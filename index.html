@@ -3,148 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Homidjon Projects - Auth</title>
+    <title>Homidjon's Universe</title>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
-        :root {
-            --apple-blue: #0071e3;
-            --glass: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
-        }
-        body {
-            margin: 0; background: #000; color: #fff;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+        :root { --apple-blue: #0071e3; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: -apple-system, sans-serif; }
+        
+        /* Markazdagi fon animatsiyasi yoki video uchun joy */
+        .hero-video {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; opacity: 0.6; pointer-events: none;
         }
 
-        /* Login Ekran */
-        .auth-container {
-            width: 350px; padding: 40px; border-radius: 30px;
-            background: var(--glass); backdrop-filter: blur(25px);
-            border: 1px solid var(--glass-border); text-align: center;
+        /* Burchakdagi Login tugmasi */
+        .top-nav {
+            position: fixed; top: 30px; right: 40px; z-index: 100;
         }
 
-        /* Dashboard Ekran */
-        #dashboard {
-            display: none; width: 90%; max-width: 1000px; padding: 20px;
+        .hero-text {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center; z-index: 10;
         }
+        h1 { font-size: 60px; font-weight: 700; letter-spacing: -2px; margin: 0; background: linear-gradient(to bottom, #fff, #86868b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        p { color: #86868b; font-size: 20px; margin-top: 10px; }
 
-        .user-profile {
-            display: flex; align-items: center; gap: 15px;
-            background: var(--glass); padding: 10px 20px;
-            border-radius: 50px; border: 1px solid var(--glass-border);
-            width: fit-content; margin-bottom: 30px;
+        .explore-btn {
+            margin-top: 30px; padding: 12px 30px; border-radius: 30px; border: 1px solid #fff;
+            background: none; color: #fff; cursor: pointer; transition: 0.3s;
         }
-        .user-profile img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--apple-blue); }
-
-        .project-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-        .project-card {
-            background: var(--glass); border: 1px solid var(--glass-border);
-            border-radius: 24px; padding: 25px; text-decoration: none; color: #fff;
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .project-card:hover { background: rgba(255,255,255,0.1); transform: scale(1.02); }
-
-        /* Tugmalar */
-        .social-btn {
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--glass-border);
-            background: #fff; color: #000; font-weight: 500; cursor: pointer; margin-top: 15px;
-        }
-        .email-login {
-            background: var(--glass); color: #fff; margin-top: 25px;
-        }
+        .explore-btn:hover { background: #fff; color: #000; }
     </style>
 </head>
 <body>
 
-    <div id="auth-box" class="auth-container">
-        <h2 style="font-size: 24px; margin-bottom: 8px;">Kirish</h2>
-        <p style="color: #86868b; font-size: 14px; margin-bottom: 30px;">Davom etish uchun akkaunt tanlang</p>
-        
+    <video class="hero-video" autoplay muted loop playsinline>
+        <source src="preview.mp4" type="video/mp4">
+    </video>
+
+    <div class="top-nav">
         <div id="g_id_onload"
              data-client_id="532407535407-gv96crsubfss205e8dd5ek89sq1f7p7n.apps.googleusercontent.com"
              data-callback="handleCredentialResponse">
         </div>
-        <div class="g_id_signin" data-type="standard"></div>
-
-        <button class="social-btn email-login" onclick="alert('Tez kunda...')">
-            <span>📧</span> Email orqali kirish
-        </button>
+        <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="filled_black"></div>
     </div>
 
-    <div id="dashboard">
-        <div class="user-profile">
-            <img id="user-img" src="" alt="Avatar">
-            <div>
-                <div id="user-name" style="font-weight: 600; font-size: 14px;"></div>
-                <div id="user-email" style="font-size: 12px; color: #86868b;"></div>
-            </div>
-        </div>
-
-        <h1 style="font-size: 40px; font-weight: 700; margin-bottom: 40px;">Loyihalarim</h1>
-
-        <div class="project-grid">
-            <a href="Jarvis.paint.html" class="project-card">
-                <div class="status-badge" style="background: rgba(255, 159, 10, 0.2); color: #ff9f0a;">
-                    🎨 Grafik Muharrir
-                </div>
-                <h3>Jarvis Paint</h3>
-                <p>Sening shaxsiy aqlli chizish asbobing.Qo'l harakati bilan chizish imkoniyati.</p>
-                <div style="margin-top: 15px; font-size: 12px; color: var(--apple-blue);">
-                    3D system
-                </div>
-            </a>
-            <a href="Atom.html" class="project-card">
-                <div style="color: var(--apple-blue); margin-bottom: 10px;">✦ 3D System</div>
-                <h3>Atom & Hand Tracking</h3>
-                <p>Kamera orqali boshqariladigan interaktiv atomlar.</p>
-            </a>
-            </div>
-
-        <button onclick="logout()" style="margin-top: 40px; background: none; border: none; color: #ff3b30; cursor: pointer;">Tizimdan chiqish</button>
+    <div class="hero-text">
+        <h1>INTERACTIVE UNIVERSE</h1>
+        <p>Havoda chizish va 3D atomlar dunyosiga xush kelibsiz.</p>
+        <button class="explore-btn" onclick="alert('Oldin login qiling!')">Loyihalarni ko'rish</button>
     </div>
 
-    <script>
-        // Google'dan ma'lumot kelganda ishlaydi
-        function handleCredentialResponse(response) {
-            const responsePayload = decodeJwtResponse(response.credential);
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAg_n9-MsYSI41l_BqHWHuXrkE7I0fRfmo",
+            authDomain: "my-universe-a5416.firebaseapp.com",
+            projectId: "my-universe-a5416",
+            storageBucket: "my-universe-a5416.firebasestorage.app",
+            messagingSenderId: "960863192078",
+            appId: "1:960863192078:web:b47ef80668ccbeea9d285f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Avval kirgan bo'lsa srazu dashboardga
+        if (localStorage.getItem('atom_user')) {
+            window.location.href = 'dashboard.html';
+        }
+
+        window.handleCredentialResponse = async (response) => {
+            const payload = JSON.parse(atob(response.credential.split('.')[1]));
             
             const userData = {
-                name: responsePayload.name,
-                email: responsePayload.email,
-                picture: responsePayload.picture
+                name: payload.name,
+                email: payload.email,
+                picture: payload.picture,
+                lastSeen: serverTimestamp()
             };
 
-            localStorage.setItem('atom_user', JSON.stringify(userData));
-            renderDashboard(userData);
-        }
-
-        function decodeJwtResponse(token) {
-            let base64Url = token.split('.')[1];
-            let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            return JSON.parse(window.atob(base64));
-        }
-
-        function renderDashboard(user) {
-            document.getElementById('auth-box').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'block';
-            document.getElementById('user-img').src = user.picture;
-            document.getElementById('user-name').innerText = user.name;
-            document.getElementById('user-email').innerText = user.email;
-        }
-
-        function logout() {
-            localStorage.removeItem('atom_user');
-            location.reload();
-        }
-
-        window.onload = () => {
-            const savedUser = localStorage.getItem('atom_user');
-            if (savedUser) renderDashboard(JSON.parse(savedUser));
+            try {
+                // FIREBASE BAZASIGA YOZISH (Users kolleksiyasiga)
+                await setDoc(doc(db, "users", payload.email), userData, { merge: true });
+                localStorage.setItem('atom_user', JSON.stringify(userData));
+                window.location.href = 'dashboard.html';
+            } catch (e) {
+                console.error("Firebase xatosi:", e);
+                alert("Bazaga ulanib bo'lmadi. Rules (Qoidalar)ni tekshiring!");
+            }
         };
     </script>
 </body>
