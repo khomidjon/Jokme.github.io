@@ -193,32 +193,27 @@
             setTimeout(() => switchTab('login'), 1500);
         }
 
-        // Email orqali Kirish
-       window.handleCredentialResponse = async (response) => {
-            try {
-        // Google'dan kelgan ma'lumotni dekodlash
-                const payload = JSON.parse(atob(response.credential.split('.')[1]));
+        document.addEventListener('DOMContentLoaded', () => {
+            // LocalStorage dan ma'lumotni olamiz
+            const user = JSON.parse(localStorage.getItem('atom_user'));
+
+            if (user && user.picture) {
+                // Sahifadagi rasm qo'yiladigan joyni topamiz (masalan, id="user-img")
+                const imgElement = document.getElementById('user-avatar');
+                if (imgElement) {
+                    imgElement.src = user.picture; // Google'dan kelgan rasm URL-ni qo'yamiz
+                }
         
-                const userData = {
-                    name: payload.name,
-                    email: payload.email,
-                    picture: payload.picture, // Google profildagi rasm URL manzili
-                    uid: payload.sub // Har bir foydalanuvchining unikal ID-si
-                };
-
-        // 1. Firebase Firestore-ga saqlash (Server)
-        // Bu kod foydalanuvchini bazaga yozadi yoki bor bo'lsa yangilaydi
-                await db.collection("users").doc(userData.uid).set(userData);
-
-        // 2. LocalStorage-ga vaqtincha saqlash (Keyingi oyna srazu o'qishi uchun)
-                localStorage.setItem('atom_user', JSON.stringify(userData));
-
-                console.log("Muvaffaqiyatli saqlandi!");
-                window.location.href = 'dashboard.html';
-            } catch (error) {
-                console.error("Xatolik:", error);
+                // Ismini ham chiqarish mumkin
+                const nameElement = document.getElementById('user-name');
+                if (nameElement) {
+                    nameElement.innerText = user.name;
+                }
+            } else {
+                // Agar login qilmagan bo'lsa, orqaga qaytarib yuboramiz
+                window.location.href = 'index.html';
             }
-        };
+        });
     </script>
 </body>
 </html>
