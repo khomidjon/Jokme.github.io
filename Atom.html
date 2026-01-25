@@ -6,10 +6,6 @@
     <title>Homidjon's Intro Animation</title>
     <style>
         body {
-            <div class="settings-panel">
-                <label for="particle-count">Atom soni: <span id="count-val">5000</span></label>
-                <input type="range" id="particle-count" min="100" max="10000" step="100" value="5000">
-            </div>
             margin: 0;
             overflow: hidden;
             background: #000;
@@ -89,6 +85,34 @@
     <meta charset="UTF-8">
     <title>Atom</title>
     <style>
+        .glass-back-btn {
+            position: fixed;
+            top: 25px;
+            left: 25px;
+            padding: 12px 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.9);
+            font-family: -apple-system, sans-serif;
+            font-size: 16px;
+            z-index: 10001; /* Intro screendan ham tepada turishi uchun */
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .glass-back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .chevron { font-size: 24px; line-height: 0; }
         body { margin: 0; background: #000; overflow: hidden; font-family: 'Orbitron', sans-serif; }
         #ui_overlay {
             position: absolute; bottom: 20px; right: 20px;
@@ -104,6 +128,9 @@
     </style>
 </head>
 <body>
+    <a href="index.html" class="glass-back-btn">
+        <span class="chevron">‹</span> Orqaga
+    </a>
 
     <div id="intro-screen">
         <div class="intro-content">
