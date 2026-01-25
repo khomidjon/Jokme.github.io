@@ -278,7 +278,7 @@
 
     <script>
         if (!localStorage.getItem('atom_user')) {
-            window.location.href = 'index.html';
+            window.location.href = 'index.html'; 
         }
 
 var animationDuration = 5000;
@@ -480,7 +480,7 @@ function startJarvisSystem() {
                 var ringTip = hand[16];
                 var pinkyTip = hand[20];
                 
-                var screenX = (1 - indexTip.x) * window.innerWidth;
+                var screenX = indexTip.x * window.innerWidth;
                 var screenY = indexTip.y * window.innerHeight;
                 
                 var x = (screenX / window.innerWidth - 0.5) * 30;
@@ -698,6 +698,26 @@ function startJarvisSystem() {
             
             renderer.render(scene, camera);
         }
+           var animationDuration = 5000;
+    setTimeout(function() {
+        var introScreen = document.getElementById('intro-screen');
+        if (introScreen) {
+            introScreen.style.opacity = '0';
+            setTimeout(function() {
+                introScreen.style.display = 'none';
+            
+            // Faqat shu yerda kamerani ishga tushiramiz
+                cam.start().then(function() {
+                    modeText.textContent = 'Sistema faol';
+                    showNotification('Xush kelibsiz, marhamat foydalanishingiz mumkin');
+                }).catch(function(err) {
+                    console.error("Kamera xatosi:", err);
+                    modeText.textContent = 'CAMERA ERROR';
+                });
+
+            }, 1000);
+        }
+    }, animationDuration);
         animate();
         
         window.addEventListener('resize', function() {
