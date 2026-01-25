@@ -91,15 +91,7 @@
         function createPointsData(newCount) {
             shapes.scatter = []; shapes.sphere = []; shapes.heart = []; shapes.torus = [];
     
-            for (let i = 0; i < posAttr.array.length; i++) {
-            if (target[i] !== undefined) {
-                let drift = (target[i] - posAttr.array[i]) * 0.12;
-        
-                let noise = (Math.random() - 0.5) * 0.15; 
-        
-                posAttr.array[i] += drift + noise;
-            }
-        }
+            for (let i = 0; i < newCount; i++) {
         // Scatter (tarqoq)
                 shapes.scatter.push((Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20);
         
