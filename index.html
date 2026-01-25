@@ -110,36 +110,7 @@
     </style>
 </head>
 <body>
-    <div id="g_id_onload"
-         data-client_id="532407535407-t122jsgms7oqvtei0p46sb3bql3bpptu.apps.googleusercontent.com" 
-         data-context="signin"
-         data-ux_mode="popup"
-         data-callback="handleCredentialResponse"
-         data-auto_select="true"
-         data-itp_support="true">
-    </div>
-
-    <script>
-      function handleCredentialResponse(response) {
-    // Bu yerda foydalanuvchi ma'lumotlarini (token) olasiz
-        console.log("Encoded JWT ID token: " + response.credential);
-    
-    // Masalan, foydalanuvchini o'yinga yo'naltirish:
-        alert("Muvaffaqiyatli kirdingiz!");
-    // window.location.href = "game.html"; 
-      }
-
-      window.onload = function () {
-        google.accounts.id.initialize({
-          client_id: "532407535407-t122jsgms7oqvtei0p46sb3bql3bpptu.apps.googleusercontent.com", // O'zingizni Client ID'ingizni qo'ying
-          callback: handleCredentialResponse,
-          auto_select: true // Qurilmadagi akkauntni avtomatik taklif qilish
-        });
-        google.accounts.id.prompt(); // One Tap oynasini chiqarish
-  }
-</script>
-
-    <div class="bg-animation"></div>
+     <div class="bg-animation"></div>
 
     <div class="hero">
         <h1>ASSALOMU ALEYKUM XUSH KELIBSIZ!</h1>
@@ -147,13 +118,59 @@
     </div>
 
     <div class="login-box">
-        <div id="g_id_onload"
-             data-client_id="532407535407-t122jsgms7oqvtei0p46sb3bql3bpptu.apps.googleusercontent.com"
-             data-callback="handleCredentialResponse"
-             data-auto_prompt="false">
-        </div>
-        <div class="g_id_signin" data-type="standard" data-theme="filled_black" data-size="large" data-shape="pill"></div>
+        <div id="buttonDiv"></div>
     </div>
 
+    <script>
+        // Google kirish javobini qayta ishlash
+        function handleCredentialResponse(response) {
+            console.log("Login jarayoni boshlandi...");
+            try {
+                // JWT tokenni dekodlash (foydalanuvchi ma'lumotlarini olish)
+                const base64Url = response.credential.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const payload = JSON.parse(window.atob(base64));
+
+                console.log("Salom, " + payload.name);
+
+                // Ma'lumotni brauzer xotirasiga saqlash
+                localStorage.setItem('atom_user', JSON.stringify({
+                    name: payload.name,
+                    email: payload.email,
+                    picture: payload.picture
+                }));
+
+                // Dashboardga o'tish
+                window.location.href = 'dashboard.html';
+            } catch (e) {
+                console.error("Dekodlashda xatolik:", e);
+            }
+        }
+
+        window.onload = function () {
+            // 1. Google Identity-ni ishga tushirish
+            google.accounts.id.initialize({
+                client_id: "532407535407-t122jsgms7oqvtei0p46sb3bql3bpptu.apps.googleusercontent.com",
+                callback: handleCredentialResponse,
+                auto_select: true, // Akkaunt bo'lsa avtomatik tanlaydi
+                itp_support: true
+            });
+
+            // 2. Standart tugmani chizish (Agar One Tap chiqmasa kerak bo'ladi)
+            google.accounts.id.renderButton(
+                document.getElementById("buttonDiv"),
+                { theme: "filled_black", size: "large", shape: "pill", width: 250 }
+            );
+
+            // 3. One Tap (Avtomatik akkaunt tanlash oynasi)ni chiqarish
+            google.accounts.id.prompt((notification) => {
+                if (notification.isNotDisplayed()) {
+                    console.warn("One Tap ko'rinmadi. Sababi:", notification.getNotDisplayedReason());
+                }
+            });
+        };
+    </script>
+</body>
+</html>
 </body>
 </html>
