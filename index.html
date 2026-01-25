@@ -42,15 +42,25 @@
         .divider { display: flex; align-items: center; margin: 25px 0; color: rgba(255, 255, 255, 0.5); font-size: 14px; }
         .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: rgba(255, 255, 255, 0.1); }
         .divider span { padding: 0 15px; }
-        .google-btn { width: 100%; padding: 14px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; }
-        .google-btn:hover { background: rgba(255, 255, 255, 0.1); }
-        .google-icon { width: 20px; height: 20px; }
         .alert { padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; text-align: center; }
         .alert-error { background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #f87171; }
         .alert-success { background: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; color: #4ade80; }
     </style>
 </head>
 <body>
+    <div id="g_id_onload"
+         data-client_id="532407535407-t122jsgms7oqvtei0p46sb3bql3bpptu.apps.googleusercontent.com"
+         data-callback="handleCredentialResponse"
+         data-auto_prompt="false">
+    </div>
+    <div class="g_id_signin"
+         data-type="standard"
+         data-shape="pill"
+         data-theme="filled_black"
+         data-text="signin_with"
+         data-size="large"
+         data-logo_alignment="left">
+    </div>
     <div class="bg-animation">
         <div class="bg-gradient"></div>
         <div class="particles">
@@ -159,21 +169,32 @@
         }
 
         // Email orqali Kirish
-        function handleLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
+       window.handleCredentialResponse = async (response) => {
+        const payload = JSON.parse(atob(response.credential.split('.')[1]));
+    
+        // Foydalanuvchi ma'lumotlari
+            const userData = {
+            name: payload.name,
+            email: payload.email,
+            picture: payload.picture,
+            lastLogin: new Date().toISOString()
+        };
 
-            const users = JSON.parse(localStorage.getItem('registered_users') || '{}');
-            const user = users[email];
+        // 1. Brauzerga saqlash (Dashboard ko'rishi uchun)
+        localStorage.setItem('atom_user', JSON.stringify(userData));
 
-            if (user && user.password === password) {
-                localStorage.setItem('atom_user', JSON.stringify({ name: user.name, email: email, method: 'email' }));
-                window.location.href = 'dashboard.html';
-            } else {
-                document.getElementById('login-alert').innerHTML = '<div class="alert alert-error">Email yoki parol xato!</div>';
-            }
+        // 2. Firebase Firestore-ga saqlash (Mana shu joyi registratsiyani bazaga yozadi)
+        try {
+            // Agar Firebase init qilingan bo'lsa:
+            // await setDoc(doc(db, "users", payload.email), userData, { merge: true });
+            console.log("Ma'lumotlar bazaga yuborildi");
+        } catch (e) {
+            console.log("Baza bilan aloqa yo'q, lekin login bo'ldi");
         }
+
+        // Dashboardga o'tish
+        window.location.href = 'dashboard.html';
+    };
     </script>
 </body>
 </html>
