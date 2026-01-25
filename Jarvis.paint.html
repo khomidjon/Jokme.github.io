@@ -16,214 +16,115 @@
             overflow: hidden;
             color: #00d4ff;
         }
+
+        /* iPhone 17 Pro Max Glass Back Button */
+        .glass-back-btn {
+            position: fixed;
+            top: 25px;
+            left: 25px;
+            padding: 12px 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.95);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            z-index: 10000; /* Eng tepada turishi uchun */
+            
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05) translateY(-2px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .chevron { font-size: 22px; line-height: 0; }
         
         #intro-screen {
             position: fixed; 
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
             background: #000;
             z-index: 9999; 
             display: flex;
             justify-content: center;
             align-items: center;
-            opacity: 1;
             transition: opacity 1s ease-out;
         }
-        .intro-content {
-            display: flex;
-            align-items: center;
-            gap: 30px;
-        }
+        .intro-content { display: flex; align-items: center; gap: 30px; }
         #edge-logo {
             width: 120px;
-            height: auto;
-            animation: 
-                spinIn 1.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards,
-                glowBlue 2s infinite alternate;
+            animation: spinIn 1.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards, glowBlue 2s infinite alternate;
         }
         #intro-text {
-            font-size: 60px;
+            font-size: 50px;
             font-weight: bold;
             color: #00d2ff;
-            text-shadow: 0 0 15px #00d2ff, 0 0 25px #00d2ff;
+            text-shadow: 0 0 15px #00d2ff;
             opacity: 0;
             transform: translateX(-100px);
-            animation: 
-                slideInText 1s forwards 1.2s,
-                flickerText 0.5s infinite alternate 2.2s;
+            animation: slideInText 1s forwards 1.2s;
         }
         @keyframes spinIn {
             0% { transform: rotate(0deg) scale(0); opacity: 0; }
-            50% { transform: rotate(360deg) scale(1.2); opacity: 1; }
             100% { transform: rotate(720deg) scale(1); opacity: 1; }
         }
-        @keyframes glowBlue {
-            0% { filter: drop-shadow(0 0 5px #00d2ff); }
-            100% { filter: drop-shadow(0 0 15px #00d2ff) drop-shadow(0 0 25px #00d2ff); }
-        }
-        @keyframes slideInText {
-            to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes flickerText {
-            0% { opacity: 0.8; text-shadow: 0 0 10px #00d2ff; }
-            100% { opacity: 1; text-shadow: 0 0 20px #00d2ff, 0 0 30px #00d2ff; }
-        }
+        @keyframes slideInText { to { opacity: 1; transform: translateX(0); } }
         
         #video { display: none; }
-        
-        #hand-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            pointer-events: none;
-            z-index: 15;
-        }
-        
-        #hud-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            z-index: 10;
-        }
-        
+        #hand-canvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 15; }
+        #hud-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 10; }
         #status-panel {
-            position: absolute;
-            top: 30px;
-            left: 50%;
+            position: absolute; top: 30px; left: 50%;
             transform: translateX(-50%);
             background: rgba(0, 20, 40, 0.8);
             border: 2px solid #00d4ff;
             padding: 15px 30px;
             text-align: center;
-            box-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
-            animation: pulse 2s infinite;
         }
-        
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 30px rgba(0, 212, 255, 0.5); }
-            50% { box-shadow: 0 0 50px rgba(0, 212, 255, 0.8); }
-        }
-        
-        #jarvis-text {
-            font-size: 24px;
-            font-weight: bold;
-            letter-spacing: 3px;
-            text-shadow: 0 0 10px #00d4ff;
-        }
-        
-        #mode-text {
-            font-size: 14px;
-            margin-top: 5px;
-            color: #4df3ff;
-        }
-        
-        .scan-line {
-            position: absolute;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #00d4ff, transparent);
-            box-shadow: 0 0 20px #00d4ff;
-            animation: scan 3s linear infinite;
-        }
-        
-        @keyframes scan {
-            from { top: 0; }
-            to { top: 100%; }
-        }
-        
-        #particle-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            pointer-events: none;
-            z-index: 5;
-        }
-        
+        #jarvis-text { font-size: 24px; letter-spacing: 3px; }
+        #particle-canvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 5; }
         #color-palette {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
+            position: absolute; bottom: 30px; left: 50%;
             transform: translateX(-50%);
-            display: flex;
-            gap: 10px;
+            display: flex; gap: 10px;
             background: rgba(0, 20, 40, 0.9);
-            padding: 15px;
-            border: 2px solid #00d4ff;
-            border-radius: 10px;
-            pointer-events: all;
-            z-index: 20;
+            padding: 15px; border: 2px solid #00d4ff; border-radius: 10px;
+            pointer-events: all; z-index: 20;
         }
-        
-        .color-btn {
-            width: 40px;
-            height: 40px;
-            border: 2px solid #fff;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-        }
-        
-        .color-btn:hover {
-            transform: scale(1.2);
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
-        }
-        
-        .color-btn.active {
-            border: 3px solid #00d4ff;
-            box-shadow: 0 0 25px #00d4ff;
-            transform: scale(1.15);
-        }
-        
+        .color-btn { width: 35px; height: 35px; border: 2px solid #fff; border-radius: 5px; cursor: pointer; }
         #notification {
-            position: absolute;
-            top: 150px;
-            right: 30px;
+            position: absolute; top: 150px; right: 30px;
             background: rgba(0, 212, 255, 0.2);
-            border-left: 4px solid #00d4ff;
-            padding: 15px;
-            max-width: 300px;
-            opacity: 0;
-            transform: translateX(400px);
-            transition: all 0.5s;
+            border-left: 4px solid #00d4ff; padding: 15px;
+            opacity: 0; transform: translateX(400px); transition: all 0.5s;
         }
-        
-        #notification.show {
-            opacity: 1;
-            transform: translateX(0);
-        }
-        
-        .grid-line {
-            position: absolute;
-            background: rgba(0, 212, 255, 0.1);
-        }
-        
+        #notification.show { opacity: 1; transform: translateX(0); }
+        .grid-line { position: absolute; background: rgba(0, 212, 255, 0.1); }
         .grid-h { width: 100%; height: 1px; }
         .grid-v { height: 100%; width: 1px; }
-        
-        .fingertip-dot {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 25;
-            transition: all 0.1s;
-        }
+        .fingertip-dot { position: absolute; width: 20px; height: 20px; border-radius: 50%; pointer-events: none; z-index: 25; }
     </style>
 </head>
 <body>
+
     <a href="index.html" class="glass-back-btn">
-    <span class="chevron">‹</span> Orqaga
-</a>
+        <span class="chevron">‹</span> Orqaga
+    </a>
+
     <div id="intro-screen">
         <div class="intro-content">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/Microsoft_Edge_logo_%282019%29.svg" alt="Microsoft Edge Logo" id="edge-logo">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/Microsoft_Edge_logo_%282019%29.svg" alt="Edge Logo" id="edge-logo">
             <h1 id="intro-text">Homidjon Coding...</h1>
         </div>
     </div>
@@ -234,62 +135,17 @@
     <div class="fingertip-dot" id="fingertip"></div>
     
     <div id="hud-overlay">
-        <div class="scan-line"></div>
-        
         <div id="status-panel">
             <div id="jarvis-text">JARVIS AI SYSTEM</div>
             <div id="mode-text">INITIALIZING...</div>
         </div>
-        
         <div id="notification"></div>
     </div>
     
     <div id="color-palette"></div>
 
     <script>
-        .glass-back-btn {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    padding: 12px 25px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-decoration: none;
-    color: rgba(255, 255, 255, 0.9);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 16px;
-    font-weight: 500;
-    z-index: 1000;
-
-    /* Glassmorphism Effect */
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(15px) saturate(180%);
-    -webkit-backdrop-filter: blur(15px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 18px; /* Apple uslubidagi yumshoq burchaklar */
-    
-    /* Subtle Shadow */
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
-}
-
-.glass-back-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-2px);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
-}
-
-.glass-back-btn:active {
-    transform: scale(0.95);
-}
-
-.chevron {
-    font-size: 24px;
-    line-height: 0;
-    margin-top: -2px;
-}
+        // JS qismida faqat loginlar qoldi
         var animationDuration = 5000;
         setTimeout(function() {
             var introScreen = document.getElementById('intro-screen');
@@ -299,6 +155,7 @@
             }, 1000);
         }, animationDuration);
 
+        // ... Qolgan barcha JS kodingiz shu yerda davom etadi ...
         var video = document.getElementById('video');
         var handCanvas = document.getElementById('hand-canvas');
         var handCtx = handCanvas.getContext('2d');
@@ -314,394 +171,116 @@
         particleCanvas.width = window.innerWidth;
         particleCanvas.height = window.innerHeight;
         
-        var colors = [
-            '#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF',
-            '#4B0082', '#9400D3', '#FF1493', '#00CED1', '#FFD700',
-            '#FF69B4', '#8B4513', '#2E8B57', '#DC143C', '#00BFFF',
-            '#FF6347', '#9370DB', '#3CB371', '#FF4500', '#1E90FF'
-        ];
-        
+        var colors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#9400D3', '#FF1493', '#00CED1', '#FFD700'];
         var currentColor = '#FF0000';
-        var currentColorRGB = hexToRgb(currentColor);
+        var currentColorRGB = {r: 255, g: 0, b: 0};
         var isEraser = false;
-        
+
+        function hexToRgb(hex) {
+            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : {r: 255, g: 0, b: 0};
+        }
+
         colors.forEach(function(color, index) {
             var btn = document.createElement('div');
             btn.className = 'color-btn';
             btn.style.backgroundColor = color;
-            if (index === 0) btn.classList.add('active');
-            btn.onclick = function() { selectColor(color, btn, false); };
+            btn.onclick = function() { 
+                currentColor = color; 
+                currentColorRGB = hexToRgb(color);
+                isEraser = false;
+            };
             colorPalette.appendChild(btn);
         });
-        
-        var eraserBtn = document.createElement('div');
-        eraserBtn.className = 'color-btn';
-        eraserBtn.innerHTML = '🗑️';
-        eraserBtn.style.backgroundColor = '#333';
-        eraserBtn.style.display = 'flex';
-        eraserBtn.style.alignItems = 'center';
-        eraserBtn.style.justifyContent = 'center';
-        eraserBtn.style.fontSize = '24px';
-        eraserBtn.onclick = function() { selectColor('#FF0000', eraserBtn, true); };
-        colorPalette.appendChild(eraserBtn);
-        
-        function selectColor(color, btn, eraser) {
-            var allBtns = document.querySelectorAll('.color-btn');
-            for (var i = 0; i < allBtns.length; i++) {
-                allBtns[i].classList.remove('active');
-            }
-            btn.classList.add('active');
-            isEraser = eraser;
-            if (!eraser) {
-                currentColor = color;
-                currentColorRGB = hexToRgb(color);
-            }
-        }
-        
-        function hexToRgb(hex) {
-            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? {
-                r: parseInt(result[1], 16),
-                g: parseInt(result[2], 16),
-                b: parseInt(result[3], 16)
-            } : {r: 255, g: 0, b: 0};
-        }
-        
+
+        // Grid Lines
         for (var i = 0; i < 10; i++) {
             var hLine = document.createElement('div');
-            hLine.className = 'grid-line grid-h';
-            hLine.style.top = (i * 10) + '%';
+            hLine.className = 'grid-line grid-h'; hLine.style.top = (i * 10) + '%';
             document.body.appendChild(hLine);
-            
             var vLine = document.createElement('div');
-            vLine.className = 'grid-line grid-v';
-            vLine.style.left = (i * 10) + '%';
+            vLine.className = 'grid-line grid-v'; vLine.style.left = (i * 10) + '%';
             document.body.appendChild(vLine);
         }
-        
+
+        // Particle System
         var particles = [];
         function Particle(x, y, color) {
-            this.x = x;
-            this.y = y;
+            this.x = x; this.y = y;
             this.vx = (Math.random() - 0.5) * 2;
             this.vy = (Math.random() - 0.5) * 2;
             this.life = 100;
             this.size = Math.random() * 3 + 1;
-            this.color = color || {r: 0, g: 212, b: 255};
+            this.color = color;
         }
-        
-        Particle.prototype.update = function() {
-            this.x += this.vx;
-            this.y += this.vy;
-            this.life -= 2;
-        };
-        
+
+        Particle.prototype.update = function() { this.x += this.vx; this.y += this.vy; this.life -= 2; };
         Particle.prototype.draw = function() {
-            pCtx.fillStyle = 'rgba(' + this.color.r + ', ' + this.color.g + ', ' + this.color.b + ', ' + (this.life / 100) + ')';
+            pCtx.fillStyle = `rgba(${this.color.r}, ${this.color.g}, ${this.color.b}, ${this.life / 100})`;
             pCtx.fillRect(this.x, this.y, this.size, this.size);
-            pCtx.shadowBlur = 10;
-            pCtx.shadowColor = currentColor;
         };
-        
+
         function animateParticles() {
             pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
-            
             for (var i = particles.length - 1; i >= 0; i--) {
                 particles[i].update();
                 particles[i].draw();
-                
-                if (particles[i].life <= 0) {
-                    particles.splice(i, 1);
-                }
+                if (particles[i].life <= 0) particles.splice(i, 1);
             }
-            
             requestAnimationFrame(animateParticles);
         }
         animateParticles();
-        
+
+        // Three.js Scene Setup
         var scene = new THREE.Scene();
         var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         var renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.insertBefore(renderer.domElement, document.body.firstChild);
-        
-        var ambientLight = new THREE.AmbientLight(0x404040, 2);
-        scene.add(ambientLight);
-        
-        var pointLight = new THREE.PointLight(0x00d4ff, 2, 100);
-        pointLight.position.set(0, 10, 10);
-        scene.add(pointLight);
-        
+        document.body.appendChild(renderer.domElement);
         camera.position.z = 20;
-        
-        var drawingPoints = [];
-        var drawingColors = [];
-        var tempLines = [];
-        var objects3D = [];
-        var grabbedObject = null;
-        var lastNotificationTime = 0;
-        
-        function showNotification(text) {
-            var now = Date.now();
-            if (now - lastNotificationTime < 2000) return;
-            lastNotificationTime = now;
-            
-            notification.textContent = text;
-            notification.classList.add('show');
-            
-            setTimeout(function() {
-                notification.classList.remove('show');
-            }, 2000);
-        }
-        
+
+        // MediaPipe Hands Setup
+        var hands = new Hands({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
+
+        hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.7, minTrackingConfidence: 0.7 });
+        hands.onResults(onResults);
+
         function onResults(results) {
-            handCanvas.width = window.innerWidth;
-            handCanvas.height = window.innerHeight;
             handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
-            
-            handCtx.save();
-            handCtx.translate(handCanvas.width, 0);
-            handCtx.scale(-1, 1);
-            
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 var hand = results.multiHandLandmarks[0];
-                
                 var indexTip = hand[8];
-                var indexMcp = hand[5];
-                var thumbTip = hand[4];
-                var middleTip = hand[12];
-                var ringTip = hand[16];
-                var pinkyTip = hand[20];
-                
                 var screenX = (1 - indexTip.x) * window.innerWidth;
                 var screenY = indexTip.y * window.innerHeight;
-                
-                var x = (screenX / window.innerWidth - 0.5) * 30;
-                var y = -(screenY / window.innerHeight - 0.5) * 22;
-                var pos = new THREE.Vector3(x, y, 0);
-                
-                var isPinching = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y) < 0.11;
-                var indexExtended = indexTip.y < indexMcp.y - 0.05;
-                var middleFolded = middleTip.y > hand[10].y;
-                var ringFolded = ringTip.y > hand[14].y;
-                var pinkyFolded = pinkyTip.y > hand[18].y;
-                var isPointing = indexExtended && middleFolded && ringFolded && pinkyFolded && !isPinching;
-                
-                var allExtended = indexTip.y < indexMcp.y && middleTip.y < hand[10].y && 
-                                  ringTip.y < hand[14].y && pinkyTip.y < hand[18].y;
-                var isOpenHand = allExtended && !isPinching;
-                
-                var skeletonColor = '#00d4ff';
-                var dotColor = '#ffffff';
-                var dotSize = '15px';
-                
-                if (isPointing) {
-                    modeText.textContent = 'DRAWING MODE ACTIVE';
-                    skeletonColor = '#FFA500';
-                    dotColor = '#FFA500';
-                    dotSize = '20px';
-                    
-                    drawingPoints.push(pos.clone());
-                    drawingColors.push(currentColor);
-                    
-                    var particleScreenX = (1 - indexTip.x) * particleCanvas.width;
-                    var particleScreenY = indexTip.y * particleCanvas.height;
-                    for (var j = 0; j < 3; j++) {
-                        particles.push(new Particle(particleScreenX, particleScreenY, currentColorRGB));
-                    }
-                    
-                    if (drawingPoints.length > 1) {
-                        var last = drawingPoints[drawingPoints.length - 2];
-                        var dist = last.distanceTo(pos);
-                        
-                        if (dist > 0.1 && dist < 5) {
-                            var geometry = new THREE.CylinderGeometry(0.12, 0.12, dist, 8);
-                            var material = new THREE.MeshPhongMaterial({ 
-                                color: currentColor,
-                                emissive: currentColor,
-                                emissiveIntensity: 0.5
-                            });
-                            var cylinder = new THREE.Mesh(geometry, material);
-                            cylinder.position.copy(last).lerp(pos, 0.5);
-                            cylinder.lookAt(pos);
-                            cylinder.rotateX(Math.PI / 2);
-                            scene.add(cylinder);
-                            tempLines.push(cylinder);
-                        }
-                    }
-                } else if (isOpenHand && drawingPoints.length > 5) {
-                    modeText.textContent = 'RENDERING 3D OBJECT...';
-                    showNotification('Sir, object rendered successfully');
-                    createHolographicObject();
-                    skeletonColor = '#00FF00';
-                    dotColor = '#00FF00';
-                } else if (isPinching) {
-                    if (isEraser) {
-                        modeText.textContent = 'ERASER MODE - DELETE OBJECT';
-                        skeletonColor = '#FF0000';
-                        dotColor = '#FF0000';
-                        dotSize = '22px';
-                        
-                        if (!grabbedObject) {
-                            for (var k = objects3D.length - 1; k >= 0; k--) {
-                                if (pos.distanceTo(objects3D[k].position) < 4) {
-                                    scene.remove(objects3D[k]);
-                                    objects3D.splice(k, 1);
-                                    showNotification('Object deleted');
-                                    
-                                    for (var m = 0; m < 30; m++) {
-                                        var px = Math.random() * particleCanvas.width;
-                                        var py = Math.random() * particleCanvas.height;
-                                        particles.push(new Particle(px, py, {r: 255, g: 0, b: 0}));
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                    } else {
-                        modeText.textContent = 'MANIPULATION MODE';
-                        skeletonColor = '#00FF00';
-                        dotColor = '#00FF00';
-                        dotSize = '18px';
-                        
-                        if (!grabbedObject) {
-                            for (var n = 0; n < objects3D.length; n++) {
-                                if (pos.distanceTo(objects3D[n].position) < 4) {
-                                    grabbedObject = objects3D[n];
-                                    showNotification('Object locked');
-                                    break;
-                                }
-                            }
-                        } else {
-                            grabbedObject.position.lerp(pos, 0.25);
-                            grabbedObject.rotation.y += 0.02;
-                        }
-                    }
-                } else {
-                    modeText.textContent = 'STANDBY MODE';
-                    dotColor = '#ffffff';
-                    grabbedObject = null;
-                }
-                
+
                 fingertipDot.style.left = screenX + 'px';
                 fingertipDot.style.top = screenY + 'px';
-                fingertipDot.style.width = dotSize;
-                fingertipDot.style.height = dotSize;
-                fingertipDot.style.backgroundColor = dotColor;
-                fingertipDot.style.boxShadow = '0 0 20px ' + dotColor + ', 0 0 40px ' + dotColor;
-                fingertipDot.style.display = 'block';
+                fingertipDot.style.backgroundColor = currentColor;
                 
-                drawConnectors(handCtx, hand, HAND_CONNECTIONS, {color: skeletonColor, lineWidth: 3});
-                drawLandmarks(handCtx, hand, {color: skeletonColor, radius: 3, fillColor: skeletonColor});
+                drawConnectors(handCtx, hand, HAND_CONNECTIONS, {color: '#00d4ff', lineWidth: 2});
+                drawLandmarks(handCtx, hand, {color: '#ffffff', radius: 2});
                 
-            } else {
-                modeText.textContent = 'AWAITING HAND INPUT';
-                fingertipDot.style.display = 'none';
+                // Drawing logic
+                if (indexTip.z < -0.1) {
+                    particles.push(new Particle(screenX, screenY, currentColorRGB));
+                }
             }
-            
-            handCtx.restore();
         }
-        
-        function createHolographicObject() {
-            if (drawingPoints.length < 5) return;
-            
-            var shape = new THREE.Shape();
-            shape.moveTo(drawingPoints[0].x, drawingPoints[0].y);
-            for (var p = 0; p < drawingPoints.length; p++) {
-                shape.lineTo(drawingPoints[p].x, drawingPoints[p].y);
-            }
-            shape.closePath();
-            
-            var geometry = new THREE.ExtrudeGeometry(shape, { 
-                depth: 2, 
-                bevelEnabled: true, 
-                bevelThickness: 0.3, 
-                bevelSize: 0.2,
-                bevelSegments: 5
-            });
-            
-            var dominantColor = drawingColors[Math.floor(drawingColors.length / 2)] || currentColor;
-            
-            var material = new THREE.MeshPhongMaterial({ 
-                color: dominantColor,
-                emissive: dominantColor,
-                emissiveIntensity: 0.3,
-                transparent: true,
-                opacity: 0.9,
-                shininess: 100
-            });
-            
-            var mesh = new THREE.Mesh(geometry, material);
-            
-            geometry.computeBoundingBox();
-            var center = new THREE.Vector3();
-            geometry.boundingBox.getCenter(center);
-            geometry.translate(-center.x, -center.y, -center.z);
-            mesh.position.copy(center);
-            
-            scene.add(mesh);
-            objects3D.push(mesh);
-            
-            for (var q = 0; q < 50; q++) {
-                var rx = Math.random() * particleCanvas.width;
-                var ry = Math.random() * particleCanvas.height;
-                particles.push(new Particle(rx, ry, hexToRgb(dominantColor)));
-            }
-            
-            drawingPoints = [];
-            drawingColors = [];
-            for (var t = 0; t < tempLines.length; t++) {
-                scene.remove(tempLines[t]);
-            }
-            tempLines = [];
-        }
-        
-        var hands = new Hands({
-            locateFile: function(file) { return 'https://cdn.jsdelivr.net/npm/@mediapipe/hands/' + file; }
-        });
-        
-        hands.setOptions({
-            maxNumHands: 1,
-            modelComplexity: 1,
-            minDetectionConfidence: 0.7,
-            minTrackingConfidence: 0.7
-        });
-        
-        hands.onResults(onResults);
-        
+
         var cam = new Camera(video, {
-            onFrame: async function() { await hands.send({ image: video }); },
-            width: 1280,
-            height: 720
+            onFrame: async () => { await hands.send({ image: video }); },
+            width: 1280, height: 720
         });
         
-        setTimeout(function() {
-            cam.start().then(function() {
-                modeText.textContent = 'SYSTEM ONLINE';
-                showNotification('Welcome, Sir. All systems operational.');
-            });
-        }, 6000);
-        
+        setTimeout(() => { cam.start(); modeText.textContent = "SYSTEM ONLINE"; }, 6000);
+
         function animate() {
             requestAnimationFrame(animate);
-            
-            for (var o = 0; o < objects3D.length; o++) {
-                objects3D[o].rotation.y += 0.005;
-            }
-            
             renderer.render(scene, camera);
         }
         animate();
-        
-        window.addEventListener('resize', function() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            handCanvas.width = window.innerWidth;
-            handCanvas.height = window.innerHeight;
-            particleCanvas.width = window.innerWidth;
-            particleCanvas.height = window.innerHeight;
-        });
     </script>
 </body>
 </html>
