@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        body { background: #000; color: #fff; font-family: -apple-system, sans-serif; padding: 50px; }
+        .user-card { display: flex; align-items: center; gap: 15px; margin-bottom: 50px; }
+        .user-card img { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #0071e3; }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+        
+        .project-card { 
+            position: relative; height: 200px; border-radius: 20px; overflow: hidden; 
+            background: #1c1c1e; border: 1px solid #333; text-decoration: none; color: #fff;
+        }
+        
+        /* Preview video faqat sichqoncha borganda chiqadi */
+        .preview-content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; transition: 0.4s; }
+        .project-card:hover .preview-content { opacity: 1; }
+        
+        .card-text { padding: 20px; z-index: 5; position: relative; }
+        .logout { color: #ff3b30; cursor: pointer; margin-top: 30px; display: block; }
+    </style>
+</head>
+<body>
+
+    <div class="user-card">
+        <img id="u-img" src="">
+        <div>
+            <h3 id="u-name" style="margin:0"></h3>
+            <p id="u-email" style="margin:0; font-size: 12px; color: #86868b;"></p>
+        </div>
+    </div>
+
+    <div class="grid">
+        <a href="Atom.html" class="project-card">
+            <div class="preview-content">
+                <video src="atom-preview.mp4" autoplay muted loop style="width:100%; height:100%; object-fit:cover;"></video>
+            </div>
+            <div class="card-text">
+                <h3>Atom 3D</h3>
+                <p>3D Atomlar va Hand Tracking.</p>
+            </div>
+        </a>
+
+        <a href="Jarvis.paint.html" class="project-card">
+            <div class="preview-content">
+                <video src="paint-preview.mp4" autoplay muted loop style="width:100%; height:100%; object-fit:cover;"></video>
+            </div>
+            <div class="card-text">
+                <h3>Jarvis Paint</h3>
+                <p>Havoda rasm chizish.</p>
+            </div>
+        </a>
+    </div>
+
+    <span class="logout" onclick="localStorage.clear(); location.href='index.html'">Chiqish</span>
+
+    <script>
+        const user = JSON.parse(localStorage.getItem('atom_user'));
+        if(!user) location.href = 'index.html';
+        
+        document.getElementById('u-img').src = user.picture;
+        document.getElementById('u-name').innerText = user.name;
+        document.getElementById('u-email').innerText = user.email;
+    </script>
+</body>
+</html>
