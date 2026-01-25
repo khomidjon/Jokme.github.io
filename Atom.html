@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homidjon's Intro Animation</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Segoe UI', sans-serif;
+            color: #fff;
+        }
+
+        #intro-screen {
+            position: fixed; 
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 9999; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+            transition: opacity 1s ease-out;
+        }
+
+        .intro-content {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        #edge-logo {
+            width: 120px;
+            height: auto;
+            animation: 
+                spinIn 1.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards,
+                glowBlue 2s infinite alternate;
+        }
+
+        #intro-text {
+            font-size: 60px;
+            font-weight: bold;
+            color: #00d2ff;
+            text-shadow: 0 0 15px #00d2ff, 0 0 25px #00d2ff;
+            opacity: 0;
+            transform: translateX(-100px);
+            animation: 
+                slideInText 1s forwards 1.2s,
+                flickerText 0.5s infinite alternate 2.2s;
+        }
+
+      
+        @keyframes spinIn {
+            0% { transform: rotate(0deg) scale(0); opacity: 0; }
+            50% { transform: rotate(360deg) scale(1.2); opacity: 1; }
+            100% { transform: rotate(720deg) scale(1); opacity: 1; }
+        }
+
+        @keyframes glowBlue {
+            0% { filter: drop-shadow(0 0 5px #00d2ff); }
+            100% { filter: drop-shadow(0 0 15px #00d2ff) drop-shadow(0 0 25px #00d2ff); }
+        }
+
+        
+        @keyframes slideInText {
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+       
+        @keyframes flickerText {
+            0% { opacity: 0.8; text-shadow: 0 0 10px #00d2ff; }
+            100% { opacity: 1; text-shadow: 0 0 20px #00d2ff, 0 0 30px #00d2ff; }
+        }
+    </style>
+</head>
+    <meta charset="UTF-8">
+    <title>Atom</title>
+    <style>
+        body { margin: 0; background: #000; overflow: hidden; font-family: 'Orbitron', sans-serif; }
+        #ui_overlay {
+            position: absolute; bottom: 20px; right: 20px;
+            width: 240px; height: 180px;
+            border: 1px solid #00d2ff; background: rgba(0, 210, 255, 0.1);
+            border-radius: 10px; transform: scaleX(-1);
+        }
+        #instruction {
+            position: absolute; top: 15px; left: 15px; color: #00d2ff;
+            background: rgba(0, 0, 0, 0.6); padding: 10px; border-radius: 5px; font-size: 12px;
+        }
+        #input_video { display: none; }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="glass-back-btn">
+    <span class="chevron">‹</span> Orqaga
+</a>
+
+    <div id="intro-screen">
+        <div class="intro-content">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/Microsoft_Edge_logo_%282019%29.svg" alt="Microsoft Edge Logo" id="edge-logo">
+            <h1 id="intro-text">Homidjon Coding...</h1>
+        </div>
+    </div>
+
+    <script>
+        const animationDuration = 5000; 
+
+        
+        setTimeout(() => {
+            const introScreen = document.getElementById('intro-screen');
+            introScreen.style.opacity = '0'; 
+            
+            
+            setTimeout(() => {
+                introScreen.style.display = 'none';
+               
+            }, 1000); // Opacity animatsiyasi tugashini kutadi (1 soniya)
+
+        }, animationDuration);
+    </script>
+</body>
+</html>
+    <div id="instruction">
+        </div>
+    <video id="input_video" playsinline muted></video>
+    <canvas id="ui_overlay"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        .glass-back-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    padding: 12px 25px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.9);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    z-index: 1000;
+
+    /* Glassmorphism Effect */
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px) saturate(180%);
+    -webkit-backdrop-filter: blur(15px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 18px; /* Apple uslubidagi yumshoq burchaklar */
+    
+    /* Subtle Shadow */
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.glass-back-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
+}
+
+.glass-back-btn:active {
+    transform: scale(0.95);
+}
+
+.chevron {
+    font-size: 24px;
+    line-height: 0;
+    margin-top: -2px;
+}
+        const videoElement = document.getElementById('input_video');
+        const uiCanvas = document.getElementById('ui_overlay');
+        const uiCtx = uiCanvas.getContext('2d');
+
+        let scene, camera, renderer, particles, geometry;
+        const count = 5000; // Zarrachalar soni kamaytirildi (Tezroq ishlashi uchun)
+        const shapes = { scatter: [], sphere: [], heart: [], torus: [] };
+        let currentColor = new THREE.Color(0x00d2ff);
+
+        function createPoints() {
+            for (let i = 0; i < count; i++) {
+                shapes.scatter.push((Math.random()-0.5)*20, (Math.random()-0.5)*20, (Math.random()-0.5)*20);
+                
+                const phi = Math.acos(-1 + (2 * i) / count);
+                const theta = Math.sqrt(count * Math.PI) * phi;
+                shapes.sphere.push(3.5 * Math.cos(theta) * Math.sin(phi), 3.5 * Math.sin(theta) * Math.sin(phi), 3.5 * Math.cos(phi));
+
+                const t = Math.random() * Math.PI * 2;
+                shapes.heart.push((16 * Math.pow(Math.sin(t), 3)) * 0.25, (13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) * 0.25, (Math.random()-0.5));
+
+                const u = Math.random() * Math.PI * 2, v = Math.random() * Math.PI * 2;
+                shapes.torus.push((4 + 1.5 * Math.cos(v)) * Math.cos(u), (4 + 1.5 * Math.cos(v)) * Math.sin(u), 1.5 * Math.sin(v));
+            }
+        }
+
+        function initThree() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 12;
+
+            renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true }); // Antialias o'chirildi (FPS uchun)
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(1); // Piksel nisbati 1 qilib belgilandi
+            document.body.appendChild(renderer.domElement);
+
+            createPoints();
+            geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(shapes.scatter, 3));
+            
+            const mat = new THREE.PointsMaterial({
+                size: 0.06, color: 0x00d2ff, transparent: true,
+                blending: THREE.AdditiveBlending, depthWrite: false
+            });
+
+            particles = new THREE.Points(geometry, mat);
+            scene.add(particles);
+        }
+
+        function onResults(results) {
+            uiCtx.save();
+            uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
+            
+            if (results.multiHandLandmarks) {
+                for (const landmarks of results.multiHandLandmarks) {
+                    drawConnectors(uiCtx, landmarks, HAND_CONNECTIONS, {color: '#00d2ff', lineWidth: 1.5});
+                    drawLandmarks(uiCtx, landmarks, {color: '#ffffff', radius: 1});
+                }
+                handleLogic(results.multiHandLandmarks);
+            }
+            uiCtx.restore();
+        }
+
+        function handleLogic(hands) {
+            const posAttr = geometry.attributes.position;
+            let target = shapes.scatter;
+            
+           
+            if (hands.length === 2) {
+                const d = Math.hypot(hands[0][9].x - hands[1][9].x, hands[0][9].y - hands[1][9].y);
+                const s = d * 12;
+                particles.scale.lerp(new THREE.Vector3(s, s, s), 0.1);
+            }
+
+            hands.forEach(hand => {
+                // Rang o'zgarishi (Pinch)
+                if (Math.hypot(hand[4].x - hand[8].x, hand[4].y - hand[8].y) < 0.05) {
+                    currentColor.setHSL(Math.random(), 0.9, 0.6);
+                }
+               
+                let f = 0;
+                [8, 12, 16, 20].forEach(idx => { if(hand[idx].y < hand[idx-2].y) f++; });
+                if (f === 1) target = shapes.sphere;
+                else if (f === 2) target = shapes.heart;
+                else if (f >= 3) target = shapes.torus;
+            });
+
+          
+            for (let i = 0; i < posAttr.array.length; i++) {
+                posAttr.array[i] += (target[i] - posAttr.array[i]) * 0.12;
+            }
+            posAttr.needsUpdate = true;
+            particles.material.color.lerp(currentColor, 0.1);
+            particles.rotation.y += 0.005;
+        }
+
+        const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+        hands.setOptions({ maxNumHands: 2, modelComplexity: 0, minDetectionConfidence: 0.6 }); // Complexity 0 qilindi
+        hands.onResults(onResults);
+
+        const cameraFeed = new Camera(videoElement, {
+            onFrame: async () => { 
+                uiCanvas.width = 240; uiCanvas.height = 180;
+                await hands.send({image: videoElement}); 
+            },
+            width: 640, height: 480 // Kamera o'lchami kamaytirildi
+        });
+        cameraFeed.start();
+
+        initThree();
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+</html>
