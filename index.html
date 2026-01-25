@@ -109,9 +109,6 @@
     </div>
 
     <script>
-        if (!localStorage.getItem('atom_user')) {
-            window.location.href = 'index.html';
-        }
         // Google'dan ma'lumot kelganda ishlaydi
         function handleCredentialResponse(response) {
             const responsePayload = decodeJwtResponse(response.credential);
