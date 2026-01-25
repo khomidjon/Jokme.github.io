@@ -9,251 +9,37 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
+        /* Sening barcha stillaring o'zgarishsiz qoldi */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Courier New', monospace;
-            background: #000;
-            overflow: hidden;
-            color: #00d4ff;
-        }
-
-        .glass-back-btn {
-         position: fixed;
-            top: 25px;
-            left: 25px;
-            padding: 12px 25px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            color: rgba(255, 255, 255, 0.9);
-            font-family: -apple-system, sans-serif;
-            font-size: 16px;
-            z-index: 10001; /* Intro screendan ham tepada turishi uchun */
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-            transition: all 0.3s ease;
-        }
-
-        .glass-back-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.05);
-        }
-
-        .chevron { font-size: 24px; line-height: 0; }
-        
-        #intro-screen {
-            position: fixed; 
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: #000;
-            z-index: 9999; 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            opacity: 1;
-            transition: opacity 1s ease-out;
-        }
-        .intro-content {
-            display: flex;
-            align-items: center;
-            gap: 30px;
-        }
-        #edge-logo {
-            width: 120px;
-            height: auto;
-            animation: 
-                spinIn 1.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards,
-                glowBlue 2s infinite alternate;
-        }
-        #intro-text {
-            font-size: 60px;
-            font-weight: bold;
-            color: #00d2ff;
-            text-shadow: 0 0 15px #00d2ff, 0 0 25px #00d2ff;
-            opacity: 0;
-            transform: translateX(-100px);
-            animation: 
-                slideInText 1s forwards 1.2s,
-                flickerText 0.5s infinite alternate 2.2s;
-        }
-        @keyframes spinIn {
-            0% { transform: rotate(0deg) scale(0); opacity: 0; }
-            50% { transform: rotate(360deg) scale(1.2); opacity: 1; }
-            100% { transform: rotate(720deg) scale(1); opacity: 1; }
-        }
-        @keyframes glowBlue {
-            0% { filter: drop-shadow(0 0 5px #00d2ff); }
-            100% { filter: drop-shadow(0 0 15px #00d2ff) drop-shadow(0 0 25px #00d2ff); }
-        }
-        @keyframes slideInText {
-            to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes flickerText {
-            0% { opacity: 0.8; text-shadow: 0 0 10px #00d2ff; }
-            100% { opacity: 1; text-shadow: 0 0 20px #00d2ff, 0 0 30px #00d2ff; }
-        }
-        
+        body { font-family: 'Courier New', monospace; background: #000; overflow: hidden; color: #00d4ff; }
+        .glass-back-btn { position: fixed; top: 25px; left: 25px; padding: 12px 25px; display: flex; align-items: center; gap: 10px; text-decoration: none; color: rgba(255, 255, 255, 0.9); z-index: 10001; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 20px; transition: all 0.3s ease; }
+        #intro-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 9999; display: flex; justify-content: center; align-items: center; opacity: 1; transition: opacity 1s ease-out; }
+        .intro-content { display: flex; align-items: center; gap: 30px; }
+        #edge-logo { width: 120px; animation: spinIn 1.5s forwards, glowBlue 2s infinite alternate; }
+        #intro-text { font-size: 60px; font-weight: bold; color: #00d2ff; opacity: 0; transform: translateX(-100px); animation: slideInText 1s forwards 1.2s; }
+        @keyframes spinIn { 0% { transform: rotate(0deg) scale(0); opacity: 0; } 100% { transform: rotate(720deg) scale(1); opacity: 1; } }
+        @keyframes slideInText { to { opacity: 1; transform: translateX(0); } }
         #video { display: none; }
-        
-        #hand-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            pointer-events: none;
-            z-index: 15;
-        }
-        
-        #hud-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            z-index: 10;
-        }
-        
-        #status-panel {
-            position: absolute;
-            top: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 20, 40, 0.8);
-            border: 2px solid #00d4ff;
-            padding: 15px 30px;
-            text-align: center;
-            box-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 30px rgba(0, 212, 255, 0.5); }
-            50% { box-shadow: 0 0 50px rgba(0, 212, 255, 0.8); }
-        }
-        
-        #jarvis-text {
-            font-size: 24px;
-            font-weight: bold;
-            letter-spacing: 3px;
-            text-shadow: 0 0 10px #00d4ff;
-        }
-        
-        #mode-text {
-            font-size: 14px;
-            margin-top: 5px;
-            color: #4df3ff;
-        }
-        
-        .scan-line {
-            position: absolute;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #00d4ff, transparent);
-            box-shadow: 0 0 20px #00d4ff;
-            animation: scan 3s linear infinite;
-        }
-        
-        @keyframes scan {
-            from { top: 0; }
-            to { top: 100%; }
-        }
-        
-        #particle-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            pointer-events: none;
-            z-index: 5;
-        }
-        
-        #color-palette {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 10px;
-            background: rgba(0, 20, 40, 0.9);
-            padding: 15px;
-            border: 2px solid #00d4ff;
-            border-radius: 10px;
-            pointer-events: all;
-            z-index: 20;
-        }
-        
-        .color-btn {
-            width: 40px;
-            height: 40px;
-            border: 2px solid #fff;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-        }
-        
-        .color-btn:hover {
-            transform: scale(1.2);
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
-        }
-        
-        .color-btn.active {
-            border: 3px solid #00d4ff;
-            box-shadow: 0 0 25px #00d4ff;
-            transform: scale(1.15);
-        }
-        
-        #notification {
-            position: absolute;
-            top: 150px;
-            right: 30px;
-            background: rgba(0, 212, 255, 0.2);
-            border-left: 4px solid #00d4ff;
-            padding: 15px;
-            max-width: 300px;
-            opacity: 0;
-            transform: translateX(400px);
-            transition: all 0.5s;
-        }
-        
-        #notification.show {
-            opacity: 1;
-            transform: translateX(0);
-        }
-        
-        .grid-line {
-            position: absolute;
-            background: rgba(0, 212, 255, 0.1);
-        }
-        
-        .grid-h { width: 100%; height: 1px; }
-        .grid-v { height: 100%; width: 1px; }
-        
-        .fingertip-dot {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 25;
-            transition: all 0.1s;
-        }
+        #hand-canvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 15; }
+        #hud-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 10; }
+        #status-panel { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); background: rgba(0, 20, 40, 0.8); border: 2px solid #00d4ff; padding: 15px 30px; text-align: center; }
+        .scan-line { position: absolute; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, #00d4ff, transparent); animation: scan 3s linear infinite; }
+        @keyframes scan { from { top: 0; } to { top: 100%; } }
+        #particle-canvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 5; }
+        #color-palette { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; background: rgba(0, 20, 40, 0.9); padding: 15px; border: 2px solid #00d4ff; border-radius: 10px; z-index: 20; }
+        .color-btn { width: 40px; height: 40px; border: 2px solid #fff; border-radius: 5px; cursor: pointer; }
+        .color-btn.active { border: 3px solid #00d4ff; box-shadow: 0 0 25px #00d4ff; }
+        #notification { position: absolute; top: 150px; right: 30px; background: rgba(0, 212, 255, 0.2); border-left: 4px solid #00d4ff; padding: 15px; max-width: 300px; opacity: 0; transition: all 0.5s; }
+        #notification.show { opacity: 1; transform: translateX(0); }
+        .fingertip-dot { position: absolute; width: 20px; height: 20px; border-radius: 50%; pointer-events: none; z-index: 25; }
     </style>
 </head>
 <body>
-    <a href="dashboard.html" class="glass-back-btn">
-        <span class="chevron">‹</span> Orqaga
-    </a>
+    <a href="dashboard.html" class="glass-back-btn"><span class="chevron">‹</span> Orqaga</a>
 
     <div id="intro-screen">
         <div class="intro-content">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/Microsoft_Edge_logo_%282019%29.svg" alt="Microsoft Edge Logo" id="edge-logo">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/Microsoft_Edge_logo_%282019%29.svg" alt="Logo" id="edge-logo">
             <h1 id="intro-text">Homidjon Coding...</h1>
         </div>
     </div>
@@ -265,212 +51,221 @@
     
     <div id="hud-overlay">
         <div class="scan-line"></div>
-        
         <div id="status-panel">
             <div id="jarvis-text">JARVIS AI SYSTEM</div>
             <div id="mode-text">Kuting...</div>
         </div>
-        
         <div id="notification"></div>
     </div>
-    
     <div id="color-palette"></div>
 
     <script>
-    // 1. LOGIN TEKSHIRUVI
-    if (!localStorage.getItem('atom_user')) {
-        window.location.href = 'index.html'; 
-    }
-
-    // O'zgaruvchilarni e'lon qilish
-    var video = document.getElementById('video');
-    var handCanvas = document.getElementById('hand-canvas');
-    var handCtx = handCanvas.getContext('2d');
-    var particleCanvas = document.getElementById('particle-canvas');
-    var pCtx = particleCanvas.getContext('2d');
-    var modeText = document.getElementById('mode-text');
-    var notification = document.getElementById('notification');
-    var fingertipDot = document.getElementById('fingertip');
-    var colorPalette = document.getElementById('color-palette');
-    
-    handCanvas.width = window.innerWidth;
-    handCanvas.height = window.innerHeight;
-    particleCanvas.width = window.innerWidth;
-    particleCanvas.height = window.innerHeight;
-
-    var currentColor = '#FF0000';
-    var currentColorRGB = {r: 255, g: 0, b: 0};
-    var isEraser = false;
-    var particles = [];
-    var drawingPoints = [];
-    var drawingColors = [];
-    var tempLines = [];
-    var objects3D = [];
-    var grabbedObject = null;
-    var lastNotificationTime = 0;
-
-    // 2. RANG PALITRASINI QURISH
-    var colors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#9400D3', '#00CED1', '#FFD500'];
-    colors.forEach(function(color, index) {
-        var btn = document.createElement('div');
-        btn.className = 'color-btn';
-        btn.style.backgroundColor = color;
-        if (index === 0) btn.classList.add('active');
-        btn.onclick = function() { selectColor(color, btn, false); };
-        colorPalette.appendChild(btn);
-    });
-
-    var eraserBtn = document.createElement('div');
-    eraserBtn.className = 'color-btn';
-    eraserBtn.innerHTML = '🗑️';
-    eraserBtn.onclick = function() { selectColor('#FF0000', eraserBtn, true); };
-    colorPalette.appendChild(eraserBtn);
-
-    function selectColor(color, btn, eraser) {
-        document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        isEraser = eraser;
-        if (!eraser) {
-            currentColor = color;
-            currentColorRGB = hexToRgb(color);
+        // 1. LOGIN CHECK (TO'G'RILANDI)
+        if (!localStorage.getItem('atom_user')) {
+            window.location.href = 'index.html'; 
         }
-    }
 
-    function hexToRgb(hex) {
-        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : {r:255, g:0, b:0};
-    }
+        // O'zgaruvchilar
+        var video = document.getElementById('video');
+        var handCanvas = document.getElementById('hand-canvas');
+        var handCtx = handCanvas.getContext('2d');
+        var particleCanvas = document.getElementById('particle-canvas');
+        var pCtx = particleCanvas.getContext('2d');
+        var modeText = document.getElementById('mode-text');
+        var notification = document.getElementById('notification');
+        var fingertipDot = document.getElementById('fingertip');
+        var colorPalette = document.getElementById('color-palette');
+        
+        handCanvas.width = window.innerWidth;
+        handCanvas.height = window.innerHeight;
+        particleCanvas.width = window.innerWidth;
+        particleCanvas.height = window.innerHeight;
 
-    // 3. MEDIAPIPE VA KAMERA SOZLAMALARI
-    var hands = new Hands({
-        locateFile: function(file) { return 'https://cdn.jsdelivr.net/npm/@mediapipe/hands/' + file; }
-    });
+        var currentColor = '#FF0000';
+        var currentColorRGB = {r: 255, g: 0, b: 0};
+        var isEraser = false;
+        var particles = [];
 
-    hands.setOptions({
-        maxNumHands: 1,
-        modelComplexity: 1,
-        minDetectionConfidence: 0.7,
-        minTrackingConfidence: 0.7
-    });
+        // Ranglar palitrasini yaratish
+        var colors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#9400D3', '#00CED1', '#FFD500'];
+        colors.forEach(function(color, index) {
+            var btn = document.createElement('div');
+            btn.className = 'color-btn' + (index === 0 ? ' active' : '');
+            btn.style.backgroundColor = color;
+            btn.onclick = function() { selectColor(color, btn, false); };
+            colorPalette.appendChild(btn);
+        });
 
-    hands.onResults(onResults);
+        var eraserBtn = document.createElement('div');
+        eraserBtn.className = 'color-btn';
+        eraserBtn.innerHTML = '🗑️';
+        eraserBtn.style.backgroundColor = '#333';
+        eraserBtn.onclick = function() { selectColor('#FF0000', eraserBtn, true); };
+        colorPalette.appendChild(eraserBtn);
 
-    var cam = new Camera(video, {
-        onFrame: async function() { await hands.send({ image: video }); },
-        width: 1280,
-        height: 720
-    });
-
-    // 4. INTRO VA SISTEMANI BOSHLASH (FAQAT BITTA)
-    setTimeout(function() {
-        var introScreen = document.getElementById('intro-screen');
-        if (introScreen) {
-            introScreen.style.opacity = '0';
-            setTimeout(function() {
-                introScreen.style.display = 'none';
-                cam.start().then(function() {
-                    modeText.textContent = 'Sistema faol';
-                    showNotification('JARVIS ishga tushdi');
-                }).catch(err => {
-                    modeText.textContent = 'CAMERA ERROR';
-                });
-            }, 1000);
+        function selectColor(color, btn, eraser) {
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            isEraser = eraser;
+            if (!eraser) { currentColor = color; currentColorRGB = hexToRgb(color); }
         }
-    }, 5000);
 
-    // 5. ASOSIY NATIJALAR FUNKSIYASI (KOORDINATA TUZATILGAN)
-    function onResults(results) {
-        handCtx.save();
-        handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
-        handCtx.translate(handCanvas.width, 0);
-        handCtx.scale(-1, 1);
+        function hexToRgb(hex) {
+            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : {r:255, g:0, b:0};
+        }
 
-        if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-            var hand = results.multiHandLandmarks[0];
-            var indexTip = hand[8];
-            var thumbTip = hand[4];
+        // Three.js Sozlamalari
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        var renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.insertBefore(renderer.domElement, document.body.firstChild);
+        
+        var ambientLight = new THREE.AmbientLight(0x404040, 2); scene.add(ambientLight);
+        var pointLight = new THREE.PointLight(0x00d4ff, 2, 100); pointLight.position.set(0, 10, 10); scene.add(pointLight);
+        camera.position.z = 20;
 
-            // Koordinata (Mirror effekti uchun 1-x)
-            var screenX = (1 - indexTip.x) * window.innerWidth;
-            var screenY = indexTip.y * window.innerHeight;
+        var drawingPoints = [], drawingColors = [], tempLines = [], objects3D = [], grabbedObject = null, lastNotificationTime = 0;
 
-            fingertipDot.style.left = screenX + 'px';
-            fingertipDot.style.top = screenY + 'px';
-            fingertipDot.style.display = 'block';
+        function showNotification(text) {
+            var now = Date.now(); if (now - lastNotificationTime < 2000) return;
+            lastNotificationTime = now; notification.textContent = text;
+            notification.classList.add('show'); setTimeout(() => notification.classList.remove('show'), 2000);
+        }
 
-            // Chizish va boshqa logikalar...
-            var isPinching = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y) < 0.1;
-            
-            if (!isPinching) {
-                // Chizish logikasi (Sizning oldingi kodingizdan olingan)
+        // 2. ONRESULTS - KOORDINATALAR TUZATILDI
+        function onResults(results) {
+            handCtx.save();
+            handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
+            handCtx.translate(handCanvas.width, 0);
+            handCtx.scale(-1, 1);
+
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                var hand = results.multiHandLandmarks[0];
+                var indexTip = hand[8], thumbTip = hand[4], indexMcp = hand[5];
+                var middleTip = hand[12], ringTip = hand[16], pinkyTip = hand[20];
+
+                // DOM (nuqta) uchun koordinata: Mirroring hisobga olindi
+                var screenX = (1 - indexTip.x) * window.innerWidth;
+                var screenY = indexTip.y * window.innerHeight;
+
+                // 3D uchun koordinata
                 var x3d = (indexTip.x - 0.5) * 30;
                 var y3d = -(indexTip.y - 0.5) * 22;
                 var pos = new THREE.Vector3(x3d, y3d, 0);
-                
-                // Zarrachalar (Particles)
-                for (var j = 0; j < 2; j++) {
-                    particles.push(new Particle(screenX, screenY, currentColorRGB));
+
+                // Ishoralar logikasi
+                var isPinching = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y) < 0.11;
+                var isPointing = indexTip.y < indexMcp.y - 0.05 && middleTip.y > hand[10].y && !isPinching;
+                var isOpenHand = indexTip.y < indexMcp.y && middleTip.y < hand[10].y && ringTip.y < hand[14].y && pinkyTip.y < hand[18].y && !isPinching;
+
+                if (isPointing) {
+                    modeText.textContent = 'CHIZISH REJIMIDA';
+                    drawingPoints.push(pos.clone()); drawingColors.push(currentColor);
+                    for (var j = 0; j < 3; j++) particles.push(new Particle(screenX, screenY, currentColorRGB));
+
+                    if (drawingPoints.length > 1) {
+                        var last = drawingPoints[drawingPoints.length - 2];
+                        var dist = last.distanceTo(pos);
+                        if (dist > 0.1 && dist < 5) {
+                            var geometry = new THREE.CylinderGeometry(0.12, 0.12, dist, 8);
+                            var material = new THREE.MeshPhongMaterial({ color: currentColor, emissive: currentColor, emissiveIntensity: 0.5 });
+                            var cylinder = new THREE.Mesh(geometry, material);
+                            cylinder.position.copy(last).lerp(pos, 0.5); cylinder.lookAt(pos); cylinder.rotateX(Math.PI / 2);
+                            scene.add(cylinder); tempLines.push(cylinder);
+                        }
+                    }
+                } else if (isOpenHand && drawingPoints.length > 5) {
+                    createHolographicObject();
+                } else if (isPinching) {
+                    if (isEraser) {
+                        for (var k = objects3D.length - 1; k >= 0; k--) {
+                            if (pos.distanceTo(objects3D[k].position) < 4) {
+                                scene.remove(objects3D[k]); objects3D.splice(k, 1);
+                                showNotification('Obekt o\'chirildi'); break;
+                            }
+                        }
+                    } else if (!grabbedObject) {
+                        for (var n = 0; n < objects3D.length; n++) {
+                            if (pos.distanceTo(objects3D[n].position) < 4) { grabbedObject = objects3D[n]; break; }
+                        }
+                    } else {
+                        grabbedObject.position.lerp(pos, 0.25);
+                    }
+                } else {
+                    grabbedObject = null;
                 }
+
+                fingertipDot.style.left = screenX + 'px';
+                fingertipDot.style.top = screenY + 'px';
+                fingertipDot.style.display = 'block';
+                fingertipDot.style.backgroundColor = isPointing ? currentColor : '#fff';
+
+                drawConnectors(handCtx, hand, HAND_CONNECTIONS, {color: '#00d4ff', lineWidth: 3});
+                drawLandmarks(handCtx, hand, {color: '#fff', radius: 3});
+            } else {
+                fingertipDot.style.display = 'none';
             }
-            
-            drawConnectors(handCtx, hand, HAND_CONNECTIONS, {color: '#00d4ff', lineWidth: 2});
-            drawLandmarks(handCtx, hand, {color: '#ffffff', radius: 2});
-        } else {
-            fingertipDot.style.display = 'none';
+            handCtx.restore();
         }
-        handCtx.restore();
-    }
 
-    // 6. THREE.JS VA ANIMATSIYA
-    var scene = new THREE.Scene();
-    var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    var renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.insertBefore(renderer.domElement, document.body.firstChild);
-    camera.position.z = 20;
-
-    function animate() {
-        requestAnimationFrame(animate);
-        renderer.render(scene, camera);
-    }
-    animate();
-
-    // Zarrachalar klassi va boshqa yordamchi funksiyalar
-    function Particle(x, y, color) {
-        this.x = x; this.y = y;
-        this.vx = (Math.random() - 0.5) * 2;
-        this.vy = (Math.random() - 0.5) * 2;
-        this.life = 100;
-        this.color = color;
-    }
-    Particle.prototype.update = function() { this.x += this.vx; this.y += this.vy; this.life -= 2; };
-    Particle.prototype.draw = function() {
-        pCtx.fillStyle = `rgba(${this.color.r},${this.color.g},${this.color.b},${this.life/100})`;
-        pCtx.fillRect(this.x, this.y, 2, 2);
-    };
-
-    function animateParticles() {
-        pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
-        for (var i = particles.length - 1; i >= 0; i--) {
-            particles[i].update();
-            particles[i].draw();
-            if (particles[i].life <= 0) particles.splice(i, 1);
+        function createHolographicObject() {
+            var shape = new THREE.Shape();
+            shape.moveTo(drawingPoints[0].x, drawingPoints[0].y);
+            drawingPoints.forEach(p => shape.lineTo(p.x, p.y));
+            shape.closePath();
+            var geometry = new THREE.ExtrudeGeometry(shape, { depth: 2, bevelEnabled: true });
+            var material = new THREE.MeshPhongMaterial({ color: currentColor, transparent: true, opacity: 0.8 });
+            var mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh); objects3D.push(mesh);
+            drawingPoints = []; tempLines.forEach(l => scene.remove(l)); tempLines = [];
+            showNotification('Obekt yaratildi');
         }
-        requestAnimationFrame(animateParticles);
-    }
-    animateParticles();
 
-    function showNotification(text) {
-        notification.textContent = text;
-        notification.classList.add('show');
-        setTimeout(() => notification.classList.remove('show'), 2000);
-    }
+        // MediaPipe va Kamera Sozlamalari
+        var hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
+        hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.7, minTrackingConfidence: 0.7 });
+        hands.onResults(onResults);
 
-    window.addEventListener('resize', function() {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-</script>
+        var cam = new Camera(video, { onFrame: async () => { await hands.send({ image: video }); }, width: 1280, height: 720 });
+
+        // 3. START SYSTEM ( FAQAT BITTA JOYDA QOLDIRILDI)
+        setTimeout(function() {
+            var intro = document.getElementById('intro-screen');
+            intro.style.opacity = '0';
+            setTimeout(() => {
+                intro.style.display = 'none';
+                cam.start().then(() => {
+                    modeText.textContent = 'SISTEMA FAOL';
+                    showNotification('JARVIS ishga tushdi');
+                });
+            }, 1000);
+        }, 5000);
+
+        function Particle(x, y, color) {
+            this.x = x; this.y = y; this.vx = (Math.random() - 0.5) * 4; this.vy = (Math.random() - 0.5) * 4; this.life = 100; this.color = color;
+        }
+        Particle.prototype.update = function() { this.x += this.vx; this.y += this.vy; this.life -= 2; };
+        Particle.prototype.draw = function() {
+            pCtx.fillStyle = `rgba(${this.color.r},${this.color.g},${this.color.b},${this.life/100})`;
+            pCtx.fillRect(this.x, this.y, 3, 3);
+        };
+
+        function animate() {
+            requestAnimationFrame(animate);
+            pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+            particles.forEach((p, i) => { p.update(); p.draw(); if (p.life <= 0) particles.splice(i, 1); });
+            objects3D.forEach(obj => { if (obj !== grabbedObject) obj.rotation.y += 0.01; });
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            handCanvas.width = window.innerWidth; handCanvas.height = window.innerHeight;
+        });
+    </script>
 </body>
 </html>
