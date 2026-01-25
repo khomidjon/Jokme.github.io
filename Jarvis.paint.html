@@ -277,6 +277,9 @@
     <div id="color-palette"></div>
 
     <script>
+        if (!localStorage.getItem('atom_user')) {
+            window.location.href = 'index.html';
+        }
 
 var animationDuration = 5000;
 setTimeout(function() {
