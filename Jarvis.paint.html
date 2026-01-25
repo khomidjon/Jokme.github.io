@@ -459,11 +459,22 @@
         var hand = results.multiHandLandmarks[0];
         var indexTip = hand[8];
 
-        var screenX = (1 - indexTip.x) * window.innerWidth;
-        var screenY = indexTip.y * window.innerHeight;
-        var x3d = (indexTip.x - 0.5) * -40; 
-        var y3d = -(indexTip.y - 0.5) * 30; 
+        var aspect = window.innerWidth / window.innerHeight;
+        var x3d = (indexTip.x - 0.5) * -aspect * 42; // Sonlarni kattalashtirdik
+        var y3d = -(indexTip.y - 0.5) * 32; 
         var pos = new THREE.Vector3(x3d, y3d, 0);
+        drawConnectors(handCtx, hand, HAND_CONNECTIONS, {color: '#00d4ff', lineWidth: 2});
+        drawLandmarks(handCtx, [hand[8]], {
+            color: '#FFD700', // Oltin rang yoki o'zing xohlagan rang
+            lineWidth: 2,
+            radius: 8
+        });
+        drawLandmarks(handCtx, hand.filter((_,i) => i !== 8), {color: '#ffffff', radius: 2});
+        if (isPointing) {
+        }
+    }
+    handCtx.restore();
+}
         fingertipDot.style.left = screenX + 'px';
         fingertipDot.style.top = screenY + 'px';
         fingertipDot.style.display = 'block';
