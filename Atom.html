@@ -161,19 +161,35 @@
         function handleLogic(hands) {
             const posAttr = geometry.attributes.position;
             let target = shapes.scatter;
+    
+            if (hands.length === 2) {
+                const d = Math.hypot(hands[0][9].x - hands[1][9].x, hands[0][9].y - hands[1][9].y);
+                const s = d * 12; 
+                particles.scale.lerp(new THREE.Vector3(s, s, s), 0.1);
+            }
 
-            hands.forEach(hand => {
+            hands.forEach(hand => 
+                const pinchDist = Math.hypot(hand[4].x - hand[8].x, hand[4].y - hand[8].y);
+                if (pinchDist < 0.05) {
+                    currentColor.setHSL(Math.random(), 0.9, 0.6);
+                }
+        
                 let f = 0;
                 [8, 12, 16, 20].forEach(idx => { if(hand[idx].y < hand[idx-2].y) f++; });
+        
                 if (f === 1) target = shapes.sphere;
                 else if (f === 2) target = shapes.heart;
                 else if (f >= 3) target = shapes.torus;
             });
 
             for (let i = 0; i < posAttr.array.length; i++) {
-                posAttr.array[i] += (target[i] - posAttr.array[i]) * 0.1;
+                if (target[i] !== undefined) {
+                    posAttr.array[i] += (target[i] - posAttr.array[i]) * 0.12;
+                }
             }
+    
             posAttr.needsUpdate = true;
+            particles.material.color.lerp(currentColor, 0.1); // Rang silliq o'zgarishi uchun
             particles.rotation.y += 0.005;
         }
 
@@ -191,6 +207,16 @@
         function animate() {
             requestAnimationFrame(animate);
             renderer.render(scene, camera);
+        }
+        if (slider) {
+            slider.oninput = function() {
+                count = parseInt(this.value);
+                countDisplay.textContent = count;
+        
+                createPointsData(count); 
+        
+                geometry.setAttribute('position', new THREE.Float32BufferAttribute(shapes.scatter, 3));
+            };
         }
         animate();
 
