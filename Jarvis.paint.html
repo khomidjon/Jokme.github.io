@@ -145,16 +145,34 @@
     <div id="color-palette"></div>
 
     <script>
-        // JS qismida faqat loginlar qoldi
-        var animationDuration = 5000;
-        setTimeout(function() {
-            var introScreen = document.getElementById('intro-screen');
-            introScreen.style.opacity = '0';
-            setTimeout(function() {
-                introScreen.style.display = 'none';
-            }, 1000);
-        }, animationDuration);
+       
+var animationDuration = 5000; 
 
+setTimeout(function() {
+    var introScreen = document.getElementById('intro-screen');
+    if (introScreen) {
+        introScreen.style.opacity = '0'; // Sekin yo'qolishi
+        
+        // 1 soniya kutib, domdan butunlay o'chirib tashlaymiz
+        setTimeout(function() {
+            introScreen.style.display = 'none'; 
+            console.log("Intro finished. Systems starting...");
+            
+            // Kamera va tizimni faqat intro tugagandan keyin ishga tushirish (resursni tejash)
+            startJarvisSystem(); 
+        }, 1000);
+    }
+}, animationDuration);
+
+function startJarvisSystem() {
+    cam.start().then(function() {
+        modeText.textContent = 'SYSTEM ONLINE';
+        showNotification('Welcome, Sir. All systems operational.');
+    }).catch(function(err) {
+        console.error("Camera error: ", err);
+        modeText.textContent = 'CAMERA ERROR';
+    });
+}
         // ... Qolgan barcha JS kodingiz shu yerda davom etadi ...
         var video = document.getElementById('video');
         var handCanvas = document.getElementById('hand-canvas');
