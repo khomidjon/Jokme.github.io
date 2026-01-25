@@ -122,52 +122,53 @@
     </div>
 
     <script>
-        // Google kirish javobini qayta ishlash
+    // 1. SAHIFAGA KIRGANDA TEKSHIRISH: 
+    // Agar foydalanuvchi ma'lumotlari xotirada bo'lsa, srazu dashboardga yuboramiz
+        if (localStorage.getItem('atom_user')) {
+            window.location.href = 'dashboard.html';
+        }
+
+        // 2. Google dan javob kelganda ishlaydigan funksiya
         function handleCredentialResponse(response) {
-            console.log("Login jarayoni boshlandi...");
+            console.log("Login jarayoni muvaffaqiyatli...");
             try {
-                // JWT tokenni dekodlash (foydalanuvchi ma'lumotlarini olish)
+                // JWT tokenni dekodlash
                 const base64Url = response.credential.split('.')[1];
                 const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
                 const payload = JSON.parse(window.atob(base64));
 
-                console.log("Salom, " + payload.name);
-
-                // Ma'lumotni brauzer xotirasiga saqlash
+            // Ma'lumotlarni saqlash
                 localStorage.setItem('atom_user', JSON.stringify({
                     name: payload.name,
                     email: payload.email,
                     picture: payload.picture
                 }));
 
-                // Dashboardga o'tish
+                // Dashboardga yo'naltirish
                 window.location.href = 'dashboard.html';
+            
             } catch (e) {
-                console.error("Dekodlashda xatolik:", e);
+                console.error("Xatolik:", e);
+                alert("Kirishda muammo bo'ldi, qaytadan urinib ko'ring.");
             }
         }
 
         window.onload = function () {
-            // 1. Google Identity-ni ishga tushirish
             google.accounts.id.initialize({
                 client_id: "532407535407-t122jsgms7oqvtei0p46sb3bql3bpptu.apps.googleusercontent.com",
                 callback: handleCredentialResponse,
-                auto_select: true, // Akkaunt bo'lsa avtomatik tanlaydi
+                auto_select: true, // Akkaunt bo'lsa, foydalanuvchidan so'ramay avtomatik kiradi
                 itp_support: true
             });
 
-            // 2. Standart tugmani chizish (Agar One Tap chiqmasa kerak bo'ladi)
+        // Standart tugma (agar avtomatik chiqmasa)
             google.accounts.id.renderButton(
                 document.getElementById("buttonDiv"),
                 { theme: "filled_black", size: "large", shape: "pill", width: 250 }
             );
 
-            // 3. One Tap (Avtomatik akkaunt tanlash oynasi)ni chiqarish
-            google.accounts.id.prompt((notification) => {
-                if (notification.isNotDisplayed()) {
-                    console.warn("One Tap ko'rinmadi. Sababi:", notification.getNotDisplayedReason());
-                }
-            });
+        // One Tap oynasini chiqarish
+            google.accounts.id.prompt();
         };
     </script>
 </body>
