@@ -59,12 +59,15 @@
     <span class="logout" onclick="localStorage.clear(); location.href='index.html'">Chiqish</span>
 
     <script>
-        const user = JSON.parse(localStorage.getItem('atom_user'));
-        if(!user) location.href = 'index.html';
-        
-        document.getElementById('u-img').src = user.picture;
-        document.getElementById('u-name').innerText = user.name;
-        document.getElementById('u-email').innerText = user.email;
+       const user = JSON.parse(localStorage.getItem('atom_user'));
+
+        if (!user) {
+            console.log("Foydalanuvchi topilmadi, orqaga qaytish...");
+            window.location.href = 'index.html';
+        } else {
+            document.getElementById('u-name').innerText = user.name;
+            document.getElementById('u-img').src = user.picture;
+        }
     </script>
 </body>
 </html>
