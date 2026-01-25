@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JARVIS AI Interface</title>
+    <title>JARVIS Paint</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
@@ -215,38 +215,6 @@
             z-index: 25;
             transition: all 0.1s;
         }
-        
-        #controls {
-            position: absolute;
-            top: 150px;
-            left: 30px;
-            background: rgba(0, 20, 40, 0.9);
-            border: 1px solid #00d4ff;
-            padding: 15px;
-            border-radius: 10px;
-            pointer-events: all;
-            z-index: 20;
-        }
-        
-        .control-btn {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            margin: 8px 0;
-            background: rgba(0, 212, 255, 0.2);
-            border: 1px solid #00d4ff;
-            color: #00d4ff;
-            cursor: pointer;
-            border-radius: 5px;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            transition: all 0.3s;
-        }
-        
-        .control-btn:hover {
-            background: rgba(0, 212, 255, 0.4);
-            box-shadow: 0 0 15px rgba(0, 212, 255, 0.6);
-        }
         .glass-back-btn {
             position: fixed;
             top: 25px;
@@ -259,7 +227,7 @@
             color: rgba(255, 255, 255, 0.9);
             font-family: 'Courier New', monospace;
             font-size: 16px;
-            z-index: 10001; /* Hamma narsadan, hatto intro-dan ham tepada turadi */
+            z-index: 10001;
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(15px) saturate(150%);
             -webkit-backdrop-filter: blur(15px) saturate(150%);
@@ -268,21 +236,20 @@
             box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-    
+
         .glass-back-btn:hover {
             background: rgba(0, 212, 255, 0.2);
             border-color: #00d4ff;
             transform: scale(1.05) translateX(5px);
             box-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
         }
-    
+
         .chevron {
             font-size: 24px;
             line-height: 0;
-            color: #00e1ff;
+            color: #00d4ff;
         }
     </style>
-
 </head>
 <body>
     <a href="dashboard.html" class="glass-back-btn">
@@ -304,17 +271,11 @@
         <div class="scan-line"></div>
         
         <div id="status-panel">
-            <div id="jarvis-text">JARVIS AI SYSTEM</div>
-            <div id="mode-text">INITIALIZING...</div>
+            <div id="jarvis-text">JARVIS AI Sistemasi</div>
+            <div id="mode-text">KUTING...</div>
         </div>
         
         <div id="notification"></div>
-    </div>
-    
-    <div id="controls">
-        <button class="control-btn" onclick="undoLastAction()">↶ UNDO</button>
-        <button class="control-btn" onclick="clearAllObjects()">✕ CLEAR ALL</button>
-        <button class="control-btn" onclick="saveScene()">💾 SAVE</button>
     </div>
     
     <div id="color-palette"></div>
@@ -323,366 +284,329 @@
         if (!localStorage.getItem('atom_user')) {
             window.location.href = 'index.html'; 
         }
-        var introDuration = 5000;
+        var animationDuration = 5000;
         setTimeout(function() {
-            var intro = document.getElementById('intro-screen');
-            intro.style.opacity = '0';
+            var introScreen = document.getElementById('intro-screen');
+            introScreen.style.opacity = '0';
             setTimeout(function() {
-                intro.style.display = 'none';
+                introScreen.style.display = 'none';
             }, 1000);
-        }, introDuration);
+        }, animationDuration);
 
-        var videoEl = document.getElementById('video');
-        var handCanv = document.getElementById('hand-canvas');
-        var handContext = handCanv.getContext('2d');
-        var partCanv = document.getElementById('particle-canvas');
-        var partContext = partCanv.getContext('2d');
-        var statusMode = document.getElementById('mode-text');
-        var notifyBox = document.getElementById('notification');
-        var tipDot = document.getElementById('fingertip');
-        var paletteDiv = document.getElementById('color-palette');
+        var video = document.getElementById('video');
+        var handCanvas = document.getElementById('hand-canvas');
+        var handCtx = handCanvas.getContext('2d');
+        var particleCanvas = document.getElementById('particle-canvas');
+        var pCtx = particleCanvas.getContext('2d');
+        var modeText = document.getElementById('mode-text');
+        var notification = document.getElementById('notification');
+        var fingertipDot = document.getElementById('fingertip');
+        var colorPalette = document.getElementById('color-palette');
         
-        handCanv.width = window.innerWidth;
-        handCanv.height = window.innerHeight;
-        partCanv.width = window.innerWidth;
-        partCanv.height = window.innerHeight;
+        handCanvas.width = window.innerWidth;
+        handCanvas.height = window.innerHeight;
+        particleCanvas.width = window.innerWidth;
+        particleCanvas.height = window.innerHeight;
         
-        var colorArray = [
+        var colors = [
             '#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF',
             '#4B0082', '#9400D3', '#FF1493', '#00CED1', '#FFD700',
             '#FF69B4', '#8B4513', '#2E8B57', '#DC143C', '#00BFFF',
             '#FF6347', '#9370DB', '#3CB371', '#FF4500', '#1E90FF'
         ];
         
-        var activeColor = '#FF0000';
-        var activeColorRGB = parseHexColor(activeColor);
-        var eraserActive = false;
+        var currentColor = '#FF0000';
+        var currentColorRGB = hexToRgb(currentColor);
+        var isEraser = false;
         
-        for (var idx = 0; idx < colorArray.length; idx++) {
-            var colorButton = document.createElement('div');
-            colorButton.className = 'color-btn';
-            colorButton.style.backgroundColor = colorArray[idx];
-            if (idx === 0) colorButton.classList.add('active');
-            colorButton.setAttribute('data-color', colorArray[idx]);
-            colorButton.onclick = function() { 
-                switchColor(this.getAttribute('data-color'), this, false); 
-            };
-            paletteDiv.appendChild(colorButton);
-        }
+        colors.forEach(function(color, index) {
+            var btn = document.createElement('div');
+            btn.className = 'color-btn';
+            btn.style.backgroundColor = color;
+            if (index === 0) btn.classList.add('active');
+            btn.onclick = function() { selectColor(color, btn, false); };
+            colorPalette.appendChild(btn);
+        });
         
-        var eraserButton = document.createElement('div');
-        eraserButton.className = 'color-btn';
-        eraserButton.innerHTML = '🗑️';
-        eraserButton.style.backgroundColor = '#333';
-        eraserButton.style.display = 'flex';
-        eraserButton.style.alignItems = 'center';
-        eraserButton.style.justifyContent = 'center';
-        eraserButton.style.fontSize = '24px';
-        eraserButton.onclick = function() { 
-            switchColor('#FF0000', eraserButton, true); 
-        };
-        paletteDiv.appendChild(eraserButton);
+        var eraserBtn = document.createElement('div');
+        eraserBtn.className = 'color-btn';
+        eraserBtn.innerHTML = '⛔️';
+        eraserBtn.style.backgroundColor = '#333';
+        eraserBtn.style.display = 'flex';
+        eraserBtn.style.alignItems = 'center';
+        eraserBtn.style.justifyContent = 'center';
+        eraserBtn.style.fontSize = '24px';
+        eraserBtn.onclick = function() { selectColor('#FF0000', eraserBtn, true); };
+        colorPalette.appendChild(eraserBtn);
         
-        function switchColor(clr, btn, erase) {
-            var allButtons = document.querySelectorAll('.color-btn');
-            for (var b = 0; b < allButtons.length; b++) {
-                allButtons[b].classList.remove('active');
+        function selectColor(color, btn, eraser) {
+            var allBtns = document.querySelectorAll('.color-btn');
+            for (var i = 0; i < allBtns.length; i++) {
+                allBtns[i].classList.remove('active');
             }
             btn.classList.add('active');
-            eraserActive = erase;
-            if (!erase) {
-                activeColor = clr;
-                activeColorRGB = parseHexColor(clr);
+            isEraser = eraser;
+            if (!eraser) {
+                currentColor = color;
+                currentColorRGB = hexToRgb(color);
             }
         }
         
-        function parseHexColor(hexCode) {
-            var match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hexCode);
-            return match ? {
-                r: parseInt(match[1], 16),
-                g: parseInt(match[2], 16),
-                b: parseInt(match[3], 16)
+        function hexToRgb(hex) {
+            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
             } : {r: 255, g: 0, b: 0};
         }
         
-        for (var gridIdx = 0; gridIdx < 10; gridIdx++) {
-            var horzLine = document.createElement('div');
-            horzLine.className = 'grid-line grid-h';
-            horzLine.style.top = (gridIdx * 10) + '%';
-            document.body.appendChild(horzLine);
+        for (var i = 0; i < 10; i++) {
+            var hLine = document.createElement('div');
+            hLine.className = 'grid-line grid-h';
+            hLine.style.top = (i * 10) + '%';
+            document.body.appendChild(hLine);
             
-            var vertLine = document.createElement('div');
-            vertLine.className = 'grid-line grid-v';
-            vertLine.style.left = (gridIdx * 10) + '%';
-            document.body.appendChild(vertLine);
+            var vLine = document.createElement('div');
+            vLine.className = 'grid-line grid-v';
+            vLine.style.left = (i * 10) + '%';
+            document.body.appendChild(vLine);
         }
         
-        var particleList = [];
-        
-        function ParticleObj(xPos, yPos, colorData) {
-            this.x = xPos;
-            this.y = yPos;
+        var particles = [];
+        function Particle(x, y, color) {
+            this.x = x;
+            this.y = y;
             this.vx = (Math.random() - 0.5) * 2;
             this.vy = (Math.random() - 0.5) * 2;
-            this.lifetime = 100;
-            this.sz = Math.random() * 3 + 1;
-            this.clr = colorData || {r: 0, g: 212, b: 255};
+            this.life = 100;
+            this.size = Math.random() * 3 + 1;
+            this.color = color || {r: 0, g: 212, b: 255};
         }
         
-        ParticleObj.prototype.step = function() {
+        Particle.prototype.update = function() {
             this.x += this.vx;
             this.y += this.vy;
-            this.lifetime -= 2;
+            this.life -= 2;
         };
         
-        ParticleObj.prototype.drawParticle = function() {
-            var alpha = this.lifetime / 100;
-            partContext.fillStyle = 'rgba(' + this.clr.r + ', ' + this.clr.g + ', ' + this.clr.b + ', ' + alpha + ')';
-            partContext.fillRect(this.x, this.y, this.sz, this.sz);
-            partContext.shadowBlur = 10;
-            partContext.shadowColor = activeColor;
+        Particle.prototype.draw = function() {
+            pCtx.fillStyle = 'rgba(' + this.color.r + ', ' + this.color.g + ', ' + this.color.b + ', ' + (this.life / 100) + ')';
+            pCtx.fillRect(this.x, this.y, this.size, this.size);
+            pCtx.shadowBlur = 10;
+            pCtx.shadowColor = currentColor;
         };
         
-        function updateParticles() {
-            partContext.clearRect(0, 0, partCanv.width, partCanv.height);
+        function animateParticles() {
+            pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
             
-            for (var pIdx = particleList.length - 1; pIdx >= 0; pIdx--) {
-                particleList[pIdx].step();
-                particleList[pIdx].drawParticle();
+            for (var i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
                 
-                if (particleList[pIdx].lifetime <= 0) {
-                    particleList.splice(pIdx, 1);
+                if (particles[i].life <= 0) {
+                    particles.splice(i, 1);
                 }
             }
             
-            requestAnimationFrame(updateParticles);
+            requestAnimationFrame(animateParticles);
         }
-        updateParticles();
+        animateParticles();
         
-        var mainScene = new THREE.Scene();
-        var mainCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        var mainRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-        mainRenderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.insertBefore(mainRenderer.domElement, document.body.firstChild);
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        var renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.insertBefore(renderer.domElement, document.body.firstChild);
         
-        var ambLight = new THREE.AmbientLight(0x404040, 2);
-        mainScene.add(ambLight);
+        var ambientLight = new THREE.AmbientLight(0x404040, 2);
+        scene.add(ambientLight);
         
-        var pointLightSrc = new THREE.PointLight(0x00d4ff, 2, 100);
-        pointLightSrc.position.set(0, 10, 10);
-        mainScene.add(pointLightSrc);
+        var pointLight = new THREE.PointLight(0x00d4ff, 2, 100);
+        pointLight.position.set(0, 10, 10);
+        scene.add(pointLight);
         
-        mainCamera.position.z = 20;
+        camera.position.z = 20;
         
-        var sketchPoints = [];
-        var sketchColors = [];
-        var currentStrokeMesh = null;
-        var finishedObjects = [];
-        var heldObject = null;
-        var lastNotifyTimestamp = 0;
-        var historyStack = [];
+        var drawingPoints = [];
+        var drawingColors = [];
+        var tempLines = [];
+        var objects3D = [];
+        var grabbedObject = null;
+        var lastNotificationTime = 0;
         
-        function displayNotify(msg) {
-            var nowTime = Date.now();
-            if (nowTime - lastNotifyTimestamp < 2000) return;
-            lastNotifyTimestamp = nowTime;
+        function showNotification(text) {
+            var now = Date.now();
+            if (now - lastNotificationTime < 2000) return;
+            lastNotificationTime = now;
             
-            notifyBox.textContent = msg;
-            notifyBox.classList.add('show');
+            notification.textContent = text;
+            notification.classList.add('show');
             
             setTimeout(function() {
-                notifyBox.classList.remove('show');
+                notification.classList.remove('show');
             }, 2000);
         }
         
-        function clearAllObjects() {
-            while (finishedObjects.length > 0) {
-                var obj = finishedObjects.pop();
-                mainScene.remove(obj);
-            }
-            if (currentStrokeMesh) {
-                mainScene.remove(currentStrokeMesh);
-                currentStrokeMesh = null;
-            }
-            sketchPoints = [];
-            sketchColors = [];
-            historyStack = [];
-            displayNotify('All objects cleared');
-        }
-        
-        function undoLastAction() {
-            if (finishedObjects.length > 0) {
-                var lastObj = finishedObjects.pop();
-                mainScene.remove(lastObj);
-                historyStack.push(lastObj);
-                displayNotify('Undo successful');
-            }
-        }
-        
-        function saveScene() {
-            displayNotify('Save feature coming soon!');
-        }
-        
-        function handleHandResults(results) {
-            handCanv.width = window.innerWidth;
-            handCanv.height = window.innerHeight;
-            handContext.clearRect(0, 0, handCanv.width, handCanv.height);
+        function onResults(results) {
+            handCanvas.width = window.innerWidth;
+            handCanvas.height = window.innerHeight;
+            handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
             
-            handContext.save();
-            handContext.translate(handCanv.width, 0);
-            handContext.scale(-1, 1);
+            handCtx.save();
+            handCtx.translate(handCanvas.width, 0);
+            handCtx.scale(-1, 1);
             
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                var handLandmarks = results.multiHandLandmarks[0];
+                var hand = results.multiHandLandmarks[0];
                 
-                var idxTip = handLandmarks[8];
-                var idxBase = handLandmarks[5];
-                var thmTip = handLandmarks[4];
-                var midTip = handLandmarks[12];
-                var rngTip = handLandmarks[16];
-                var pnkTip = handLandmarks[20];
+                var indexTip = hand[8];
+                var indexMcp = hand[5];
+                var thumbTip = hand[4];
+                var middleTip = hand[12];
+                var ringTip = hand[16];
+                var pinkyTip = hand[20];
                 
-                var scrX = (1 - idxTip.x) * window.innerWidth;
-                var scrY = idxTip.y * window.innerHeight;
+                var screenX = (1 - indexTip.x) * window.innerWidth;
+                var screenY = indexTip.y * window.innerHeight;
                 
-                var worldX = (scrX / window.innerWidth - 0.5) * 30;
-                var worldY = -(scrY / window.innerHeight - 0.5) * 22;
-                var worldPos = new THREE.Vector3(worldX, worldY, 0);
+                var x = (screenX / window.innerWidth - 0.5) * 30;
+                var y = -(screenY / window.innerHeight - 0.5) * 22;
+                var pos = new THREE.Vector3(x, y, 0);
                 
-                var pinchDist = Math.hypot(idxTip.x - thmTip.x, idxTip.y - thmTip.y);
-                var isPinch = pinchDist < 0.11;
-                var idxUp = idxTip.y < idxBase.y - 0.05;
-                var midDown = midTip.y > handLandmarks[10].y;
-                var rngDown = rngTip.y > handLandmarks[14].y;
-                var pnkDown = pnkTip.y > handLandmarks[18].y;
-                var isPoint = idxUp && midDown && rngDown && pnkDown && !isPinch;
+                var isPinching = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y) < 0.11;
+                var indexExtended = indexTip.y < indexMcp.y - 0.05;
+                var middleFolded = middleTip.y > hand[10].y;
+                var ringFolded = ringTip.y > hand[14].y;
+                var pinkyFolded = pinkyTip.y > hand[18].y;
+                var isPointing = indexExtended && middleFolded && ringFolded && pinkyFolded && !isPinching;
                 
-                var allUp = idxTip.y < idxBase.y && midTip.y < handLandmarks[10].y && 
-                            rngTip.y < handLandmarks[14].y && pnkTip.y < handLandmarks[18].y;
-                var isOpen = allUp && !isPinch;
+                var allExtended = indexTip.y < indexMcp.y && middleTip.y < hand[10].y && 
+                                  ringTip.y < hand[14].y && pinkyTip.y < hand[18].y;
+                var isOpenHand = allExtended && !isPinching;
                 
-                var skelClr = '#00d4ff';
-                var dotClr = '#ffffff';
-                var dotSz = '15px';
+                var skeletonColor = '#00d4ff';
+                var dotColor = '#ffffff';
+                var dotSize = '15px';
                 
-                if (isPoint) {
-                    statusMode.textContent = 'DRAWING MODE ACTIVE';
-                    skelClr = '#FFA500';
-                    dotClr = '#FFA500';
-                    dotSz = '20px';
+                if (isPointing) {
+                    modeText.textContent = 'CHIZISH REJIMI';
+                    skeletonColor = '#FFA500';
+                    dotColor = '#FFA500';
+                    dotSize = '20px';
                     
-                    sketchPoints.push(worldPos.clone());
-                    sketchColors.push(activeColor);
+                    drawingPoints.push(pos.clone());
+                    drawingColors.push(currentColor);
                     
-                    var partX = (1 - idxTip.x) * partCanv.width;
-                    var partY = idxTip.y * partCanv.height;
-                    for (var pCnt = 0; pCnt < 3; pCnt++) {
-                        particleList.push(new ParticleObj(partX, partY, activeColorRGB));
+                    var particleScreenX = (1 - indexTip.x) * particleCanvas.width;
+                    var particleScreenY = indexTip.y * particleCanvas.height;
+                    for (var j = 0; j < 3; j++) {
+                        particles.push(new Particle(particleScreenX, particleScreenY, currentColorRGB));
                     }
                     
-                    if (sketchPoints.length > 2) {
-                        updateSmoothStroke();
-                    }
-                } else if (isOpen && sketchPoints.length > 5) {
-                    statusMode.textContent = 'RENDERING 3D OBJECT...';
-                    displayNotify('Sir, object rendered successfully');
-                    buildSolidObject();
-                    skelClr = '#00FF00';
-                    dotClr = '#00FF00';
-                } else if (isPinch) {
-                    if (eraserActive) {
-                        statusMode.textContent = 'ERASER MODE - DELETE OBJECT';
-                        skelClr = '#FF0000';
-                        dotClr = '#FF0000';
-                        dotSz = '22px';
+                    if (drawingPoints.length > 1) {
+                        var last = drawingPoints[drawingPoints.length - 2];
+                        var dist = last.distanceTo(pos);
                         
-                        if (!heldObject) {
-                            for (var objIdx = finishedObjects.length - 1; objIdx >= 0; objIdx--) {
-                                if (worldPos.distanceTo(finishedObjects[objIdx].position) < 4) {
-                                    mainScene.remove(finishedObjects[objIdx]);
-                                    finishedObjects.splice(objIdx, 1);
-                                    displayNotify('Object deleted');
+                        if (dist > 0.1 && dist < 5) {
+                            var geometry = new THREE.CylinderGeometry(0.12, 0.12, dist, 8);
+                            var material = new THREE.MeshPhongMaterial({ 
+                                color: currentColor,
+                                emissive: currentColor,
+                                emissiveIntensity: 0.5
+                            });
+                            var cylinder = new THREE.Mesh(geometry, material);
+                            cylinder.position.copy(last).lerp(pos, 0.5);
+                            cylinder.lookAt(pos);
+                            cylinder.rotateX(Math.PI / 2);
+                            scene.add(cylinder);
+                            tempLines.push(cylinder);
+                        }
+                    }
+                } else if (isOpenHand && drawingPoints.length > 5) {
+                    modeText.textContent = 'RENDERING 3D OBJECT...';
+                    showNotification('OBYEKT 3D SHAKLLANTIRILDI');
+                    createHolographicObject();
+                    skeletonColor = '#00FF00';
+                    dotColor = '#00FF00';
+                } else if (isPinching) {
+                    if (isEraser) {
+                        modeText.textContent = 'OBEKT OCHIRILDI';
+                        skeletonColor = '#FF0000';
+                        dotColor = '#FF0000';
+                        dotSize = '22px';
+                        
+                        if (!grabbedObject) {
+                            for (var k = objects3D.length - 1; k >= 0; k--) {
+                                if (pos.distanceTo(objects3D[k].position) < 4) {
+                                    scene.remove(objects3D[k]);
+                                    objects3D.splice(k, 1);
+                                    showNotification('Object deleted');
                                     
-                                    for (var burstCnt = 0; burstCnt < 30; burstCnt++) {
-                                        var randX = Math.random() * partCanv.width;
-                                        var randY = Math.random() * partCanv.height;
-                                        particleList.push(new ParticleObj(randX, randY, {r: 255, g: 0, b: 0}));
+                                    for (var m = 0; m < 30; m++) {
+                                        var px = Math.random() * particleCanvas.width;
+                                        var py = Math.random() * particleCanvas.height;
+                                        particles.push(new Particle(px, py, {r: 255, g: 0, b: 0}));
                                     }
                                     break;
                                 }
                             }
                         }
                     } else {
-                        statusMode.textContent = 'MANIPULATION MODE';
-                        skelClr = '#00FF00';
-                        dotClr = '#00FF00';
-                        dotSz = '18px';
+                        modeText.textContent = 'MANIPULATION MODE';
+                        skeletonColor = '#00FF00';
+                        dotColor = '#00FF00';
+                        dotSize = '18px';
                         
-                        if (!heldObject) {
-                            for (var searchIdx = 0; searchIdx < finishedObjects.length; searchIdx++) {
-                                if (worldPos.distanceTo(finishedObjects[searchIdx].position) < 4) {
-                                    heldObject = finishedObjects[searchIdx];
-                                    displayNotify('Object locked');
+                        if (!grabbedObject) {
+                            for (var n = 0; n < objects3D.length; n++) {
+                                if (pos.distanceTo(objects3D[n].position) < 4) {
+                                    grabbedObject = objects3D[n];
+                                    showNotification('OBYEKT BLOKLANDI');
                                     break;
                                 }
                             }
                         } else {
-                            heldObject.position.lerp(worldPos, 0.25);
-                            heldObject.rotation.y += 0.02;
+                            grabbedObject.position.lerp(pos, 0.25);
+                            grabbedObject.rotation.y += 0.02;
                         }
                     }
                 } else {
-                    statusMode.textContent = 'STANDBY MODE';
-                    dotClr = '#ffffff';
-                    heldObject = null;
+                    modeText.textContent = 'OBYEKTNI USHLASH';
+                    dotColor = '#ffffff';
+                    grabbedObject = null;
                 }
                 
-                tipDot.style.left = scrX + 'px';
-                tipDot.style.top = scrY + 'px';
-                tipDot.style.width = dotSz;
-                tipDot.style.height = dotSz;
-                tipDot.style.backgroundColor = dotClr;
-                tipDot.style.boxShadow = '0 0 20px ' + dotClr + ', 0 0 40px ' + dotClr;
-                tipDot.style.display = 'block';
+                fingertipDot.style.left = screenX + 'px';
+                fingertipDot.style.top = screenY + 'px';
+                fingertipDot.style.width = dotSize;
+                fingertipDot.style.height = dotSize;
+                fingertipDot.style.backgroundColor = dotColor;
+                fingertipDot.style.boxShadow = '0 0 20px ' + dotColor + ', 0 0 40px ' + dotColor;
+                fingertipDot.style.display = 'block';
                 
-                drawConnectors(handContext, handLandmarks, HAND_CONNECTIONS, {color: skelClr, lineWidth: 3});
-                drawLandmarks(handContext, handLandmarks, {color: skelClr, radius: 3, fillColor: skelClr});
+                drawConnectors(handCtx, hand, HAND_CONNECTIONS, {color: skeletonColor, lineWidth: 3});
+                drawLandmarks(handCtx, hand, {color: skeletonColor, radius: 3, fillColor: skeletonColor});
                 
             } else {
-                statusMode.textContent = 'AWAITING HAND INPUT';
-                tipDot.style.display = 'none';
+                modeText.textContent = 'QO"LINGIZNI KORSATING';
+                fingertipDot.style.display = 'none';
             }
             
-            handContext.restore();
+            handCtx.restore();
         }
         
-        function updateSmoothStroke() {
-            if (currentStrokeMesh) {
-                mainScene.remove(currentStrokeMesh);
+        function createHolographicObject() {
+            if (drawingPoints.length < 5) return;
+            
+            var shape = new THREE.Shape();
+            shape.moveTo(drawingPoints[0].x, drawingPoints[0].y);
+            for (var p = 0; p < drawingPoints.length; p++) {
+                shape.lineTo(drawingPoints[p].x, drawingPoints[p].y);
             }
+            shape.closePath();
             
-            var curvePath = new THREE.CatmullRomCurve3(sketchPoints);
-            var tubeGeo = new THREE.TubeGeometry(curvePath, sketchPoints.length * 2, 0.08, 8, false);
-            var tubeMat = new THREE.MeshPhongMaterial({ 
-                color: activeColor,
-                emissive: activeColor,
-                emissiveIntensity: 0.5
-            });
-            currentStrokeMesh = new THREE.Mesh(tubeGeo, tubeMat);
-            mainScene.add(currentStrokeMesh);
-        }
-        
-        function buildSolidObject() {
-            if (sketchPoints.length < 5) return;
-            
-            var outlineShape = new THREE.Shape();
-            outlineShape.moveTo(sketchPoints[0].x, sketchPoints[0].y);
-            for (var ptIdx = 0; ptIdx < sketchPoints.length; ptIdx++) {
-                outlineShape.lineTo(sketchPoints[ptIdx].x, sketchPoints[ptIdx].y);
-            }
-            outlineShape.closePath();
-            
-            var solidGeo = new THREE.ExtrudeGeometry(outlineShape, { 
+            var geometry = new THREE.ExtrudeGeometry(shape, { 
                 depth: 2, 
                 bevelEnabled: true, 
                 bevelThickness: 0.3, 
@@ -690,93 +614,87 @@
                 bevelSegments: 5
             });
             
-            var midColor = sketchColors[Math.floor(sketchColors.length / 2)] || activeColor;
+            var dominantColor = drawingColors[Math.floor(drawingColors.length / 2)] || currentColor;
             
-            var solidMat = new THREE.MeshPhongMaterial({ 
-                color: midColor,
-                emissive: midColor,
+            var material = new THREE.MeshPhongMaterial({ 
+                color: dominantColor,
+                emissive: dominantColor,
                 emissiveIntensity: 0.3,
                 transparent: true,
                 opacity: 0.9,
                 shininess: 100
             });
             
-            var solidMesh = new THREE.Mesh(solidGeo, solidMat);
+            var mesh = new THREE.Mesh(geometry, material);
             
-            solidGeo.computeBoundingBox();
-            var centerPt = new THREE.Vector3();
-            solidGeo.boundingBox.getCenter(centerPt);
-            solidGeo.translate(-centerPt.x, -centerPt.y, -centerPt.z);
-            solidMesh.position.copy(centerPt);
+            geometry.computeBoundingBox();
+            var center = new THREE.Vector3();
+            geometry.boundingBox.getCenter(center);
+            geometry.translate(-center.x, -center.y, -center.z);
+            mesh.position.copy(center);
             
-            mainScene.add(solidMesh);
-            finishedObjects.push(solidMesh);
+            scene.add(mesh);
+            objects3D.push(mesh);
             
-            for (var explIdx = 0; explIdx < 50; explIdx++) {
-                var explX = Math.random() * partCanv.width;
-                var explY = Math.random() * partCanv.height;
-                particleList.push(new ParticleObj(explX, explY, parseHexColor(midColor)));
+            for (var q = 0; q < 50; q++) {
+                var rx = Math.random() * particleCanvas.width;
+                var ry = Math.random() * particleCanvas.height;
+                particles.push(new Particle(rx, ry, hexToRgb(dominantColor)));
             }
             
-            if (currentStrokeMesh) {
-                mainScene.remove(currentStrokeMesh);
-                currentStrokeMesh = null;
+            drawingPoints = [];
+            drawingColors = [];
+            for (var t = 0; t < tempLines.length; t++) {
+                scene.remove(tempLines[t]);
             }
-            
-            sketchPoints = [];
-            sketchColors = [];
+            tempLines = [];
         }
         
-        var handDetector = new Hands({
-            locateFile: function(fileName) { 
-                return 'https://cdn.jsdelivr.net/npm/@mediapipe/hands/' + fileName; 
-            }
+        var hands = new Hands({
+            locateFile: function(file) { return 'https://cdn.jsdelivr.net/npm/@mediapipe/hands/' + file; }
         });
         
-        handDetector.setOptions({
+        hands.setOptions({
             maxNumHands: 1,
             modelComplexity: 1,
             minDetectionConfidence: 0.7,
             minTrackingConfidence: 0.7
         });
         
-        handDetector.onResults(handleHandResults);
+        hands.onResults(onResults);
         
-        var cameraSource = new Camera(videoEl, {
-            onFrame: function() { 
-                handDetector.send({ image: videoEl }); 
-            },
+        var cam = new Camera(video, {
+            onFrame: async function() { await hands.send({ image: video }); },
             width: 1280,
             height: 720
         });
         
         setTimeout(function() {
-            cameraSource.start();
-            setTimeout(function() {
-                statusMode.textContent = 'SYSTEM ONLINE';
-                displayNotify('Welcome, Sir. All systems operational.');
-            }, 500);
-        }, 6100);
+            cam.start().then(function() {
+                modeText.textContent = 'SISTEMA ISHLAMOQDA';
+                showNotification('XUSH KELIBSIZ');
+            });
+        }, 6000);
         
-        function renderScene() {
-            requestAnimationFrame(renderScene);
+        function animate() {
+            requestAnimationFrame(animate);
             
-            for (var rotIdx = 0; rotIdx < finishedObjects.length; rotIdx++) {
-                finishedObjects[rotIdx].rotation.y += 0.005;
+            for (var o = 0; o < objects3D.length; o++) {
+                objects3D[o].rotation.y += 0.005;
             }
             
-            mainRenderer.render(mainScene, mainCamera);
+            renderer.render(scene, camera);
         }
-        renderScene();
+        animate();
         
         window.addEventListener('resize', function() {
-            mainCamera.aspect = window.innerWidth / window.innerHeight;
-            mainCamera.updateProjectionMatrix();
-            mainRenderer.setSize(window.innerWidth, window.innerHeight);
-            handCanv.width = window.innerWidth;
-            handCanv.height = window.innerHeight;
-            partCanv.width = window.innerWidth;
-            partCanv.height = window.innerHeight;
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            handCanvas.width = window.innerWidth;
+            handCanvas.height = window.innerHeight;
+            particleCanvas.width = window.innerWidth;
+            particleCanvas.height = window.innerHeight;
         });
     </script>
 </body>
