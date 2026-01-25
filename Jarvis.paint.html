@@ -465,16 +465,17 @@
         var pos = new THREE.Vector3(x3d, y3d, 0);
         drawConnectors(handCtx, hand, HAND_CONNECTIONS, {color: '#00d4ff', lineWidth: 2});
         drawLandmarks(handCtx, [hand[8]], {
-            color: '#FFD700', // Oltin rang yoki o'zing xohlagan rang
-            lineWidth: 2,
-            radius: 8
+            color: '#FFD700', 
+            radius: 8,       
+            fillColor: '#FFD700'
         });
-        drawLandmarks(handCtx, hand.filter((_,i) => i !== 8), {color: '#ffffff', radius: 2});
-        if (isPointing) {
-        }
+        drawLandmarks(handCtx, hand.filter((_,i) => i !== 8), {
+    color: '#ffffff', 
+    radius: 2
+        });
     }
+        }
     handCtx.restore();
-}
         fingertipDot.style.left = screenX + 'px';
         fingertipDot.style.top = screenY + 'px';
         fingertipDot.style.display = 'block';
@@ -488,9 +489,9 @@
                 
                 var screenX = (1 - indexTip.x) * window.innerWidth;
                 var screenY = indexTip.y * window.innerHeight;
-                
-                var x = (screenX / window.innerWidth - 0.5) * 30;
-                var y = -(screenY / window.innerHeight - 0.5) * 22;
+                var aspect = window.innerWidth / window.innerHeight;
+                var x = (indexTip.x - 0.5) * -aspect * 45; // 45 soni chiziqni chekkaga cho'zadi
+                var y = -(indexTip.y - 0.5) * 35;   
                 var pos = new THREE.Vector3(x, y, 0);
                 
                 var isPinching = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y) < 0.11;
@@ -603,17 +604,16 @@
                 fingertipDot.style.backgroundColor = dotColor;
                 fingertipDot.style.boxShadow = '0 0 20px ' + dotColor + ', 0 0 40px ' + dotColor;
                 fingertipDot.style.display = 'block';
-                
+
                 drawConnectors(handCtx, hand, HAND_CONNECTIONS, {color: skeletonColor, lineWidth: 3});
                 drawLandmarks(handCtx, hand, {color: skeletonColor, radius: 3, fillColor: skeletonColor});
-                
-            } else {
+            
+            else {
                 modeText.textContent = 'QO"LINGIZNI KORSATING';
                 fingertipDot.style.display = 'none';
             }
             
             handCtx.restore();
-        }
         
         function createHolographicObject() {
             if (drawingPoints.length < 5) return;
@@ -688,12 +688,16 @@
             height: 720
         });
         
-        setTimeout(function() {
-            cam.start().then(function() {
-                modeText.textContent = 'SISTEMA ISHLAMOQDA';
-                showNotification('XUSH KELIBSIZ');
-            });
-        }, 6000);
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const intro = document.getElementById('intro-screen');
+                if(intro) {
+                 intro.style.opacity = '0';
+                    setTimeout(() => intro.style.display = 'none', 1000);
+                }
+                cam.start(); 
+            }, 5000);
+        });
         
         function animate() {
             requestAnimationFrame(animate);
