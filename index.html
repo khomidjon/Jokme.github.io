@@ -2,99 +2,52 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JokeMe Home</title>
+    <title>Homidjon - Auth</title>
+    <script>
+        window.handleCredentialResponse = (response) => {
+            console.log("Login jarayoni boshlandi...");
+            try {
+                const payload = JSON.parse(atob(response.credential.split('.')[1]));
+                console.log("Salom, " + payload.name);
+                
+                // Ma'lumotni saqlash
+                localStorage.setItem('atom_user', JSON.stringify({
+                    name: payload.name,
+                    email: payload.email,
+                    picture: payload.picture
+                }));
+
+                // Dashboardga o'tish
+                window.location.href = 'dashboard.html';
+            } catch (e) {
+                console.error("Dekodlashda xato:", e);
+            }
+        };
+    </script>
+    
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+
     <style>
-        :root { --apple-blue: #0071e3; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: -apple-system, sans-serif; }
-        
-        /* Markazdagi fon animatsiyasi yoki video uchun joy */
-        .hero-video {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            object-fit: cover; opacity: 0.6; pointer-events: none;
-        }
-
-        /* Burchakdagi Login tugmasi */
-        .top-nav {
-            position: fixed; top: 30px; right: 40px; z-index: 100;
-        }
-
-        .hero-text {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            text-align: center; z-index: 10;
-        }
-        h1 { font-size: 60px; font-weight: 700; letter-spacing: -2px; margin: 0; background: linear-gradient(to bottom, #fff, #86868b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        p { color: #86868b; font-size: 20px; margin-top: 10px; }
-
-        .explore-btn {
-            margin-top: 30px; padding: 12px 30px; border-radius: 30px; border: 1px solid #fff;
-            background: none; color: #fff; cursor: pointer; transition: 0.3s;
-        }
-        .explore-btn:hover { background: #fff; color: #000; }
+        body { background: #000; color: #fff; font-family: sans-serif; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .hero { margin-bottom: 20px; }
+        h1 { font-size: 40px; }
+        .login-box { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 20px; backdrop-filter: blur(10px); }
     </style>
 </head>
 <body>
 
-    <video class="hero-video" autoplay muted loop playsinline>
-        <source src="preview.mp4" type="video/mp4">
-    </video>
+    <div class="hero">
+        <h1>ASSALOMU ALEYKUM XUSH KELIBSIZ!</h1>
+        <p>JARVIS AI biz bilan birga yarating</p>
+    </div>
 
-    <div class="top-nav">
+    <div class="login-box">
         <div id="g_id_onload"
              data-client_id="532407535407-t122jsgms7oqvtei0p46sb3bql3bpptu.apps.googleusercontent.com"
              data-callback="handleCredentialResponse">
         </div>
-        <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="filled_black"></div>
+        <div class="g_id_signin" data-type="standard"></div>
     </div>
 
-    <div class="hero-text">
-        <h1>ASSALOMU ALEYKUM XUSH KELIBSIZ!</h1>
-        <p>JARVIS AI biz bilan birga yarating</p>
-        <button class="explore-btn" onclick="alert('Oldin login qiling!')">Loyihalarni ko'rish</button>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAg_n9-MsYSI41l_BqHWHuXrkE7I0fRfmo",
-            authDomain: "my-universe-a5416.firebaseapp.com",
-            projectId: "my-universe-a5416",
-            storageBucket: "my-universe-a5416.firebasestorage.app",
-            messagingSenderId: "960863192078",
-            appId: "1:960863192078:web:b47ef80668ccbeea9d285f"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // Avval kirgan bo'lsa srazu dashboardga
-        if (localStorage.getItem('atom_user')) {
-            window.location.href = 'dashboard.html';
-        }
-
-        window.handleCredentialResponse = async (response) => {
-            console.log("Muvaffaqiyatli login!");
-    
-            // JWT dekodlash
-            const payload = JSON.parse(atob(response.credential.split('.')[1]));
-    
-            const userData = {
-                name: payload.name,
-                email: payload.email,
-                picture: payload.picture
-            };
-
-            // Ma'lumotni saqlash
-            localStorage.setItem('atom_user', JSON.stringify(userData));
-    
-            // FIREBASE-ga yozish kodi shu yerda bo'ladi...
-    
-            // Sahifani yangilash yoki Dashboardga o'tish
-            window.location.href = 'dashboard.html'; 
-        };
-    </script>
 </body>
 </html>
