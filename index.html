@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jarvis System - Auth</title>
@@ -109,6 +110,34 @@
     </style>
 </head>
 <body>
+    <div id="g_id_onload"
+         data-client_id="532407535407-t122jsgms7oqvtei0p46sb3bql3bpptu.apps.googleusercontent.com" 
+         data-context="signin"
+         data-ux_mode="popup"
+         data-callback="handleCredentialResponse"
+         data-auto_select="true"
+         data-itp_support="true">
+    </div>
+
+    <script>
+      function handleCredentialResponse(response) {
+    // Bu yerda foydalanuvchi ma'lumotlarini (token) olasiz
+        console.log("Encoded JWT ID token: " + response.credential);
+    
+    // Masalan, foydalanuvchini o'yinga yo'naltirish:
+        alert("Muvaffaqiyatli kirdingiz!");
+    // window.location.href = "game.html"; 
+      }
+
+      window.onload = function () {
+        google.accounts.id.initialize({
+          client_id: "532407535407-t122jsgms7oqvtei0p46sb3bql3bpptu.apps.googleusercontent.com", // O'zingizni Client ID'ingizni qo'ying
+          callback: handleCredentialResponse,
+          auto_select: true // Qurilmadagi akkauntni avtomatik taklif qilish
+        });
+        google.accounts.id.prompt(); // One Tap oynasini chiqarish
+  }
+</script>
 
     <div class="bg-animation"></div>
 
