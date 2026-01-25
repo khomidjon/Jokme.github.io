@@ -449,16 +449,24 @@
         }
         
         function onResults(results) {
-            handCanvas.width = window.innerWidth;
-            handCanvas.height = window.innerHeight;
-            handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
-            
-            handCtx.save();
-            handCtx.translate(handCanvas.width, 0);
-            handCtx.scale(-1, 1);
-            
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                var hand = results.multiHandLandmarks[0];
+    handCtx.save();
+    handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
+    
+    handCtx.translate(handCanvas.width, 0);
+    handCtx.scale(-1, 1);
+
+    if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        var hand = results.multiHandLandmarks[0];
+        var indexTip = hand[8];
+
+        var screenX = (1 - indexTip.x) * window.innerWidth;
+        var screenY = indexTip.y * window.innerHeight;
+        var x3d = (indexTip.x - 0.5) * -40; 
+        var y3d = -(indexTip.y - 0.5) * 30; 
+        var pos = new THREE.Vector3(x3d, y3d, 0);
+        fingertipDot.style.left = screenX + 'px';
+        fingertipDot.style.top = screenY + 'px';
+        fingertipDot.style.display = 'block';
                 
                 var indexTip = hand[8];
                 var indexMcp = hand[5];
@@ -656,9 +664,9 @@
         
         hands.setOptions({
             maxNumHands: 1,
-            modelComplexity: 1,
-            minDetectionConfidence: 0.7,
-            minTrackingConfidence: 0.7
+            modelComplexity: 0,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
         });
         
         hands.onResults(onResults);
