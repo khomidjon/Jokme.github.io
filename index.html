@@ -3,90 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to Atom System</title>
+    <title>Homidjon Projects - Auth</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         :root {
             --apple-blue: #0071e3;
-            --glass: rgba(255, 255, 255, 0.08);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
         }
         body {
-            margin: 0; padding: 0;
-            background: #000;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            color: #fff;
-            display: flex; justify-content: center; align-items: center;
-            height: 100vh; overflow: hidden;
+            margin: 0; background: #000; color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
         }
-        /* Orqa fondagi animatsiya */
-        .bg-gradient {
-            position: absolute; width: 100%; height: 100%;
-            background: radial-gradient(circle at 50% 50%, #1d1d1f 0%, #000 100%);
-            z-index: -1;
+
+        /* Login Ekran */
+        .auth-container {
+            width: 350px; padding: 40px; border-radius: 30px;
+            background: var(--glass); backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border); text-align: center;
         }
-        .auth-card {
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 40px; border-radius: 30px;
-            width: 350px; text-align: center;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-            animation: fadeInUp 1s ease;
+
+        /* Dashboard Ekran */
+        #dashboard {
+            display: none; width: 90%; max-width: 1000px; padding: 20px;
         }
-        h2 { font-size: 28px; font-weight: 600; margin-bottom: 10px; }
-        p { color: #86868b; margin-bottom: 30px; font-size: 14px; }
-        
-        input {
-            width: 100%; padding: 15px; margin-bottom: 15px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px; color: #fff; outline: none;
-            box-sizing: border-box; transition: 0.3s;
+
+        .user-profile {
+            display: flex; align-items: center; gap: 15px;
+            background: var(--glass); padding: 10px 20px;
+            border-radius: 50px; border: 1px solid var(--glass-border);
+            width: fit-content; margin-bottom: 30px;
         }
-        input:focus { border-color: var(--apple-blue); background: rgba(255,255,255,0.1); }
-        
-        .btn-primary {
-            width: 100%; padding: 15px;
-            background: var(--apple-blue);
-            color: white; border: none; border-radius: 12px;
-            font-size: 16px; font-weight: 500; cursor: pointer;
-            transition: 0.3s;
+        .user-profile img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--apple-blue); }
+
+        .project-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
         }
-        .btn-primary:hover { opacity: 0.9; transform: scale(1.02); }
-        
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
+        .project-card {
+            background: var(--glass); border: 1px solid var(--glass-border);
+            border-radius: 24px; padding: 25px; text-decoration: none; color: #fff;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .project-card:hover { background: rgba(255,255,255,0.1); transform: scale(1.02); }
+
+        /* Tugmalar */
+        .social-btn {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--glass-border);
+            background: #fff; color: #000; font-weight: 500; cursor: pointer; margin-top: 15px;
+        }
+        .email-login {
+            background: var(--glass); color: #fff; margin-top: 25px;
         }
     </style>
 </head>
 <body>
-    <div class="bg-gradient"></div>
-    
-    <div class="auth-card" id="login-box">
-        <h2>Atom System</h2>
-        <p>Davom etish uchun ismingizni kiriting</p>
-        <input type="text" id="username" placeholder="Ismingiz" autocomplete="off">
-        <button class="btn-primary" onclick="handleAuth()">Kirish</button>
+
+    <div id="auth-box" class="auth-container">
+        <h2 style="font-size: 24px; margin-bottom: 8px;">Kirish</h2>
+        <p style="color: #86868b; font-size: 14px; margin-bottom: 30px;">Davom etish uchun akkaunt tanlang</p>
+        
+        <div id="g_id_onload"
+             data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+             data-callback="handleCredentialResponse">
+        </div>
+        <div class="g_id_signin" data-type="standard"></div>
+
+        <button class="social-btn email-login" onclick="alert('Tez kunda...')">
+            <span>📧</span> Email orqali kirish
+        </button>
+    </div>
+
+    <div id="dashboard">
+        <div class="user-profile">
+            <img id="user-img" src="" alt="Avatar">
+            <div>
+                <div id="user-name" style="font-weight: 600; font-size: 14px;"></div>
+                <div id="user-email" style="font-size: 12px; color: #86868b;"></div>
+            </div>
+        </div>
+
+        <h1 style="font-size: 40px; font-weight: 700; margin-bottom: 40px;">Loyihalarim</h1>
+
+        <div class="project-grid">
+            <a href="Atom.html" class="project-card">
+                <div style="color: var(--apple-blue); margin-bottom: 10px;">✦ 3D System</div>
+                <h3>Atom & Hand Tracking</h3>
+                <p>Kamera orqali boshqariladigan interaktiv atomlar.</p>
+            </a>
+            </div>
+
+        <button onclick="logout()" style="margin-top: 40px; background: none; border: none; color: #ff3b30; cursor: pointer;">Tizimdan chiqish</button>
     </div>
 
     <script>
-        function handleAuth() {
-            const name = document.getElementById('username').value;
-            if(name.length > 2) {
-                localStorage.setItem('atom_user', name); // Ismni saqlash
-                window.location.href = 'Atom.html'; // Sening asosiy faylingga o'tish
-            } else {
-                alert("Iltimos, ismingizni to'liq kiriting");
-            }
+        // Google'dan ma'lumot kelganda ishlaydi
+        function handleCredentialResponse(response) {
+            const responsePayload = decodeJwtResponse(response.credential);
+            
+            const userData = {
+                name: responsePayload.name,
+                email: responsePayload.email,
+                picture: responsePayload.picture
+            };
+
+            localStorage.setItem('atom_user', JSON.stringify(userData));
+            renderDashboard(userData);
         }
 
-        // Agar foydalanuvchi allaqachon kirgan bo'lsa
+        function decodeJwtResponse(token) {
+            let base64Url = token.split('.')[1];
+            let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            return JSON.parse(window.atob(base64));
+        }
+
+        function renderDashboard(user) {
+            document.getElementById('auth-box').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('user-img').src = user.picture;
+            document.getElementById('user-name').innerText = user.name;
+            document.getElementById('user-email').innerText = user.email;
+        }
+
+        function logout() {
+            localStorage.removeItem('atom_user');
+            location.reload();
+        }
+
         window.onload = () => {
-            if(localStorage.getItem('atom_user')) {
-                // Xohlasang srazu o'tkazib yuborish mumkin
-                // window.location.href = 'Atom.html';
-            }
+            const savedUser = localStorage.getItem('atom_user');
+            if (savedUser) renderDashboard(JSON.parse(savedUser));
         };
     </script>
 </body>
