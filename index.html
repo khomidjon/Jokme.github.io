@@ -76,33 +76,24 @@
         }
 
         window.handleCredentialResponse = async (response) => {
-            console.log("Google'dan javob keldi..."); // Tekshirish uchun
+            console.log("Muvaffaqiyatli login!");
     
-            const base64Url = response.credential.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const payload = JSON.parse(window.atob(base64));
-
-            console.log("Foydalanuvchi:", payload.name);
-
+            // JWT dekodlash
+            const payload = JSON.parse(atob(response.credential.split('.')[1]));
+    
             const userData = {
-            name: payload.name,
+                name: payload.name,
                 email: payload.email,
-                picture: payload.picture,
-                lastLogin: new Date().toISOString()
+                picture: payload.picture
             };
 
-            try {
-                localStorage.setItem('atom_user', JSON.stringify(userData));
-        
-
-                console.log("Hamma narsa tayyor, Dashboardga o'tish...");
-        
-                window.location.replace('dashboard.html'); 
-        
-            } catch (e) {
-                console.error("Xato yuz berdi:", e);
-                alert("Xatolik: " + e.message);
-            }
+            // Ma'lumotni saqlash
+            localStorage.setItem('atom_user', JSON.stringify(userData));
+    
+            // FIREBASE-ga yozish kodi shu yerda bo'ladi...
+    
+            // Sahifani yangilash yoki Dashboardga o'tish
+            window.location.href = 'dashboard.html'; 
         };
     </script>
 </body>
