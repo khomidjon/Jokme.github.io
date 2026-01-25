@@ -268,7 +268,7 @@
         
         <div id="status-panel">
             <div id="jarvis-text">JARVIS AI SYSTEM</div>
-            <div id="mode-text">Initializng...</div>
+            <div id="mode-text">Kuting...</div>
         </div>
         
         <div id="notification"></div>
@@ -278,7 +278,7 @@
 
     <script>
         if (!localStorage.getItem('atom_user')) {
-            window.location.href = 'index.html';
+            window.location.href = 'dashboard.html';
         }
 
 var animationDuration = 5000;
@@ -298,11 +298,11 @@ setTimeout(function() {
 
 function startJarvisSystem() {
     cam.start().then(function() {
-        modeText.textContent = 'SYSTEM ONLINE';
-        showNotification('Welcome, Sir. All systems operational.');
+        modeText.textContent = 'Sistema faol';
+        showNotification('Xush kelibsiz, marhamat foydalanishingiz mumkin');
     }).catch(function(err) {
-        console.error("Camera error: ", err);
-        modeText.textContent = 'CAMERA ERROR';
+        console.error("Camera aniqlanmadi: ", err);
+        modeText.textContent = 'CAMERA xatolik';
     });
 }
 
@@ -323,7 +323,7 @@ function startJarvisSystem() {
         
         var colors = [
             '#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF',
-            '#4B0082', '#9400D3', '#FF1493', '#00CED1', '#FFD700',
+            '#4B0082', '#9400D3', '#FF1493', '#00CED1', '#FFD500',
             '#FF69B4', '#8B4513', '#2E8B57', '#DC143C', '#00BFFF',
             '#FF6347', '#9370DB', '#3CB371', '#FF4500', '#1E90FF'
         ];
@@ -503,7 +503,7 @@ function startJarvisSystem() {
                 var dotSize = '15px';
                 
                 if (isPointing) {
-                    modeText.textContent = 'DRAWING MODE ACTIVE';
+                    modeText.textContent = 'Chizish faollashdi';
                     skeletonColor = '#FFA500';
                     dotColor = '#FFA500';
                     dotSize = '20px';
@@ -537,14 +537,14 @@ function startJarvisSystem() {
                         }
                     }
                 } else if (isOpenHand && drawingPoints.length > 5) {
-                    modeText.textContent = 'RENDERING 3D OBJECT...';
-                    showNotification('Sir, object rendered successfully');
+                    modeText.textContent = 'Obekt 3D bolmoqda...';
+                    showNotification('Obekt 3D shakllandi');
                     createHolographicObject();
                     skeletonColor = '#00FF00';
                     dotColor = '#00FF00';
                 } else if (isPinching) {
                     if (isEraser) {
-                        modeText.textContent = 'ERASER MODE - DELETE OBJECT';
+                        modeText.textContent = 'Ochirg'ich rejimi yoniq';
                         skeletonColor = '#FF0000';
                         dotColor = '#FF0000';
                         dotSize = '22px';
@@ -554,7 +554,7 @@ function startJarvisSystem() {
                                 if (pos.distanceTo(objects3D[k].position) < 4) {
                                     scene.remove(objects3D[k]);
                                     objects3D.splice(k, 1);
-                                    showNotification('Object deleted');
+                                    showNotification('Obekt ochirildi');
                                     
                                     for (var m = 0; m < 30; m++) {
                                         var px = Math.random() * particleCanvas.width;
@@ -566,7 +566,7 @@ function startJarvisSystem() {
                             }
                         }
                     } else {
-                        modeText.textContent = 'MANIPULATION MODE';
+                        modeText.textContent = 'Obekt siljitish';
                         skeletonColor = '#00FF00';
                         dotColor = '#00FF00';
                         dotSize = '18px';
@@ -575,7 +575,7 @@ function startJarvisSystem() {
                             for (var n = 0; n < objects3D.length; n++) {
                                 if (pos.distanceTo(objects3D[n].position) < 4) {
                                     grabbedObject = objects3D[n];
-                                    showNotification('Object locked');
+                                    showNotification('Obekt bloklandi');
                                     break;
                                 }
                             }
@@ -602,7 +602,7 @@ function startJarvisSystem() {
                 drawLandmarks(handCtx, hand, {color: skeletonColor, radius: 3, fillColor: skeletonColor});
                 
             } else {
-                modeText.textContent = 'AWAITING HAND INPUT';
+                modeText.textContent = 'Qo'l qidirilmoqda';
                 fingertipDot.style.display = 'none';
             }
             
@@ -684,8 +684,8 @@ function startJarvisSystem() {
         
         setTimeout(function() {
             cam.start().then(function() {
-                modeText.textContent = 'SYSTEM ONLINE';
-                showNotification('Welcome, Sir. All systems operational.');
+                modeText.textContent = 'Sistema faol';
+                showNotification('Xush kelibsiz, marhamat foydalanishingiz mumkin');
             });
         }, 6000);
         
