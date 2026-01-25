@@ -195,31 +195,30 @@
 
         // Email orqali Kirish
        window.handleCredentialResponse = async (response) => {
-        const payload = JSON.parse(atob(response.credential.split('.')[1]));
-    
-        // Foydalanuvchi ma'lumotlari
-            const userData = {
-            name: payload.name,
-            email: payload.email,
-            picture: payload.picture,
-            lastLogin: new Date().toISOString()
+            try {
+        // Google'dan kelgan ma'lumotni dekodlash
+                const payload = JSON.parse(atob(response.credential.split('.')[1]));
+        
+                const userData = {
+                    name: payload.name,
+                    email: payload.email,
+                    picture: payload.picture, // Google profildagi rasm URL manzili
+                    uid: payload.sub // Har bir foydalanuvchining unikal ID-si
+                };
+
+        // 1. Firebase Firestore-ga saqlash (Server)
+        // Bu kod foydalanuvchini bazaga yozadi yoki bor bo'lsa yangilaydi
+                await db.collection("users").doc(userData.uid).set(userData);
+
+        // 2. LocalStorage-ga vaqtincha saqlash (Keyingi oyna srazu o'qishi uchun)
+                localStorage.setItem('atom_user', JSON.stringify(userData));
+
+                console.log("Muvaffaqiyatli saqlandi!");
+                window.location.href = 'dashboard.html';
+            } catch (error) {
+                console.error("Xatolik:", error);
+            }
         };
-
-        // 1. Brauzerga saqlash (Dashboard ko'rishi uchun)
-        localStorage.setItem('atom_user', JSON.stringify(userData));
-
-        // 2. Firebase Firestore-ga saqlash (Mana shu joyi registratsiyani bazaga yozadi)
-        try {
-            // Agar Firebase init qilingan bo'lsa:
-            // await setDoc(doc(db, "users", payload.email), userData, { merge: true });
-            console.log("Ma'lumotlar bazaga yuborildi");
-        } catch (e) {
-            console.log("Baza bilan aloqa yo'q, lekin login bo'ldi");
-        }
-
-        // Dashboardga o'tish
-        window.location.href = 'dashboard.html';
-    };
     </script>
 </body>
 </html>
