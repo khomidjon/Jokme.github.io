@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fruit Ninja AI | Jarvis</title>
+    <style>
+        /* --- DIZAYN (CSS) --- */
+        :root {
+            --neon-green: #2fff0a;
+            --neon-red: #ff073a;
+            --glass-bg: rgba(20, 20, 20, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; user-select: none; }
+
+        body {
+            background: #000;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            color: white;
+        }
+
+        /* Orqa fon (Video) va Canvas */
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Asl video yashirin (biz uni canvasga chizamiz) */
+        #input-video { display: none; }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            transform: scaleX(-1); /* Oynadek aks ettirish */
+        }
+
+        /* --- UI ELEMENTLARI (Glassmorphism) --- */
+        .ui-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; /* O'yin o'ynashga xalaqit bermasligi uchun */
+            z-index: 10;
+        }
+
+        /* Score & Lives HUD */
+        .hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 0 0 10px black;
+        }
+        .score-box { color: var(--neon-green); }
+        .lives-box { color: var(--neon-red); }
+        .level-box { color: #00d2ff; }
+
+        /* MENU & GAME OVER (Markaziy oynalar) */
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(8px);
+            pointer-events: auto;
+            z-index: 20;
+            transition: opacity 0.3s;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 0 30px rgba(57, 255, 20, 0.2);
+        }
+
+        .hidden { opacity: 0; pointer-events: none; display: none; }
+
+        h1 {
+            font-size: 48px;
+            color: var(--neon-green);
+            text-shadow: 0 0 20px var(--neon-green);
+            margin-bottom: 10px;
+            font-style: italic;
+        }
+
+        p { color: #ccc; margin-bottom: 20px; font-size: 18px; }
+
+        input {
+            width: 80%;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid var(--neon-green);
+            border-radius: 10px;
+            color: white;
+            font-size: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            outline: none;
+        }
+
+        button {
+            padding: 15px 50px;
+            font-size: 22px;
+            font-weight: bold;
+            background: var(--neon-green);
+            color: black;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px var(--neon-green);
+        }
+
+        .highscores {
+            margin-top: 20px;
+            text-align: left;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            padding-top: 10px;
+        }
+        .highscores h3 { color: #ffd700; margin-bottom: 10px; text-align: center; }
+        .score-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; }
+
+        /* Loader */
+        .loader {
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top: 4px solid var(--neon-green);
+            border-radius: 50%;
+            width: 40px; height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <video id="input-video" playsinline></video>
+        <canvas id="game-canvas"></canvas>
+
+        <div class="ui-layer" id="game-ui" style="display: none;">
+            <div class="hud">
+                <div class="score-box">🍎 Score: <span id="score">0</span></div>
+                <div class="level-box">⚡ Level: <span id="level">1</span></div>
+                <div class="lives-box">❤️ Lives: <span id="lives">3</span></div>
+            </div>
+        </div>
+
+        <div id="menu-screen" class="overlay">
+            <div class="glass-card">
+                <h1>🥷 FRUIT NINJA</h1>
+                <p>🎥 Kamerangizni yoqib qol orqali mevalarni kes!</p>
+                
+                <input type="text" id="player-name" value="Khomidjon" placeholder="Ismingiz...">
+                
+                <div id="camera-loading" style="display: none;">
+                    <div class="loader"></div>
+                    <p style="font-size: 14px;">Kamera yuklanmoqda & AI ishga tushmoqda...</p>
+                </div>
+
+                <button id="btn-start" onclick="startGameInit()">🎮 BOSHLASH</button>
+
+                <div class="highscores">
+                    <h3>🏆 TOP REKORDLAR</h3>
+                    <div id="highscore-list">
+                        </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="gameover-screen" class="overlay hidden">
+            <div class="glass-card">
+                <h1 style="color: var(--neon-red); text-shadow: 0 0 20px var(--neon-red);">💀 O'YIN TUGADI!</h1>
+                <p>Sizning natijangiz:</p>
+                <h2 style="font-size: 60px; margin: 20px 0; color: white;"><span id="final-score">0</span></h2>
+                <p>Level: <span id="final-level">1</span></p>
+                <button onclick="resetGame()">📊 QAYTA BOSHLASH</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <script>
+        // --- O'ZGARMASLAR VA SOZLAMALAR ---
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const videoElement = document.getElementById('input-video');
+        
+        // O'yin holati
+        let state = {
+            screen: 'MENU', // MENU, PLAYING, GAMEOVER
+            score: 0,
+            lives: 3,
+            level: 1,
+            gameTime: 0,
+            lastSpawn: 0
+        };
+
+        // Fizika sozlamalari
+        let gravity = 0.25;
+        let spawnRate = 1000; // ms
+        
+        // Obyektlar
+        let fruits = [];
+        let particles = []; // Suv effekti
+        let splats = []; // Devordagi dog'lar
+        let trail = []; // Barmoq izi
+        let pointer = { x: -100, y: -100, active: false };
+
+        // Mevalar turlari
+        const fruitTypes = [
+            { emoji: '🍎', color: '#ff3b30', score: 10 },
+            { emoji: '🍊', color: '#ff9500', score: 10 },
+            { emoji: '🍌', color: '#ffcc00', score: 10 },
+            { emoji: '😅', color: '#ffcc00', score: 15 },
+            { emoji: '🍉', color: '#4cd964', score: 15 },
+            { emoji: '🍓', color: '#ff2d55', score: 10 },
+            { emoji: '🍍', color: '#ffcc00', score: 15 },
+            { emoji: '💣', color: '#ffffff', score: 0, isBomb: true } // Bomba
+        ];
+
+        // --- MEDIAPIPE QOL TRACKING (AI) ---
+        const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+        
+        hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+
+        hands.onResults((results) => {
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                const landmarks = results.multiHandLandmarks[0];
+                // 8 - Ko'rsatkich barmoq uchi (Index Finger Tip)
+                const indexTip = landmarks[8];
+                
+                pointer.active = true;
+                // Koordinatalarni canvasga o'girish
+                // Diqqat: Kamera canvasda scaleX(-1) bo'lgani uchun, x ni to'g'ri olish kerak
+                pointer.x = indexTip.x * canvas.width;
+                pointer.y = indexTip.y * canvas.height;
+            } else {
+                pointer.active = false;
+            }
+        });
+
+        const camera = new Camera(videoElement, {
+            onFrame: async () => {
+                await hands.send({image: videoElement});
+            },
+            width: 1280,
+            height: 720
+        });
+
+        // --- O'YIN LOGIKASI ---
+
+        // 1. O'yinni Boshlash
+        function startGameInit() {
+            const btn = document.getElementById('btn-start');
+            const loader = document.getElementById('camera-loading');
+            
+            btn.style.display = 'none';
+            loader.style.display = 'block';
+
+            // Kamerani ishga tushirish
+            camera.start().then(() => {
+                document.getElementById('menu-screen').style.display = 'none';
+                document.getElementById('game-ui').style.display = 'block';
+                resizeCanvas();
+                resetGameVariables();
+                state.screen = 'PLAYING';
+                loop();
+            });
+        }
+
+        // 2. Qayta Boshlash
+        function resetGame() {
+            document.getElementById('gameover-screen').classList.add('hidden');
+            resetGameVariables();
+            state.screen = 'PLAYING';
+        }
+
+        function resetGameVariables() {
+            state.score = 0;
+            state.lives = 3;
+            state.level = 1;
+            fruits = [];
+            particles = [];
+            splats = [];
+            spawnRate = 1200;
+            updateUI();
+        }
+
+        // 3. Meva Yaratish (Spawn)
+        function spawnFruit() {
+            const now = Date.now();
+            if (now - state.lastSpawn > spawnRate) {
+                // 10% ehtimol bilan bomba
+                const isBomb = Math.random() < 0.15; 
+                let type;
+                
+                if (isBomb) {
+                    type = fruitTypes[fruitTypes.length - 1]; // Bomba
+                } else {
+                    // Random meva (bombadan tashqari)
+                    type = fruitTypes[Math.floor(Math.random() * (fruitTypes.length - 1))];
+                }
+
+                const fruit = {
+                    x: Math.random() * (canvas.width - 100) + 50,
+                    y: canvas.height + 50,
+                    vx: (Math.random() - 0.5) * 8, // Yon tomonga uchish
+                    vy: -(Math.random() * 8 + 12), // Yuqoriga otilish kuchi
+                    size: 60,
+                    rotation: 0,
+                    rotSpeed: (Math.random() - 0.5) * 0.2,
+                    type: type,
+                    sliced: false
+                };
+                fruits.push(fruit);
+                state.lastSpawn = now;
+            }
+        }
+
+        // 4. Update (Fizika va To'qnashuvlar)
+        function update() {
+            // Level tizimi (Har 500 ochkoda yoki vaqtga qarab qiyinlashadi)
+            spawnRate = Math.max(400, 1200 - (state.level * 100));
+            if (state.score > state.level * 100) state.level++;
+
+            // Mevalar harakati
+            for (let i = fruits.length - 1; i >= 0; i--) {
+                let f = fruits[i];
+                f.x += f.vx;
+                f.y += f.vy;
+                f.vy += gravity; // Gravitatsiya
+                f.rotation += f.rotSpeed;
+
+                // Ekranda pastga tushib ketsa
+                if (f.y > canvas.height + 100) {
+                    if (!f.sliced && !f.type.isBomb) {
+                        state.lives--;
+                        checkGameOver();
+                    }
+                    fruits.splice(i, 1);
+                    continue;
+                }
+
+                // KESISH (Collision Detection)
+                // Barmoq faol bo'lsa va meva yaqinida bo'lsa
+                if (pointer.active && !f.sliced) {
+                    const dx = pointer.x - f.x;
+                    const dy = pointer.y - f.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+
+                    if (dist < f.size) {
+                        // KESILDI!
+                        if (f.type.isBomb) {
+                            gameOver();
+                        } else {
+                            sliceFruit(f);
+                            fruits.splice(i, 1);
+                        }
+                    }
+                }
+            }
+
+            // Zarrachalar (Particles) harakati
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.2; // Zarracha gravitatsiyasi
+                p.life -= 0.02; // Sekin yo'qolish
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+        }
+
+        // 5. Meva kesilganda nima bo'ladi?
+        function sliceFruit(f) {
+            state.score += 10;
+            
+            // Suv effekti (Particles)
+            for (let i = 0; i < 15; i++) {
+                particles.push({
+                    x: f.x,
+                    y: f.y,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    color: f.type.color,
+                    life: 1.0,
+                    size: Math.random() * 5 + 2
+                });
+            }
+
+            // Splat (Iz qoldirish)
+            splats.push({x: f.x, y: f.y, color: f.type.color, life: 1.0, emoji: f.type.emoji});
+            if(splats.length > 10) splats.shift(); // Ko'payib ketmasligi uchun
+
+            updateUI();
+        }
+
+        // 6. Chizish (Render)
+        function draw() {
+            // Ekranni tozalash
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Orqa fonga kamera videosini chizamiz (xiralashtirib)
+            // Save/Restore kerak chunki canvas scaleX(-1) qilingan CSSda, lekin drawImage teskari bo'lib qoladi
+            ctx.save();
+            ctx.globalAlpha = 0.4;
+            ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+            ctx.restore();
+            ctx.globalAlpha = 1.0;
+
+            // 2. Splats (Kesilgan izlar)
+            splats.forEach(s => {
+                ctx.globalAlpha = s.life;
+                ctx.font = "40px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(s.emoji, s.x, s.y);
+                s.life -= 0.005;
+            });
+            ctx.globalAlpha = 1.0;
+
+            // 3. Mevalar
+            fruits.forEach(f => {
+                ctx.save();
+                ctx.translate(f.x, f.y);
+                ctx.rotate(f.rotation);
+                ctx.font = `${f.size}px Arial`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                // Soya beramiz
+                ctx.shadowColor = "rgba(0,0,0,0.5)";
+                ctx.shadowBlur = 10;
+                ctx.fillText(f.type.emoji, 0, 0);
+                ctx.restore();
+            });
+
+            // 4. Zarrachalar (Particles)
+            particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1.0;
+
+            // 5. Barmoq Izi (Trail) & Pointer
+            if (pointer.active) {
+                // Trail qo'shish
+                trail.push({x: pointer.x, y: pointer.y});
+                if (trail.length > 15) trail.shift();
+
+                // Chiziq chizish
+                if (trail.length > 1) {
+                    ctx.beginPath();
+                    ctx.moveTo(trail[0].x, trail[0].y);
+                    for (let i = 1; i < trail.length; i++) {
+                        ctx.lineTo(trail[i].x, trail[i].y);
+                    }
+                    // Blade effekti (Oq va Yashil)
+                    ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+                    ctx.lineWidth = 4;
+                    ctx.stroke();
+                    
+                    ctx.strokeStyle = "rgba(57, 255, 20, 0.5)"; // Neon Green
+                    ctx.lineWidth = 10;
+                    ctx.lineCap = "round";
+                    ctx.stroke();
+                }
+
+                // Barmoq uchi nuqtasi
+                ctx.beginPath();
+                ctx.arc(pointer.x, pointer.y, 10, 0, Math.PI * 2);
+                ctx.fillStyle = "#39ff14";
+                ctx.shadowColor = "#39ff14";
+                ctx.shadowBlur = 20;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            } else {
+                trail = []; // Barmoq yo'qolsa trail o'chadi
+            }
+        }
+
+        // Asosiy Loop
+        function loop() {
+            if (state.screen === 'PLAYING') {
+                spawnFruit();
+                update();
+                draw();
+                requestAnimationFrame(loop);
+            }
+        }
+
+        // UI Yangilash
+        function updateUI() {
+            document.getElementById('score').innerText = state.score;
+            document.getElementById('level').innerText = state.level;
+            document.getElementById('lives').innerText = state.lives;
+        }
+
+        // GAME OVER
+        function checkGameOver() {
+            if (state.lives <= 0) gameOver();
+        }
+
+        function gameOver() {
+            state.screen = 'GAMEOVER';
+            document.getElementById('gameover-screen').classList.remove('hidden');
+            document.getElementById('final-score').innerText = state.score;
+            document.getElementById('final-level').innerText = state.level;
+            
+            saveHighscore();
+        }
+
+        // --- YORDAMCHI FUNKSIYALAR ---
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        // Highscore tizimi (LocalStorage)
+        function saveHighscore() {
+            const name = document.getElementById('player-name').value || "Noma'lum";
+            let scores = JSON.parse(localStorage.getItem('fn_scores')) || [];
+            scores.push({name: name, score: state.score, level: state.level});
+            scores.sort((a, b) => b.score - a.score);
+            scores = scores.slice(0, 5); // Faqat Top 5
+            localStorage.setItem('fn_scores', JSON.stringify(scores));
+            renderHighscores();
+        }
+
+        function renderHighscores() {
+            let scores = JSON.parse(localStorage.getItem('fn_scores')) || [];
+            const list = document.getElementById('highscore-list');
+            list.innerHTML = scores.map((s, i) => 
+                `<div class="score-row"><span>${i+1}. ${s.name}</span> <span>${s.score} ball</span></div>`
+            ).join('');
+        }
+        
+        // Dastlabki yuklanishda rekordlarni chiqarish
+        renderHighscores();
+
+    </script>
+</body>
+</html>
