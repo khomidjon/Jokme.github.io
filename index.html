@@ -201,7 +201,6 @@
             color: rgba(255, 255, 255, 0.3);
         }
 
-        /* Glow effect on hover */
         .input-group input:hover {
             border-color: rgba(102, 126, 234, 0.3);
             box-shadow: 0 0 15px rgba(102, 126, 234, 0.2);
@@ -247,6 +246,11 @@
 
         .btn:active {
             transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         /* Divider */
@@ -318,6 +322,54 @@
             text-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
         }
 
+        /* Alert messages */
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+            animation: slideIn 0.3s ease;
+        }
+
+        .alert-success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #4ade80;
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #f87171;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         /* Responsive */
         @media (max-width: 480px) {
             .hero h1 {
@@ -355,16 +407,17 @@
 
             <!-- Login Form -->
             <div id="login-form" class="form-content active">
+                <div id="login-alert"></div>
                 <form onsubmit="handleLogin(event)">
                     <div class="input-group">
                         <label>Email</label>
-                        <input type="email" placeholder="example@gmail.com" required>
+                        <input type="email" id="login-email" placeholder="example@gmail.com" required>
                     </div>
                     <div class="input-group">
                         <label>Parol</label>
-                        <input type="password" placeholder="••••••••" required>
+                        <input type="password" id="login-password" placeholder="••••••••" required>
                     </div>
-                    <button type="submit" class="btn">Kirish</button>
+                    <button type="submit" class="btn" id="login-btn">Kirish</button>
                 </form>
 
                 <div class="divider">
@@ -392,20 +445,21 @@
 
             <!-- Signup Form -->
             <div id="signup-form" class="form-content">
+                <div id="signup-alert"></div>
                 <form onsubmit="handleSignup(event)">
                     <div class="input-group">
                         <label>Ism</label>
-                        <input type="text" placeholder="To'liq ismingiz" required>
+                        <input type="text" id="signup-name" placeholder="To'liq ismingiz" required>
                     </div>
                     <div class="input-group">
                         <label>Email</label>
-                        <input type="email" placeholder="example@gmail.com" required>
+                        <input type="email" id="signup-email" placeholder="example@gmail.com" required>
                     </div>
                     <div class="input-group">
                         <label>Parol</label>
-                        <input type="password" placeholder="••••••••" required>
+                        <input type="password" id="signup-password" placeholder="Kamida 6 ta belgi" minlength="6" required>
                     </div>
-                    <button type="submit" class="btn">Ro'yxatdan o'tish</button>
+                    <button type="submit" class="btn" id="signup-btn">Ro'yxatdan o'tish</button>
                 </form>
 
                 <div class="divider">
@@ -426,12 +480,147 @@
     </div>
 
     <script>
+        // Storage helpers using window.storage API
+        async function saveUser(userData) {
+            try {
+                const userKey = `user:${userData.email}`;
+                await window.storage.set(userKey, JSON.stringify(userData), true);
+                return true;
+            } catch (error) {
+                console.error('Foydalanuvchini saqlashda xato:', error);
+                return false;
+            }
+        }
+
+        async function getUser(email) {
+            try {
+                const userKey = `user:${email}`;
+                const result = await window.storage.get(userKey, true);
+                return result ? JSON.parse(result.value) : null;
+            } catch (error) {
+                console.error('Foydalanuvchini yuklashda xato:', error);
+                return null;
+            }
+        }
+
+        async function setCurrentUser(userData) {
+            try {
+                await window.storage.set('current_user', JSON.stringify(userData), false);
+                return true;
+            } catch (error) {
+                console.error('Joriy foydalanuvchini saqlashda xato:', error);
+                return false;
+            }
+        }
+
+        function showAlert(elementId, message, type) {
+            const alertDiv = document.getElementById(elementId);
+            alertDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                alertDiv.innerHTML = '';
+            }, 4000);
+        }
+
+        function setButtonLoading(buttonId, isLoading) {
+            const btn = document.getElementById(buttonId);
+            if (isLoading) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner"></span>';
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = buttonId === 'login-btn' ? 'Kirish' : "Ro'yxatdan o'tish";
+            }
+        }
+
+        async function handleSignup(e) {
+            e.preventDefault();
+            setButtonLoading('signup-btn', true);
+            
+            const name = document.getElementById('signup-name').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            
+            // Check if user already exists
+            const existingUser = await getUser(email);
+            if (existingUser) {
+                showAlert('signup-alert', 'Bu email allaqachon ro\'yxatdan o\'tgan!', 'error');
+                setButtonLoading('signup-btn', false);
+                return;
+            }
+            
+            const userData = {
+                name: name,
+                email: email,
+                password: password,
+                loginMethod: 'email',
+                createdAt: new Date().toISOString()
+            };
+            
+            const saved = await saveUser(userData);
+            
+            if (saved) {
+                showAlert('signup-alert', 'Ro\'yxatdan o\'tish muvaffaqiyatli! Endi kirish mumkin.', 'success');
+                setTimeout(() => {
+                    switchTab('login');
+                    document.getElementById('login-email').value = email;
+                }, 1500);
+            } else {
+                showAlert('signup-alert', 'Xatolik yuz berdi. Qaytadan urinib ko\'ring.', 'error');
+            }
+            
+            setButtonLoading('signup-btn', false);
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            setButtonLoading('login-btn', true);
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            const user = await getUser(email);
+            
+            if (!user) {
+                showAlert('login-alert', 'Foydalanuvchi topilmadi. Avval ro\'yxatdan o\'ting.', 'error');
+                setButtonLoading('login-btn', false);
+                return;
+            }
+            
+            if (user.password !== password) {
+                showAlert('login-alert', 'Email yoki parol xato!', 'error');
+                setButtonLoading('login-btn', false);
+                return;
+            }
+            
+            // Save current user session
+            const success = await setCurrentUser({
+                name: user.name,
+                email: user.email,
+                loginMethod: 'email'
+            });
+            
+            if (success) {
+                showAlert('login-alert', 'Muvaffaqiyatli kirdingiz!', 'success');
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1000);
+            } else {
+                showAlert('login-alert', 'Xatolik yuz berdi.', 'error');
+            }
+            
+            setButtonLoading('login-btn', false);
+        }
+
         function switchTab(tab) {
             const tabs = document.querySelectorAll('.tab');
             const forms = document.querySelectorAll('.form-content');
             
             tabs.forEach(t => t.classList.remove('active'));
             forms.forEach(f => f.classList.remove('active'));
+            
+            // Clear alerts
+            document.getElementById('login-alert').innerHTML = '';
+            document.getElementById('signup-alert').innerHTML = '';
             
             if (tab === 'login') {
                 tabs[0].classList.add('active');
@@ -442,55 +631,29 @@
             }
         }
 
-        function handleLogin(e) {
-            e.preventDefault();
-            const email = e.target[0].value;
-            const password = e.target[1].value;
-            
-            // Temporary storage using variables instead of localStorage
-            const userData = {
-                email: email,
-                loginMethod: 'email'
-            };
-            
-            console.log('Login:', userData);
-            alert('Email orqali kirish amalga oshirildi!');
-            // window.location.href = 'dashboard.html';
-        }
-
-        function handleSignup(e) {
-            e.preventDefault();
-            const name = e.target[0].value;
-            const email = e.target[1].value;
-            const password = e.target[2].value;
-            
-            const userData = {
-                name: name,
-                email: email,
-                loginMethod: 'email'
-            };
-            
-            console.log('Signup:', userData);
-            alert('Ro\'yxatdan o\'tish muvaffaqiyatli!');
-            // window.location.href = 'dashboard.html';
-        }
-
-        window.handleCredentialResponse = (response) => {
+        window.handleCredentialResponse = async (response) => {
             try {
                 const payload = JSON.parse(atob(response.credential.split('.')[1]));
-                console.log("Salom, " + payload.name);
                 
                 const userData = {
                     name: payload.name,
                     email: payload.email,
                     picture: payload.picture,
-                    loginMethod: 'google'
+                    loginMethod: 'google',
+                    createdAt: new Date().toISOString()
                 };
                 
-                console.log('Google login:', userData);
-                // window.location.href = 'dashboard.html';
+                // Save or update user
+                await saveUser(userData);
+                
+                // Set current user
+                await setCurrentUser(userData);
+                
+                console.log('Google login muvaffaqiyatli:', userData.name);
+                window.location.href = 'dashboard.html';
             } catch (e) {
-                console.error("Dekodlashda xato:", e);
+                console.error("Google login xatosi:", e);
+                showAlert('login-alert', 'Google orqali kirishda xatolik yuz berdi.', 'error');
             }
         };
 
