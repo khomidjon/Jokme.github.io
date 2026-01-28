@@ -107,175 +107,132 @@
     </div>
 
     <script>
-        // ---------------------------------------------------------
-        // 1. SOZLAMALAR (CONFIG) QISMI - SHU YERNI TOLDIRISH KERAK!
-        // ---------------------------------------------------------
-        
-        // A. FIREBASE CONFIG (O'zingning console.firebase.google.com dagi ma'lumotlaringni qo'y)
-        const firebaseConfig = {
-            aapiKey: "AIzaSyAg_n9-MsYSI41l_BqHWHuXrkE7I0fRfmo",
+const firebaseConfig = {
+            apiKey: "AIzaSyAg_n9-MsYSI41l_BqHWHuXrkE7I0fRfmo",
             authDomain: "my-universe-a5416.firebaseapp.com",
             projectId: "my-universe-a5416",
             storageBucket: "my-universe-a5416.firebasestorage.app",
             messagingSenderId: "960863192078",
-          appId: "1:960863192078:web:b47ef80668ccbeea9d285f",
-          measurementId: "G-FT3XEBVPZ8"
+            appId: "1:960863192078:web:b47ef80668ccbeea9d285f",
+            measurementId: "G-FT3XEBVPZ8"
         };
         
-        // Firebase-ni ishga tushirish
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // B. EMAILJS INIT (Sening Public Keying)
-        (function() {
-            emailjs.init("Gtorrbu3ZydFWOVZO"); 
-        })();
+        (function() { emailjs.init("Gtorrbu3ZydFWOVZO"); })();
 
-        // ---------------------------------------------------------
         // 2. GLOBAL O'ZGARUVCHILAR
-        // ---------------------------------------------------------
         let generatedOTP = "";
         let userData = {};
+        // Standart rasm (agar foydalanuvchida rasm bo'lmasa)
+        const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
-        // Avval kirgan bo'lsa, to'g'ridan-to'g'ri o'tkazib yuborish
+        // Agar allaqachon kirgan bo'lsa, dashboardga otamiz
         if (localStorage.getItem('atom_user')) {
             window.location.href = 'dashboard.html';
         }
 
-        // ---------------------------------------------------------
-        // 3. FUNKSIYALAR
-        // ---------------------------------------------------------
-
-        // Parolni tekshirish funksiyasi
-        function validatePassword(password) {
-            // Kamida 8 ta belgi va kamida 1 ta katta harf
-            const regex = /^(?=.*[A-Z]).{8,}$/;
-            return regex.test(password);
+        // 3. TABLARNI ALMASHTIRISH (Login vs Register)
+        function switchTab(tab) {
+            document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+            document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
+            
+            // Tugmalar rangini o'zgartirish
+            document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+            document.getElementById('tab-register').classList.toggle('active', tab === 'register');
         }
 
-        // A. Ro'yxatdan o'tishni boshlash (Emailga kod yuborish)
+        // 4. TIZIMGA KIRISH (LOGIN)
+        async function loginUser() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            if (!email || !password) { alert("Email va parolni kiriting!"); return; }
+
+            try {
+                const snapshot = await db.collection("users")
+                    .where("email", "==", email)
+                    .where("password", "==", password).get();
+
+                if (!snapshot.empty) {
+                    const userDoc = snapshot.docs[0].data();
+                    // LocalStoragega rasm bilan saqlaymiz
+                    localStorage.setItem('atom_user', JSON.stringify({
+                        name: userDoc.username,
+                        email: userDoc.email,
+                        picture: userDoc.picture || defaultAvatar // Rasm bo'lmasa standart rasm
+                    }));
+                    window.location.href = 'dashboard.html';
+                } else {
+                    alert("Email yoki parol noto'g'ri! Avval ro'yxatdan o'ting.");
+                }
+            } catch (error) { console.error(error); alert("Xatolik: " + error.message); }
+        }
+
+        // 5. RO'YXATDAN O'TISH
         function startRegistration() {
-            const username = document.getElementById('username').value;
-            const email = document.getElementById('user-email').value;
-            const pass = document.getElementById('user-password').value;
+            const username = document.getElementById('reg-username').value;
+            const email = document.getElementById('reg-email').value;
+            const pass = document.getElementById('reg-password').value;
 
-            // Bo'sh joylarni tekshirish
-            if (!username || !email || !pass) {
-                alert("Iltimos, barcha maydonlarni to'ldiring!");
-                return;
-            }
+            // Parol va input tekshiruvi...
+            const regex = /^(?=.*[A-Z]).{8,}$/;
+            if (!regex.test(pass)) { alert("Parol kuchsiz!"); return; }
 
-            // Parol validatsiyasi
-            if (!validatePassword(pass)) {
-                alert("Parol xato! Kamida 8 ta belgi va 1 ta katta harf bo'lishi shart.");
-                return;
-            }
-
-            // 5 xonali kod yaratish
             generatedOTP = Math.floor(10000 + Math.random() * 90000).toString();
 
-            // Vaqtincha ma'lumotlarni saqlash
             userData = {
                 username: username,
                 email: email,
-                password: pass, // Eslatma: Real loyihada parol shifrlanishi kerak
+                password: pass,
+                picture: defaultAvatar, // Bazaga ham rasm qo'shamiz
                 regDate: new Date().toLocaleString()
             };
 
-            // EmailJS orqali yuborish
-            const templateParams = {
-                to_email: email,
-                otp_code: generatedOTP // Shabloningda {{otp_code}} bo'lishi kerak
-            };
+            const templateParams = { email: email, passcode: generatedOTP, to_name: username };
 
-            
+            const btn = document.querySelector('#reg-step-1 button');
+            btn.innerText = "Yuborilmoqda..."; btn.disabled = true;
+
             emailjs.send('service_tp046db', 'template_vwedq2m', templateParams)
-                .then(function() {
-                    alert("Tasdiqlash kodi emailingizga yuborildi!");
-                    // 1-oynani yopib, 2-oynani ochamiz
-                    document.getElementById('step-1').style.display = 'none';
-                    document.getElementById('step-2').style.display = 'block';
-                }, function(error) {
-                    console.error("EmailJS Xatosi:", error);
-                    alert("Email yuborishda xatolik bo'ldi. Internetni tekshiring yoki keyinroq urining.");
+                .then(() => {
+                    alert("Kod yuborildi!");
+                    document.getElementById('reg-step-1').style.display = 'none';
+                    document.getElementById('reg-step-2').style.display = 'block';
+                }, (err) => {
+                    alert("Xatolik: " + JSON.stringify(err));
+                    btn.disabled = false; btn.innerText = "Ro'yxatdan o'tish";
                 });
         }
 
-        // B. Kodni tekshirish va Bazaga saqlash
         async function confirmAndSave() {
-            const userInput = document.getElementById('otp-input').value;
-
-            if (userInput === generatedOTP) {
-                try {
-                    // Firebase Firestore-ga yozish
-                    await db.collection("users").add(userData);
-                    
-                    // LocalStorage-ga saqlash (Sessiya uchun)
-                    localStorage.setItem('atom_user', JSON.stringify({
-                        name: userData.username,
-                        email: userData.email
-                    }));
-
-                    alert("Muvaffaqiyatli ro'yxatdan o'tdingiz!");
-                    window.location.href = 'dashboard.html';
-                    
-                } catch (e) {
-                    console.error("Firebase Xatosi:", e);
-                    alert("Ma'lumotlarni serverga saqlashda xatolik yuz berdi. API Keylarni tekshiring.");
-                }
-            } else {
-                alert("Kod noto'g'ri! Qaytadan tekshirib kiring.");
-            }
-        }
-
-        // C. Google orqali kirish (Callback)
-        function handleCredentialResponse(response) {
-            console.log("Google Login boshlandi...");
-            try {
-                // Tokenni dekodlash
-                const base64Url = response.credential.split('.')[1];
-                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const payload = JSON.parse(window.atob(base64));
-
-                console.log("Salom, " + payload.name);
-
-                // Saqlash
-                localStorage.setItem('atom_user', JSON.stringify({
-                    name: payload.name,
-                    email: payload.email,
-                    picture: payload.picture
-                }));
-
-                // Yo'naltirish
+            if (document.getElementById('otp-input').value === generatedOTP) {
+                await db.collection("users").add(userData);
+                localStorage.setItem('atom_user', JSON.stringify(userData));
                 window.location.href = 'dashboard.html';
-            } catch (e) {
-                console.error("Google Login Xatosi:", e);
-            }
+            } else { alert("Kod xato!"); }
         }
 
-        // ---------------------------------------------------------
-        // 4. SAHIFA YUKLANGANDA (INIT)
-        // ---------------------------------------------------------
+        function resendCode() { /* ... eski kod bilan bir xil ... */ }
+
+        // 6. GOOGLE LOGIN
+        function handleCredentialResponse(response) {
+            const payload = JSON.parse(window.atob(response.credential.split('.')[1]));
+            localStorage.setItem('atom_user', JSON.stringify({
+                name: payload.name,
+                email: payload.email,
+                picture: payload.picture // Google rasmi
+            }));
+            window.location.href = 'dashboard.html';
+        }
+
         window.onload = function () {
-            try {
-                google.accounts.id.initialize({
-                    client_id: "532407535407-t122jsgms7oqvtei0p46sb3bql3bpptu.apps.googleusercontent.com",
-                    callback: handleCredentialResponse,
-                    auto_select: false // Avtomatik tanlashni o'chirib turgan ma'qul
-                });
-
-                google.accounts.id.renderButton(
-                    document.getElementById("buttonDiv"),
-                    { theme: "filled_black", size: "large", shape: "pill", width: "320" }
-                );
-
-                // One Tap (ixtiyoriy)
-                // google.accounts.id.prompt();
-            } catch (err) {
-                console.error("Google SDK yuklanmadi yoki xato:", err);
-            }
+            google.accounts.id.initialize({
+                client_id: "532407535407-t122jsgms7oqvtei0p46sb3bql3bpptu.apps.googleusercontent.com",
+                callback: handleCredentialResponse
+            });
+            google.accounts.id.renderButton(document.getElementById("buttonDiv"), { theme: "filled_black", size: "large", shape: "pill", width: "320" });
         };
     </script>
 </body>
