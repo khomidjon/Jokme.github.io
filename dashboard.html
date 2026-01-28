@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profil Sozlamalari</title>
+    <title>Dashboard - Jarvis</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -12,117 +12,216 @@
             min-height: 100vh;
             color: #fff;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            display: flex; justify-content: center; align-items: center;
+            padding: 50px 20px;
+            overflow-x: hidden;
+            display: flex; flex-direction: column; align-items: center;
         }
 
-        /* Orqa fon (Dashboard bilan bir xil) */
+        /* Orqa fon animatsiyasi */
         body::before {
-            content: ''; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
+            content: '';
+            position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
             background: radial-gradient(circle, rgba(0, 113, 227, 0.08) 0%, transparent 70%);
-            animation: float 15s ease-in-out infinite; z-index: -1;
+            animation: float 15s ease-in-out infinite;
+            z-index: -1; pointer-events: none;
         }
 
-        .profile-container {
-            width: 100%; max-width: 500px; padding: 20px;
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(20px, -30px); }
+            50% { transform: translate(-10px, 20px); }
+            75% { transform: translate(30px, 10px); }
         }
 
-        .profile-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px; padding: 40px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            text-align: center;
+        .container {
+            max-width: 1200px; width: 100%;
+            margin: 0 auto;
         }
 
-        .avatar-container {
-            position: relative; width: 120px; height: 120px; margin: 0 auto 20px;
+        /* USER CARD */
+        .user-card {
+            display: flex; align-items: center; gap: 20px;
+            margin-bottom: 60px; padding: 25px 30px;
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 25px;
+            transition: 0.3s ease; animation: slideDown 0.6s ease-out;
+            /* Faqat shu yerga cursor qo'shildi, bosilishi bilinishi uchun */
+            cursor: pointer; 
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .user-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(0, 113, 227, 0.15);
+        }
+        .user-card img {
+            width: 60px; height: 60px; border-radius: 50%;
+            border: 2px solid rgba(0, 113, 227, 0.5);
+            object-fit: cover;
+            box-shadow: 0 0 30px rgba(0, 113, 227, 0.3);
         }
 
-        .avatar-img {
-            width: 100%; height: 100%; border-radius: 50%;
-            border: 3px solid rgba(102, 126, 234, 0.8);
-            object-fit: cover; box-shadow: 0 0 30px rgba(102, 126, 234, 0.3);
+        .user-info h3 { font-size: 18px; font-weight: 600; margin-bottom: 5px; color: #ffffff; }
+        .user-info p { font-size: 13px; color: rgba(255, 255, 255, 0.6); }
+
+        /* GRID SYSTEM */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+            animation: fadeIn 0.8s ease-out 0.2s both;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .input-group { text-align: left; margin-bottom: 20px; }
-        .input-group label { display: block; margin-bottom: 8px; font-size: 14px; color: #aaa; }
-        .input-group input {
-            width: 100%; padding: 12px; border-radius: 12px;
-            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
-            color: white; font-size: 16px; outline: none;
+        /* PROJECT CARD */
+        .project-card {
+            position: relative; height: 240px;
+            border-radius: 25px; overflow: hidden;
+            text-decoration: none; color: #fff;
+            display: flex; flex-direction: column; justify-content: flex-end;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .input-group input:focus { border-color: #667eea; }
-        .input-group input:read-only { opacity: 0.5; cursor: not-allowed; }
+        .project-card:hover {
+            transform: translateY(-15px);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(0, 113, 227, 0.4);
+            box-shadow: 0 25px 60px rgba(0, 113, 227, 0.25);
+        }
 
-        .btn-save {
-            width: 100%; padding: 14px; border-radius: 12px; border: none;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white; font-weight: bold; cursor: pointer; margin-top: 10px;
+        /* Preview (Video/Rasm) */
+        .preview-content {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.3;
+            transition: opacity 0.4s ease; z-index: 1;
         }
-        .btn-back {
-            display: block; width: 100%; padding: 14px; text-align: center;
-            color: rgba(255,255,255,0.5); text-decoration: none; margin-top: 15px;
-            font-size: 14px; cursor: pointer;
+        .project-card:hover .preview-content { opacity: 1; }
+        
+        .preview-content video, .preview-content img {
+            width: 100%; height: 100%; object-fit: cover;
         }
-        .btn-back:hover { color: white; }
 
+        .card-text {
+            padding: 25px; z-index: 3; position: relative;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.9) 100%);
+        }
+        .card-text h3 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+        .card-text p { font-size: 14px; color: rgba(255, 255, 255, 0.8); }
+
+        /* LOGOUT BUTTON */
+        .logout-container {
+            text-align: center; width: 100%;
+        }
+        .logout {
+            display: inline-block; padding: 14px 45px;
+            background: rgba(255, 59, 48, 0.12);
+            backdrop-filter: blur(10px);
+            border: 1.5px solid rgba(255, 59, 48, 0.3);
+            border-radius: 20px; color: #ff3b30;
+            cursor: pointer; font-weight: 600; font-size: 15px;
+            transition: 0.3s ease;
+        }
+        .logout:hover {
+            background: rgba(255, 59, 48, 0.2);
+            border-color: rgba(255, 59, 48, 0.5);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(255, 59, 48, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
-
-    <div class="profile-container">
-        <div class="profile-card">
-            <h1>Mening Profilim</h1>
-            <br>
-            <div class="avatar-container">
-                <img id="p-img" src="" class="avatar-img" alt="Avatar">
+    <div class="container">
+        
+        <div class="user-card" onclick="window.location.href='profile.html'">
+            <img id="u-img" src="" alt="Avatar">
+            <div class="user-info">
+                <h3 id="u-name">Yuklanmoqda...</h3>
+                <p id="u-email">...</p>
             </div>
-
-            <div class="input-group">
-                <label>Foydalanuvchi ismi (O'zgartirish mumkin)</label>
-                <input type="text" id="p-name">
-            </div>
-
-            <div class="input-group">
-                <label>Email (O'zgartirib bo'lmaydi)</label>
-                <input type="text" id="p-email" readonly>
-            </div>
-
-            <button class="btn-save" onclick="saveProfile()">O'zgarishlarni Saqlash</button>
-            <a href="dashboard.html" class="btn-back">&larr; Dashboardga qaytish</a>
         </div>
+
+        <div class="grid">
+            
+            <a href="Atom.html" class="project-card">
+                <div class="preview-content">
+                    <video src="atom-preview.mp4" autoplay muted loop></video>
+                </div>
+                <div class="card-text">
+                    <h3>Atom 3D</h3>
+                    <p>3D Atomlar va Hand Tracking.</p>
+                </div>
+            </a>
+
+            <a href="Jarvis.paint.html" class="project-card">
+                <div class="preview-content">
+                    <video src="paint-preview.mp4" autoplay muted loop></video>
+                </div>
+                <div class="card-text">
+                    <h3>Jarvis Paint</h3>
+                    <p>Havoda rasm chizish.</p>
+                </div>
+            </a>
+
+            <a href="Fruit.html" class="project-card">
+                <div class="preview-content">
+                    <video src="fruit-preview.mp4" autoplay muted loop></video>
+                </div>
+                <div class="card-text">
+                    <h3>Jarvis Game</h3>
+                    <p>Fruit Ninja Hands</p>
+                </div>
+            </a>
+
+        </div>
+
+        <div class="logout-container">
+            <span class="logout" onclick="logoutUser()">Tizimdan Chiqish</span>
+        </div>
+
     </div>
 
     <script>
+        // Default rasm
         const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-        
-        // Yuklanishda ma'lumotlarni qo'yish
+
+        // LocalStorage dan user ma'lumotini olish
         const userStr = localStorage.getItem('atom_user');
-        if (!userStr) window.location.href = 'index.html';
-        
-        const user = JSON.parse(userStr);
-        
-        document.getElementById('p-name').value = user.name || "";
-        document.getElementById('p-email').value = user.email || "";
-        document.getElementById('p-img').src = user.picture || defaultAvatar;
 
-        // Saqlash funksiyasi
-        function saveProfile() {
-            const newName = document.getElementById('p-name').value;
+        if (!userStr) {
+            window.location.href = 'index.html';
+        } else {
+            const user = JSON.parse(userStr);
             
-            if(newName.trim() === "") {
-                alert("Ism bo'sh bo'lishi mumkin emas!");
-                return;
-            }
+            document.getElementById('u-name').innerText = user.name || "Foydalanuvchi";
+            document.getElementById('u-email').innerText = user.email || "";
+            
+            const imgElement = document.getElementById('u-img');
+            imgElement.src = user.picture ? user.picture : defaultAvatar;
+            
+            imgElement.onerror = function() {
+                this.src = defaultAvatar;
+            };
+        }
 
-            // Yangi ma'lumotni yangilash
-            user.name = newName;
-            
-            // LocalStoragega qayta yozish
-            localStorage.setItem('atom_user', JSON.stringify(user));
-            
-            alert("Ma'lumotlar saqlandi!");
+        // Chiqish funksiyasi
+        function logoutUser() {
+            localStorage.removeItem('atom_user');
+            window.location.href = 'index.html';
         }
     </script>
 </body>
