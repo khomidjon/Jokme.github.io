@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Sozlamalari - Jarvis</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0f0f1e 100%);
+            min-height: 100vh;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            display: flex; justify-content: center; align-items: center;
+            padding: 20px;
+        }
+
+        /* Orqa fon animatsiyasi */
+        body::before {
+            content: ''; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(0, 113, 227, 0.08) 0%, transparent 70%);
+            animation: float 15s ease-in-out infinite; z-index: -1;
+        }
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-10px, 20px); }
+        }
+
+        .container { width: 100%; max-width: 500px; position: relative; z-index: 1; }
+
+        .profile-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px; padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* AVATAR SECTION */
+        .avatar-section {
+            position: relative; width: 120px; height: 120px; margin: 0 auto 30px;
+        }
+        .avatar-img {
+            width: 100%; height: 100%; border-radius: 50%;
+            border: 3px solid rgba(102, 126, 234, 0.8);
+            object-fit: cover; box-shadow: 0 0 30px rgba(102, 126, 234, 0.3);
+        }
+        .edit-avatar-btn {
+            position: absolute; bottom: 0; right: 0;
+            background: #667eea; border: none; border-radius: 50%;
+            width: 35px; height: 35px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: 0.3s;
+        }
+        .edit-avatar-btn:hover { transform: scale(1.1); background: #764ba2; }
+
+        /* INPUT FIELDS */
+        .input-wrapper { margin-bottom: 20px; position: relative; }
+        .label { font-size: 13px; color: #aaa; margin-bottom: 5px; display: flex; justify-content: space-between; }
+        .label span.required { color: #ff4b4b; }
+        
+        .input-container {
+            display: flex; align-items: center;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px; padding: 5px 15px;
+            transition: 0.3s;
+        }
+        .input-container:focus-within { border-color: #667eea; box-shadow: 0 0 10px rgba(102, 126, 234, 0.2); }
+        
+        input {
+            width: 100%; background: transparent; border: none;
+            color: white; padding: 10px 0; font-size: 16px; outline: none;
+        }
+        /* O'zgartirib bo'lmaydigan input (Email) */
+        input:disabled { color: #666; cursor: not-allowed; }
+
+        .edit-icon {
+            cursor: pointer; opacity: 0.6; padding: 5px; transition: 0.3s;
+        }
+        .edit-icon:hover { opacity: 1; color: #667eea; }
+
+        /* BUTTONS */
+        .btn-save {
+            width: 100%; padding: 15px; border-radius: 15px; border: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; font-weight: bold; font-size: 16px; cursor: pointer;
+            margin-top: 10px; transition: 0.3s;
+        }
+        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+
+        .btn-back {
+            display: block; text-align: center; margin-top: 15px;
+            color: rgba(255,255,255,0.5); text-decoration: none; font-size: 14px;
+        }
+        .btn-back:hover { color: white; }
+
+        /* MODAL (RASM TANLASH) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 100;
+            display: none; align-items: center; justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: #1a1a2e; padding: 30px; border-radius: 20px;
+            width: 90%; max-width: 400px; text-align: center; border: 1px solid rgba(255,255,255,0.1);
+        }
+        .avatar-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0;
+        }
+        .avatar-option {
+            width: 70px; height: 70px; border-radius: 50%; cursor: pointer;
+            border: 2px solid transparent; transition: 0.3s; object-fit: cover;
+        }
+        .avatar-option:hover { transform: scale(1.1); border-color: #667eea; }
+        
+        .premium-upload {
+            grid-column: span 3; background: rgba(255, 215, 0, 0.1);
+            border: 1px dashed gold; color: gold;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 80px; border-radius: 10px; cursor: pointer; margin-top: 10px;
+        }
+        .premium-upload:hover { background: rgba(255, 215, 0, 0.2); }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="profile-card">
+            
+            <div class="avatar-section">
+                <img id="p-img" src="" class="avatar-img">
+                <button class="edit-avatar-btn" onclick="openAvatarModal()" title="Rasmni o'zgartirish">
+                    <svg width="16" height="16" fill="white" viewBox="0 0 16 16">
+                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="input-wrapper">
+                <div class="label">Ism Familiya <span class="required">*</span></div>
+                <div class="input-container">
+                    <input type="text" id="p-name" readonly>
+                    <div class="edit-icon" onclick="enableEdit('p-name')">✏️</div>
+                </div>
+            </div>
+
+            <div class="input-wrapper">
+                <div class="label">Email (O'zgartirilmaydi)</div>
+                <div class="input-container" style="opacity: 0.6;">
+                    <input type="email" id="p-email" disabled>
+                    <div class="edit-icon" style="cursor: default;">🔒</div>
+                </div>
+            </div>
+
+            <div class="input-wrapper">
+                <div class="label">Game Nickname (Unikal) <span class="required">*</span></div>
+                <div class="input-container">
+                    <input type="text" id="p-nick" readonly placeholder="@Player_...">
+                    <div class="edit-icon" onclick="enableEdit('p-nick')">✏️</div>
+                </div>
+            </div>
+
+            <div class="input-wrapper">
+                <div class="label">Telefon Raqam</div>
+                <div class="input-container">
+                    <input type="tel" id="p-phone" readonly placeholder="+998...">
+                    <div class="edit-icon" onclick="enableEdit('p-phone')">✏️</div>
+                </div>
+            </div>
+
+            <div class="input-wrapper">
+                <div class="label">Telegram Username</div>
+                <div class="input-container">
+                    <input type="text" id="p-tg" readonly placeholder="@username">
+                    <div class="edit-icon" onclick="enableEdit('p-tg')">✏️</div>
+                </div>
+            </div>
+
+            <button class="btn-save" onclick="saveProfile()">SAQLASH</button>
+            <a href="dashboard.html" class="btn-back">&larr; Dashboardga qaytish</a>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="avatarModal" onclick="closeAvatarModal(event)">
+        <div class="modal-content">
+            <h3>Avatar tanlang</h3>
+            <div class="avatar-grid">
+                <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="avatar-option" onclick="selectAvatar(this.src)">
+                <img src="https://cdn-icons-png.flaticon.com/512/1999/1999625.png" class="avatar-option" onclick="selectAvatar(this.src)">
+                <img src="https://cdn-icons-png.flaticon.com/512/4140/4140048.png" class="avatar-option" onclick="selectAvatar(this.src)">
+                <img src="https://cdn-icons-png.flaticon.com/512/4140/4140047.png" class="avatar-option" onclick="selectAvatar(this.src)">
+                <img src="https://cdn-icons-png.flaticon.com/512/4140/4140037.png" class="avatar-option" onclick="selectAvatar(this.src)">
+                
+                <div class="avatar-option" style="display: flex; align-items: center; justify-content: center; background: #333;" onclick="premiumAlert()">
+                     🔒
+                </div>
+            </div>
+
+            <div class="premium-upload" onclick="premiumAlert()">
+                <span style="font-size: 20px;">📷</span>
+                <span>O'z rasmingizni qo'yish (Premium)</span>
+            </div>
+            <br>
+            <button onclick="document.getElementById('avatarModal').style.display='none'" style="background:transparent; border:none; color:white; cursor:pointer;">Yopish</button>
+        </div>
+    </div>
+
+    <script>
+        const userStr = localStorage.getItem('atom_user');
+        if (!userStr) window.location.href = 'index.html';
+        
+        const user = JSON.parse(userStr);
+        let tempAvatar = user.picture || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+
+        // 1. MA'LUMOTLARNI YUKLASH
+        window.onload = function() {
+            document.getElementById('p-img').src = tempAvatar;
+            document.getElementById('p-name').value = user.name || "";
+            document.getElementById('p-email').value = user.email || "";
+            document.getElementById('p-phone').value = user.phone || "";
+            document.getElementById('p-tg').value = user.telegram || "";
+            
+            // NICKNAME LOGIKASI
+            if (!user.nickname) {
+                // Agar nik bo'lmasa, avtomatik yaratamiz
+                const randomId = Math.floor(1000 + Math.random() * 9000);
+                user.nickname = "@Player_" + randomId;
+                // Buni birdan xotiraga yozmaymiz, saqlash bosilganda yoziladi
+            }
+            document.getElementById('p-nick').value = user.nickname;
+        };
+
+        // 2. TAHRIRLASH (Qalamcha bosilganda)
+        function enableEdit(id) {
+            const input = document.getElementById(id);
+            input.removeAttribute('readonly');
+            input.focus();
+            input.style.borderBottom = "1px solid #667eea"; // Vizual effekt
+        }
+
+        // 3. AVATAR MODALI
+        function openAvatarModal() {
+            document.getElementById('avatarModal').style.display = 'flex';
+        }
+
+        function closeAvatarModal(e) {
+            if(e.target.id === 'avatarModal') {
+                document.getElementById('avatarModal').style.display = 'none';
+            }
+        }
+
+        function selectAvatar(src) {
+            tempAvatar = src;
+            document.getElementById('p-img').src = src;
+            document.getElementById('avatarModal').style.display = 'none';
+        }
+
+        function premiumAlert() {
+            alert("⚠️ Bu funksiya faqat Premium akkauntlar uchun mavjud!\n\n(Hozircha sotib olish tizimi ulanmagan)");
+        }
+
+        // 4. SAQLASH VA VALIDATSIYA
+        function saveProfile() {
+            const name = document.getElementById('p-name').value.trim();
+            const nick = document.getElementById('p-nick').value.trim();
+            const phone = document.getElementById('p-phone').value.trim();
+            const tg = document.getElementById('p-tg').value.trim();
+
+            // Majburiy maydonlar
+            if (!name) {
+                alert("Ism Familiya bo'sh bo'lishi mumkin emas!");
+                return;
+            }
+
+            // Nickname validatsiyasi (@, harf, raqam, _)
+            // Regex: @ bilan boshlanadi, keyin faqat harf, raqam yoki _ (min 3 ta belgi)
+            const nickRegex = /^@[a-zA-Z0-9_]{3,}$/;
+            if (!nickRegex.test(nick)) {
+                alert("Game Nickname noto'g'ri!\n\n- @ belgisi bilan boshlanishi shart.\n- Faqat lotin harflari, raqamlar va (_) ishlatilishi mumkin.\n- Kamida 4 ta belgi bo'lishi kerak.");
+                return;
+            }
+
+            // Ma'lumotlarni yangilash
+            user.name = name;
+            user.nickname = nick;
+            user.phone = phone;
+            user.telegram = tg;
+            user.picture = tempAvatar;
+
+            // Xotiraga yozish
+            localStorage.setItem('atom_user', JSON.stringify(user));
+            
+            // Firebasega ham yozish kerak (Agar kelajakda server ulansa)
+            // Hozircha vizual
+            
+            // Muvaffaqiyatli xabar
+            alert("✅ Profil muvaffaqiyatli saqlandi!");
+            // Ixtiyoriy: Dashboardga qaytarish
+            // window.location.href = 'dashboard.html';
+        }
+    </script>
+</body>
+</html>
