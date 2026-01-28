@@ -3,17 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Homidjon - Auth</title>
+    <title>Jarvis - Auth</title>
+    
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+
     <style>
-        /* SIZNING DIZAYNINGIZ (O'ZGARISHSIZ) */
+        /* SIZGA YOQQAN DIZAYN (O'ZGARISHSIZ) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             min-height: 100vh;
             display: flex; align-items: center; justify-content: center;
-            background: #000; overflow: hidden; position: relative;
+            background: #000; overflow: hidden; position: relative; color: white;
         }
 
         /* Animated Background */
@@ -36,8 +41,6 @@
         .particle:nth-child(1) { width: 80px; height: 80px; left: 10%; animation-delay: 0s; }
         .particle:nth-child(2) { width: 60px; height: 60px; left: 30%; animation-delay: 2s; }
         .particle:nth-child(3) { width: 100px; height: 100px; left: 50%; animation-delay: 4s; }
-        .particle:nth-child(4) { width: 70px; height: 70px; left: 70%; animation-delay: 6s; }
-        .particle:nth-child(5) { width: 90px; height: 90px; left: 85%; animation-delay: 8s; }
 
         @keyframes float {
             0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
@@ -71,7 +74,7 @@
             box-shadow: 0 8px 32px 0 rgba(102, 126, 234, 0.2);
         }
 
-        /* Tab System */
+        /* Tabs */
         .tabs { display: flex; gap: 10px; margin-bottom: 30px; }
         .tab {
             flex: 1; padding: 12px;
@@ -79,104 +82,48 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px; color: rgba(255, 255, 255, 0.5);
             cursor: pointer; transition: all 0.3s ease;
-            font-weight: 500; backdrop-filter: blur(10px); text-align: center;
+            font-weight: 500; text-align: center;
         }
-        .tab:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(102, 126, 234, 0.3); }
         .tab.active {
             background: rgba(102, 126, 234, 0.2);
             border-color: rgba(102, 126, 234, 0.5);
             color: #fff; box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
         }
 
-        /* Form Styles */
-        .form-content { display: none; }
-        .form-content.active { display: block; animation: fadeIn 0.5s ease; }
+        /* Inputs & Buttons */
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; color: rgba(255, 255, 255, 0.8); font-size: 14px; margin-bottom: 8px; }
+        .input-group input {
+            width: 100%; padding: 14px; background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
+            color: #fff; font-size: 15px; outline: none; transition: 0.3s;
+        }
+        .input-group input:focus { border-color: #667eea; background: rgba(255, 255, 255, 0.08); }
+        
+        .btn {
+            width: 100%; padding: 14px; margin-top: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none; border-radius: 12px; color: #fff;
+            font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* Form Visibility */
+        .form-content { display: none; animation: fadeIn 0.5s; }
+        .form-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .input-group { margin-bottom: 20px; position: relative; }
-        .input-group label {
-            display: block; color: rgba(255, 255, 255, 0.8);
-            font-size: 14px; margin-bottom: 8px; font-weight: 500;
-        }
-        .input-group input {
-            width: 100%; padding: 14px 18px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px; color: #fff; font-size: 15px;
-            transition: all 0.3s ease; backdrop-filter: blur(10px); outline: none;
-        }
-        .input-group input:focus {
-            border-color: rgba(102, 126, 234, 0.6);
-            background: rgba(255, 255, 255, 0.08);
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 0 20px rgba(102, 126, 234, 0.3);
-        }
-        .input-group input::placeholder { color: rgba(255, 255, 255, 0.3); }
-
-        /* Button Styles */
-        .btn {
-            width: 100%; padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px; color: #fff; font-size: 16px; font-weight: 600;
-            cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden;
-        }
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-        }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        /* Divider */
-        .divider {
-            display: flex; align-items: center; margin: 25px 0;
-            color: rgba(255, 255, 255, 0.5); font-size: 14px;
-        }
-        .divider::before, .divider::after {
-            content: ''; flex: 1; height: 1px; background: rgba(255, 255, 255, 0.1);
-        }
-        .divider span { padding: 0 15px; }
-
-        /* Google Button */
-        .google-btn {
-            width: 100%; padding: 14px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px; color: #fff; font-size: 15px; font-weight: 500;
-            cursor: pointer; transition: all 0.3s ease;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-        }
-        .google-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.3);
-        }
-        .google-icon { width: 20px; height: 20px; }
-
-        /* Links & Alerts */
-        .links { text-align: center; margin-top: 20px; }
-        .links a { color: rgba(102, 126, 234, 0.8); text-decoration: none; font-size: 14px; transition: 0.3s; }
-        .links a:hover { color: #667eea; text-shadow: 0 0 10px rgba(102, 126, 234, 0.5); }
-
-        .alert {
-            padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 14px;
-            backdrop-filter: blur(10px); animation: slideIn 0.3s ease;
-        }
-        .alert-success { background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); color: #4ade80; }
-        .alert-error { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Responsive */
-        @media (max-width: 480px) {
-            .hero h1 { font-size: 32px; }
-            .login-box { padding: 30px 25px; }
-        }
+        .otp-input { text-align: center; letter-spacing: 5px; font-size: 20px; }
+        .resend-link { text-align: center; margin-top: 15px; font-size: 12px; cursor: pointer; color: #aaa; }
+        .divider { text-align: center; margin: 20px 0; color: rgba(255,255,255,0.4); font-size: 14px; }
     </style>
 </head>
 <body>
+
     <div class="bg-animation">
         <div class="bg-gradient"></div>
         <div class="particles">
-            <div class="particle"></div>
-            <div class="particle"></div>
             <div class="particle"></div>
             <div class="particle"></div>
             <div class="particle"></div>
@@ -186,270 +133,259 @@
     <div class="container">
         <div class="hero">
             <h1>XUSH KELIBSIZ!</h1>
-            <p>JARVIS AI - Kelajakni yarating</p>
+            <p>JARVIS AI tizimiga kiring</p>
         </div>
 
         <div class="login-box">
             <div class="tabs">
-                <div class="tab active" onclick="switchTab('login')">Kirish</div>
-                <div class="tab" onclick="switchTab('signup')">Ro'yxatdan o'tish</div>
+                <div class="tab active" id="tab-login" onclick="switchTab('login')">Kirish</div>
+                <div class="tab" id="tab-register" onclick="switchTab('register')">Ro'yxatdan o'tish</div>
             </div>
 
             <div id="login-form" class="form-content active">
-                <div id="login-alert"></div>
-                <form onsubmit="handleLogin(event)">
+                <div class="input-group">
+                    <label>Email</label>
+                    <input type="email" id="login-email" placeholder="Emailingiz">
+                </div>
+                <div class="input-group">
+                    <label>Parol</label>
+                    <input type="password" id="login-password" placeholder="Parolingiz">
+                </div>
+                <button class="btn" onclick="loginUser()">Tizimga kirish</button>
+            </div>
+
+            <div id="register-form" class="form-content">
+                <div id="reg-step-1">
+                    <div class="input-group">
+                        <label>Foydalanuvchi nomi</label>
+                        <input type="text" id="reg-username" placeholder="Ismingiz">
+                    </div>
                     <div class="input-group">
                         <label>Email</label>
-                        <input type="email" id="login-email" placeholder="example@gmail.com" required>
+                        <input type="email" id="reg-email" placeholder="Emailingiz">
                     </div>
                     <div class="input-group">
-                        <label>Parol</label>
-                        <input type="password" id="login-password" placeholder="••••••••" required>
+                        <label>Parol (8+ belgi, 1 ta katta harf)</label>
+                        <input type="password" id="reg-password" placeholder="Parol o'ylab toping">
                     </div>
-                    <button type="submit" class="btn" id="login-btn">Kirish</button>
-                </form>
-
-                <div class="divider"><span>yoki</span></div>
-
-                <div id="g_id_onload"
-                     data-client_id="532407535407-t122jsgms7oqvtei0p46sb3bql3bpptu.apps.googleusercontent.com"
-                     data-callback="handleCredentialResponse"
-                     data-auto_prompt="false">
+                    <button class="btn" id="send-code-btn" onclick="startRegistration()">Ro'yxatdan o'tish</button>
                 </div>
-                
-                <button class="google-btn" onclick="triggerGoogleLogin()">
-                    <svg class="google-icon" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                    </svg>
-                    Google orqali kirish
-                </button>
 
-                <div class="links">
-                    <a href="#">Parolni unutdingizmi?</a>
+                <div id="reg-step-2" style="display: none;">
+                    <p style="text-align: center; margin-bottom: 15px;">Emailga yuborilgan kodni kiriting:</p>
+                    <div class="input-group">
+                        <input type="text" id="otp-input" class="otp-input" maxlength="5" placeholder="12345">
+                    </div>
+                    <button class="btn" onclick="confirmAndSave()">Tasdiqlash</button>
+                    <p class="resend-link" onclick="resendCode()">Kodni qayta yuborish</p>
                 </div>
             </div>
 
-            <div id="signup-form" class="form-content">
-                <div id="signup-alert"></div>
-                <form onsubmit="handleSignup(event)">
-                    <div class="input-group">
-                        <label>Ism</label>
-                        <input type="text" id="signup-name" placeholder="To'liq ismingiz" required>
-                    </div>
-                    <div class="input-group">
-                        <label>Email</label>
-                        <input type="email" id="signup-email" placeholder="example@gmail.com" required>
-                    </div>
-                    <div class="input-group">
-                        <label>Parol</label>
-                        <input type="password" id="signup-password" placeholder="Kamida 6 ta belgi" minlength="6" required>
-                    </div>
-                    <button type="submit" class="btn" id="signup-btn">Ro'yxatdan o'tish</button>
-                </form>
-
-                <div class="divider"><span>yoki</span></div>
-
-                <button class="google-btn" onclick="triggerGoogleLogin()">
-                    <svg class="google-icon" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                    </svg>
-                    Google orqali ro'yxatdan o'tish
-                </button>
+            <div class="divider">yoki Google orqali</div>
+            <div id="g_id_onload"
+                 data-client_id="532407535407-t122jsgms7oqvtei0p46sb3bql3bpptu.apps.googleusercontent.com"
+                 data-context="signin"
+                 data-ux_mode="popup"
+                 data-callback="handleCredentialResponse"
+                 data-auto_select="true"
+                 data-itp_support="true">
             </div>
         </div>
     </div>
 
     <script>
-        // --- 1. LOCALSTORAGE FUNKSIYALARI ---
-        // (Eski window.storage o'rniga oddiy localStorage ishlatamiz)
+        // ---------------------------------------------------------
+        // 1. FIREBASE & EMAILJS SOZLAMALARI
+        // ---------------------------------------------------------
+        const firebaseConfig = {
+            apiKey: "AIzaSyAg_n9-MsYSI41l_BqHWHuXrkE7I0fRfmo",
+            authDomain: "my-universe-a5416.firebaseapp.com",
+            projectId: "my-universe-a5416",
+            storageBucket: "my-universe-a5416.firebasestorage.app",
+            messagingSenderId: "960863192078",
+            appId: "1:960863192078:web:b47ef80668ccbeea9d285f",
+            measurementId: "G-FT3XEBVPZ8"
+        };
         
-        function saveUser(userData) {
-            try {
-                // Har bir user alohida kalit bilan saqlanadi: "user:ali@gmail.com"
-                const userKey = `user:${userData.email}`;
-                localStorage.setItem(userKey, JSON.stringify(userData));
-                return true;
-            } catch (error) {
-                console.error('Save error:', error);
-                return false;
-            }
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        (function() {
+            emailjs.init("Gtorrbu3ZydFWOVZO"); // Public Key
+        })();
+
+        // ---------------------------------------------------------
+        // 2. GLOBAL O'ZGARUVCHILAR
+        // ---------------------------------------------------------
+        let generatedOTP = "";
+        let userData = {};
+        const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+
+        if (localStorage.getItem('atom_user')) {
+            window.location.href = 'dashboard.html';
         }
 
-        function getUser(email) {
-            try {
-                const userKey = `user:${email}`;
-                const result = localStorage.getItem(userKey);
-                return result ? JSON.parse(result) : null;
-            } catch (error) {
-                console.error('Get error:', error);
-                return null;
-            }
-        }
-
-        function setCurrentUser(userData) {
-            try {
-                // Joriy kirgan odamni "atom_user" deb saqlaymiz (Dashboard uchun)
-                localStorage.setItem('atom_user', JSON.stringify(userData));
-                return true;
-            } catch (error) {
-                console.error('Session error:', error);
-                return false;
-            }
-        }
-
-        // --- 2. UI FUNKSIYALARI ---
-
-        function showAlert(elementId, message, type) {
-            const alertDiv = document.getElementById(elementId);
-            alertDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
-            setTimeout(() => { alertDiv.innerHTML = ''; }, 4000);
-        }
-
-        function setButtonLoading(buttonId, isLoading) {
-            const btn = document.getElementById(buttonId);
-            if (isLoading) {
-                btn.disabled = true;
-                btn.innerText = 'Yuklanmoqda...';
-            } else {
-                btn.disabled = false;
-                btn.innerText = buttonId === 'login-btn' ? 'Kirish' : "Ro'yxatdan o'tish";
-            }
-        }
-
+        // ---------------------------------------------------------
+        // 3. TABLARNI ALMASHTIRISH
+        // ---------------------------------------------------------
         function switchTab(tab) {
-            const tabs = document.querySelectorAll('.tab');
-            const forms = document.querySelectorAll('.form-content');
-            
-            tabs.forEach(t => t.classList.remove('active'));
-            forms.forEach(f => f.classList.remove('active'));
-            
-            // Xatoliklarni tozalash
-            document.getElementById('login-alert').innerHTML = '';
-            document.getElementById('signup-alert').innerHTML = '';
-            
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const tabLogin = document.getElementById('tab-login');
+            const tabRegister = document.getElementById('tab-register');
+
             if (tab === 'login') {
-                tabs[0].classList.add('active');
-                document.getElementById('login-form').classList.add('active');
+                loginForm.classList.add('active');
+                registerForm.classList.remove('active');
+                tabLogin.classList.add('active');
+                tabRegister.classList.remove('active');
             } else {
-                tabs[1].classList.add('active');
-                document.getElementById('signup-form').classList.add('active');
+                loginForm.classList.remove('active');
+                registerForm.classList.add('active');
+                tabLogin.classList.remove('active');
+                tabRegister.classList.add('active');
             }
         }
 
-        // --- 3. RO'YXATDAN O'TISH (SIGNUP) ---
-        function handleSignup(e) {
-            e.preventDefault();
-            setButtonLoading('signup-btn', true);
-            
-            const name = document.getElementById('signup-name').value;
-            const email = document.getElementById('signup-email').value;
-            const password = document.getElementById('signup-password').value;
-            
-            // Foydalanuvchi bormi tekshiramiz
-            const existingUser = getUser(email);
-            if (existingUser) {
-                showAlert('signup-alert', 'Bu email allaqachon ro\'yxatdan o\'tgan!', 'error');
-                setButtonLoading('signup-btn', false);
-                return;
-            }
-            
-            // Yangi user ma'lumotlari
-            const userData = {
-                name: name,
-                email: email,
-                password: password, // Real loyihada parolni shifrlash kerak
-                picture: "https://cdn-icons-png.flaticon.com/512/149/149071.png", // Default rasm
-                createdAt: new Date().toISOString()
-            };
-            
-            const saved = saveUser(userData);
-            
-            if (saved) {
-                showAlert('signup-alert', 'Muvaffaqiyatli! Endi kirishingiz mumkin.', 'success');
-                setTimeout(() => {
-                    switchTab('login');
-                    document.getElementById('login-email').value = email;
-                }, 1500);
-            } else {
-                showAlert('signup-alert', 'Xatolik yuz berdi.', 'error');
-            }
-            
-            setButtonLoading('signup-btn', false);
-        }
-
-        // --- 4. KIRISH (LOGIN) ---
-        function handleLogin(e) {
-            e.preventDefault();
-            setButtonLoading('login-btn', true);
-            
+        // ---------------------------------------------------------
+        // 4. LOGIN (KIRISH)
+        // ---------------------------------------------------------
+        async function loginUser() {
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
-            
-            const user = getUser(email);
-            
-            if (!user) {
-                showAlert('login-alert', 'Foydalanuvchi topilmadi. Ro\'yxatdan o\'ting.', 'error');
-                setButtonLoading('login-btn', false);
-                return;
+
+            if (!email || !password) { alert("Iltimos, email va parolni kiriting!"); return; }
+
+            try {
+                const snapshot = await db.collection("users")
+                    .where("email", "==", email)
+                    .where("password", "==", password)
+                    .get();
+
+                if (!snapshot.empty) {
+                    const userDoc = snapshot.docs[0].data();
+                    localStorage.setItem('atom_user', JSON.stringify({
+                        name: userDoc.username,
+                        email: userDoc.email,
+                        picture: userDoc.picture || defaultAvatar
+                    }));
+                    window.location.href = 'dashboard.html';
+                } else {
+                    alert("Email yoki parol noto'g'ri!");
+                }
+            } catch (error) {
+                console.error("Xatolik:", error);
+                alert("Tizim xatosi: " + error.message);
             }
-            
-            if (user.password !== password) {
-                showAlert('login-alert', 'Parol noto\'g\'ri!', 'error');
-                setButtonLoading('login-btn', false);
-                return;
-            }
-            
-            // Muvaffaqiyatli kirish
-            setCurrentUser(user);
-            showAlert('login-alert', 'Xush kelibsiz!', 'success');
-            
-            setTimeout(() => {
-                window.location.href = 'dashboard.html';
-            }, 1000);
-            
-            setButtonLoading('login-btn', false);
         }
 
-        // --- 5. GOOGLE LOGIN ---
+        // ---------------------------------------------------------
+        // 5. REGISTRATSIYA (EMAIL KOD BILAN)
+        // ---------------------------------------------------------
+        function startRegistration() {
+            const username = document.getElementById('reg-username').value;
+            const email = document.getElementById('reg-email').value;
+            const pass = document.getElementById('reg-password').value;
+
+            if (!username || !email || !pass) { alert("Barcha maydonlarni to'ldiring!"); return; }
+            
+            // Parol tekshiruvi (Kamida 8 belgi, 1 ta katta harf)
+            const regex = /^(?=.*[A-Z]).{8,}$/;
+            if (!regex.test(pass)) { 
+                alert("Parol juda oddiy! Kamida 8 ta belgi va 1 ta katta harf bo'lishi kerak."); 
+                return; 
+            }
+
+            generatedOTP = Math.floor(10000 + Math.random() * 90000).toString();
+
+            userData = {
+                username: username,
+                email: email,
+                password: pass,
+                picture: defaultAvatar,
+                regDate: new Date().toLocaleString()
+            };
+
+            const templateParams = {
+                email: email,           
+                passcode: generatedOTP, 
+                to_name: username       
+            };
+
+            const btn = document.getElementById('send-code-btn');
+            btn.innerText = "Yuborilmoqda...";
+            btn.disabled = true;
+
+            emailjs.send('service_tp046db', 'template_vwedq2m', templateParams)
+                .then(function() {
+                    alert("Kod emailingizga yuborildi!");
+                    document.getElementById('reg-step-1').style.display = 'none';
+                    document.getElementById('reg-step-2').style.display = 'block';
+                }, function(error) {
+                    alert("Xatolik yuz berdi. Internetni tekshiring.");
+                    console.error(error);
+                    btn.innerText = "Ro'yxatdan o'tish";
+                    btn.disabled = false;
+                });
+        }
+
+        async function confirmAndSave() {
+            const userInput = document.getElementById('otp-input').value;
+            if (userInput === generatedOTP) {
+                try {
+                    await db.collection("users").add(userData);
+                    localStorage.setItem('atom_user', JSON.stringify({
+                        name: userData.username,
+                        email: userData.email,
+                        picture: userData.picture
+                    }));
+                    window.location.href = 'dashboard.html';
+                } catch (e) {
+                    alert("Bazaga yozishda xatolik!");
+                }
+            } else {
+                alert("Kod noto'g'ri!");
+            }
+        }
+
+        function resendCode() {
+            document.getElementById('reg-step-2').style.display = 'none';
+            document.getElementById('reg-step-1').style.display = 'block';
+            const btn = document.getElementById('send-code-btn');
+            btn.innerText = "Ro'yxatdan o'tish";
+            btn.disabled = false;
+        }
+
+        // ---------------------------------------------------------
+        // 6. GOOGLE ONE TAP (AVTOMATIK CHIQADIGAN OYNA)
+        // ---------------------------------------------------------
         window.handleCredentialResponse = function(response) {
             try {
+                // Tokenni o'qish
                 const payload = JSON.parse(atob(response.credential.split('.')[1]));
                 
-                const userData = {
+                // Bazaga saqlash (ixtiyoriy, agar kerak bo'lsa)
+                // Hozircha faqat localstoragega yozib kirgizvoramiz
+                localStorage.setItem('atom_user', JSON.stringify({
                     name: payload.name,
                     email: payload.email,
-                    picture: payload.picture,
-                    password: "google_login", // Google bilan kirganda parol shart emas
-                    createdAt: new Date().toISOString()
-                };
-                
-                // Bazaga saqlash va sessiyani ochish
-                saveUser(userData);
-                setCurrentUser(userData);
-                
-                console.log('Google login OK:', userData.name);
+                    picture: payload.picture
+                }));
+
                 window.location.href = 'dashboard.html';
             } catch (e) {
-                console.error("Google error:", e);
-                showAlert('login-alert', 'Google orqali kirishda xato.', 'error');
+                console.error("Google Login Error:", e);
             }
         };
 
-        function triggerGoogleLogin() {
-            // Google One Tap oynasini chaqirish
-            google.accounts.id.prompt();
-        }
-        
-        // Avval kirgan bo'lsa, Dashboardga o'tkazish
-        if(localStorage.getItem('atom_user')) {
-            window.location.href = 'dashboard.html';
-        }
+        // Sayt yuklanganda Google oynasini chiqarishga urinish
+        window.onload = function() {
+            google.accounts.id.prompt((notification) => {
+                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                    console.log("Google One Tap ko'rsatilmadi yoki yopildi");
+                }
+            });
+        };
     </script>
 </body>
 </html>
