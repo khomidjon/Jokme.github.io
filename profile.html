@@ -200,9 +200,10 @@
             <div class="input-wrapper">
                 <div class="label">Game Nickname (Unikal) <span class="required">*</span></div>
                 <div class="input-container">
-                    <input type="text" id="p-nick" readonly placeholder="@Player_...">
+                    <input type="text" id="p-nick" readonly placeholder="@Player_..." oninput="handleNickInput(this.value)">
                     <div class="edit-icon" onclick="enableEdit('p-nick')">✏️</div>
                 </div>
+                <div id="nick-status" style="font-size: 12px; margin-top: 5px; height: 15px; transition: 0.3s;"></div>
             </div>
 
             <div class="input-wrapper">
@@ -260,6 +261,83 @@
     </div>
 
     <script>
+        let typingTimer; 
+const doneTypingInterval = 500; // 0.5 soniya kutish vaqti
+const nickStatus = document.getElementById('nick-status');
+const saveButton = document.getElementById('saveBtn');
+
+// Inputga yozganda ishlaydigan funksiya
+function handleNickInput(val) {
+    // 1. Avvalgi taymerni tozalaymiz
+    clearTimeout(typingTimer);
+    
+    // 2. Agar bo'sh bo'lsa
+    if (!val) {
+        nickStatus.innerHTML = "";
+        saveButton.disabled = false;
+        return;
+    }
+
+    // 3. Statusni "Tekshirilmoqda..." ga o'zgartiramiz
+    nickStatus.style.color = "#ffa502"; // Sariq rang
+    nickStatus.innerHTML = "⏳ Tekshirilmoqda...";
+    saveButton.disabled = true; // Tekshiruv paytida saqlab bo'lmaydi
+
+    // 4. Taymerni ishga tushiramiz (yozib bo'lgach ishlaydi)
+    typingTimer = setTimeout(() => {
+        checkNicknameLive(val);
+    }, doneTypingInterval);
+}
+
+// Jonli tekshirish funksiyasi
+async function checkNicknameLive(nick) {
+    const trimmedNick = nick.trim();
+    
+    // REGEX VALIDATSIYA
+    const nickRegex = /^@[a-zA-Z0-9_]{3,}$/;
+    if (!nickRegex.test(trimmedNick)) {
+        nickStatus.style.color = "#ff4b4b"; // Qizil
+        nickStatus.innerHTML = "❌ Noto'g'ri format! (@bilan, min 4 belgi)";
+        return; // Tugma disabled bo'lib qolaveradi
+    }
+
+    // Agar o'zining eski niki bo'lsa (o'zgartirmagan bo'lsa)
+    if (trimmedNick === user.nickname) {
+        nickStatus.style.color = "#00b894"; // Yashil
+        nickStatus.innerHTML = "✅ Bu sizning hozirgi nikingiz";
+        saveButton.disabled = false;
+        return;
+    }
+
+    try {
+        // SERVERDAN TEKSHIRISH (Firebase)
+        if (db) {
+            const usersRef = db.collection('users');
+            const snapshot = await usersRef.where('nickname', '==', trimmedNick).get();
+
+            if (!snapshot.empty) {
+                // Band bo'lsa
+                nickStatus.style.color = "#ff4b4b";
+                nickStatus.innerHTML = "⚠️ Bu nik allaqachon band!";
+                saveButton.disabled = true; // Saqlashni bloklaymiz
+            } else {
+                // Bo'sh bo'lsa (Muvaffaqiyatli)
+                nickStatus.style.color = "#00b894";
+                nickStatus.innerHTML = "✅ Bu nik bo'sh, ishlata olasiz!";
+                saveButton.disabled = false; // Saqlashni yoqamiz
+            }
+        } else {
+            // Server ulanmagan bo'lsa
+            nickStatus.style.color = "#aaa";
+            nickStatus.innerHTML = "Server ulanmagan (Lokal rejim)";
+            saveButton.disabled = false;
+        }
+    } catch (error) {
+        console.error("Tekshirishda xatolik:", error);
+        nickStatus.style.color = "#ff4b4b";
+        nickStatus.innerHTML = "Internet xatosi!";
+    }
+}
         // --- 1. FIREBASE CONFIG (O'zingizning kalitlaringizni shu yerga qo'ying) ---
         const firebaseConfig = {
             apiKey: "SIZNING_API_KEY",
