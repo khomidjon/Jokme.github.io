@@ -449,50 +449,46 @@
         }
         
         function onResults(results) {
-    handCtx.save();
-    handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
-    
-    handCtx.translate(handCanvas.width, 0);
-    handCtx.scale(-1, 1);
+            handCtx.save();
+            handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
+            
+            // Oynani to'g'irlash (Mirror effect)
+            handCtx.translate(handCanvas.width, 0);
+            handCtx.scale(-1, 1);
 
-    if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-        var hand = results.multiHandLandmarks[0];
-        var indexTip = hand[8];
-
-        var aspect = window.innerWidth / window.innerHeight;
-        var x3d = (indexTip.x - 0.5) * -aspect * 42; // Sonlarni kattalashtirdik
-        var y3d = -(indexTip.y - 0.5) * 32; 
-        var pos = new THREE.Vector3(x3d, y3d, 0);
-        drawConnectors(handCtx, hand, HAND_CONNECTIONS, {color: '#00d4ff', lineWidth: 2});
-        drawLandmarks(handCtx, [hand[8]], {
-            color: '#FFD700', 
-            radius: 8,       
-            fillColor: '#FFD700'
-        });
-        drawLandmarks(handCtx, hand.filter((_,i) => i !== 8), {
-    color: '#ffffff', 
-    radius: 2
-        });
-    }
-        }
-    handCtx.restore();
-        fingertipDot.style.left = screenX + 'px';
-        fingertipDot.style.top = screenY + 'px';
-        fingertipDot.style.display = 'block';
-                
+            // Xatolik shu yerda edi: if sharti ochildi
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                var hand = results.multiHandLandmarks[0];
                 var indexTip = hand[8];
+
+                // Qo'l chiziqlarini chizish
+                drawConnectors(handCtx, hand, HAND_CONNECTIONS, {color: '#00d4ff', lineWidth: 2});
+                drawLandmarks(handCtx, [hand[8]], {
+                    color: '#FFD700', 
+                    radius: 8,        
+                    fillColor: '#FFD700'
+                });
+                drawLandmarks(handCtx, hand.filter((_,i) => i !== 8), {
+                    color: '#ffffff', 
+                    radius: 2
+                });
+
+                // Barmoq uchi koordinatalarini olish
+                var screenX = (1 - indexTip.x) * window.innerWidth;
+                var screenY = indexTip.y * window.innerHeight;
+                
+                // 3D koordinatalar
+                var aspect = window.innerWidth / window.innerHeight;
+                var x3d = (indexTip.x - 0.5) * -aspect * 42; 
+                var y3d = -(indexTip.y - 0.5) * 32; 
+                var pos = new THREE.Vector3(x3d, y3d, 0);
+
+                // Barmoqlar holatini aniqlash
                 var indexMcp = hand[5];
                 var thumbTip = hand[4];
                 var middleTip = hand[12];
                 var ringTip = hand[16];
                 var pinkyTip = hand[20];
-                
-                var screenX = (1 - indexTip.x) * window.innerWidth;
-                var screenY = indexTip.y * window.innerHeight;
-                var aspect = window.innerWidth / window.innerHeight;
-                var x = (indexTip.x - 0.5) * -aspect * 45; // 45 soni chiziqni chekkaga cho'zadi
-                var y = -(indexTip.y - 0.5) * 35;   
-                var pos = new THREE.Vector3(x, y, 0);
                 
                 var isPinching = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y) < 0.11;
                 var indexExtended = indexTip.y < indexMcp.y - 0.05;
@@ -509,6 +505,7 @@
                 var dotColor = '#ffffff';
                 var dotSize = '15px';
                 
+                // MANTIQIY QISMLAR
                 if (isPointing) {
                     modeText.textContent = 'CHIZISH REJIMI';
                     skeletonColor = '#FFA500';
@@ -562,12 +559,6 @@
                                     scene.remove(objects3D[k]);
                                     objects3D.splice(k, 1);
                                     showNotification('Object deleted');
-                                    
-                                    for (var m = 0; m < 30; m++) {
-                                        var px = Math.random() * particleCanvas.width;
-                                        var py = Math.random() * particleCanvas.height;
-                                        particles.push(new Particle(px, py, {r: 255, g: 0, b: 0}));
-                                    }
                                     break;
                                 }
                             }
@@ -605,120 +596,18 @@
                 fingertipDot.style.boxShadow = '0 0 20px ' + dotColor + ', 0 0 40px ' + dotColor;
                 fingertipDot.style.display = 'block';
 
+                // Qayta chizish (ranglar o'zgargan bo'lishi mumkin)
                 drawConnectors(handCtx, hand, HAND_CONNECTIONS, {color: skeletonColor, lineWidth: 3});
                 drawLandmarks(handCtx, hand, {color: skeletonColor, radius: 3, fillColor: skeletonColor});
             
-            else {
+            } else { 
+                // Xatolik sababi shu yerda edi: else ifsiz qolib ketgandi
                 modeText.textContent = 'QO"LINGIZNI KORSATING';
                 fingertipDot.style.display = 'none';
             }
             
             handCtx.restore();
-        
-        function createHolographicObject() {
-            if (drawingPoints.length < 5) return;
-            
-            var shape = new THREE.Shape();
-            shape.moveTo(drawingPoints[0].x, drawingPoints[0].y);
-            for (var p = 0; p < drawingPoints.length; p++) {
-                shape.lineTo(drawingPoints[p].x, drawingPoints[p].y);
-            }
-            shape.closePath();
-            
-            var geometry = new THREE.ExtrudeGeometry(shape, { 
-                depth: 2, 
-                bevelEnabled: true, 
-                bevelThickness: 0.3, 
-                bevelSize: 0.2,
-                bevelSegments: 5
-            });
-            
-            var dominantColor = drawingColors[Math.floor(drawingColors.length / 2)] || currentColor;
-            
-            var material = new THREE.MeshPhongMaterial({ 
-                color: dominantColor,
-                emissive: dominantColor,
-                emissiveIntensity: 0.3,
-                transparent: true,
-                opacity: 0.9,
-                shininess: 100
-            });
-            
-            var mesh = new THREE.Mesh(geometry, material);
-            
-            geometry.computeBoundingBox();
-            var center = new THREE.Vector3();
-            geometry.boundingBox.getCenter(center);
-            geometry.translate(-center.x, -center.y, -center.z);
-            mesh.position.copy(center);
-            
-            scene.add(mesh);
-            objects3D.push(mesh);
-            
-            for (var q = 0; q < 50; q++) {
-                var rx = Math.random() * particleCanvas.width;
-                var ry = Math.random() * particleCanvas.height;
-                particles.push(new Particle(rx, ry, hexToRgb(dominantColor)));
-            }
-            
-            drawingPoints = [];
-            drawingColors = [];
-            for (var t = 0; t < tempLines.length; t++) {
-                scene.remove(tempLines[t]);
-            }
-            tempLines = [];
         }
-        
-        var hands = new Hands({
-            locateFile: function(file) { return 'https://cdn.jsdelivr.net/npm/@mediapipe/hands/' + file; }
-        });
-        
-        hands.setOptions({
-            maxNumHands: 1,
-            modelComplexity: 0,
-            minDetectionConfidence: 0.5,
-            minTrackingConfidence: 0.5
-        });
-        
-        hands.onResults(onResults);
-        
-        var cam = new Camera(video, {
-            onFrame: async function() { await hands.send({ image: video }); },
-            width: 1280,
-            height: 720
-        });
-        
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                const intro = document.getElementById('intro-screen');
-                if(intro) {
-                 intro.style.opacity = '0';
-                    setTimeout(() => intro.style.display = 'none', 1000);
-                }
-                cam.start(); 
-            }, 5000);
-        });
-        
-        function animate() {
-            requestAnimationFrame(animate);
-            
-            for (var o = 0; o < objects3D.length; o++) {
-                objects3D[o].rotation.y += 0.005;
-            }
-            
-            renderer.render(scene, camera);
-        }
-        animate();
-        
-        window.addEventListener('resize', function() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            handCanvas.width = window.innerWidth;
-            handCanvas.height = window.innerHeight;
-            particleCanvas.width = window.innerWidth;
-            particleCanvas.height = window.innerHeight;
-        });
     </script>
 </body>
 </html>
