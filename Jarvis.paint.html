@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JARVIS AI 3.0</title>
+    <title>JARVIS AI Final</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
@@ -16,7 +16,8 @@
             overflow: hidden;
             color: #00d4ff;
         }
-        
+
+        /* Orqaga tugmasi */
         .back-btn {
             position: fixed; top: 20px; left: 20px; padding: 10px 20px;
             background: rgba(0, 212, 255, 0.1); border: 1px solid #00d4ff;
@@ -29,6 +30,7 @@
             background: rgba(0, 212, 255, 0.3); box-shadow: 0 0 20px #00d4ff; transform: scale(1.05);
         }
 
+        /* Intro */
         #intro-screen {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: #000; z-index: 9999; display: flex;
@@ -59,6 +61,7 @@
         #particle-canvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 5; }
         #hud-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 10; }
         
+        /* Status Panel */
         #status-panel {
             position: absolute; top: 30px; left: 50%; transform: translateX(-50%);
             background: rgba(0, 20, 40, 0.8); border: 2px solid #00d4ff;
@@ -73,24 +76,18 @@
         #jarvis-text { font-size: 24px; font-weight: bold; letter-spacing: 3px; }
         #mode-text { font-size: 14px; margin-top: 5px; color: #4df3ff; }
         
-        .scan-line {
-            position: absolute; width: 100%; height: 2px;
-            background: linear-gradient(90deg, transparent, #00d4ff, transparent);
-            box-shadow: 0 0 20px #00d4ff; animation: scan 3s linear infinite;
-        }
-        @keyframes scan { from { top: 0; } to { top: 100%; } }
-        
+        /* Rang Palitrasi */
         #color-palette {
             position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
             display: flex; gap: 10px; background: rgba(0, 20, 40, 0.9);
             padding: 15px; border: 2px solid #00d4ff; border-radius: 10px;
             pointer-events: all; z-index: 20;
         }
-        
         .color-btn { width: 40px; height: 40px; border: 2px solid #fff; border-radius: 5px; cursor: pointer; transition: 0.3s; }
         .color-btn:hover { transform: scale(1.2); box-shadow: 0 0 20px #fff; }
         .color-btn.active { border: 3px solid #00d4ff; box-shadow: 0 0 25px #00d4ff; transform: scale(1.15); }
 
+        /* Bildirishnoma */
         #notification {
             position: absolute; top: 150px; right: 30px;
             background: rgba(0, 212, 255, 0.2); border-left: 4px solid #00d4ff;
@@ -99,8 +96,7 @@
         }
         #notification.show { opacity: 1; transform: translateX(0); }
         
-        /* HTML dot olib tashlandi, endi canvasda chizamiz */
-        
+        /* Grid Chiziqlar */
         .grid-line { position: absolute; background: rgba(0, 212, 255, 0.1); }
         .grid-h { width: 100%; height: 1px; }
         .grid-v { height: 100%; width: 1px; }
@@ -125,10 +121,9 @@
     <canvas id="particle-canvas"></canvas>
     
     <div id="hud-overlay">
-        <div class="scan-line"></div>
         <div id="status-panel">
-            <div id="jarvis-text">JARVIS AI TIZIMI</div>
-            <div id="mode-text">TIZIM TAYYORLANMOQDA...</div>
+            <div id="jarvis-text">JARVIS AI SYSTEM</div>
+            <div id="mode-text">INITIALIZING...</div>
         </div>
         <div id="notification"></div>
     </div>
@@ -136,173 +131,238 @@
     <div id="color-palette"></div>
 
     <script>
-        setTimeout(function() {
-            var introScreen = document.getElementById('intro-screen');
-            introScreen.style.opacity = '0';
-            setTimeout(() => introScreen.style.display = 'none', 1000);
+        // Intro
+        setTimeout(() => {
+            document.getElementById('intro-screen').style.opacity = '0';
+            setTimeout(() => document.getElementById('intro-screen').style.display = 'none', 1000);
         }, 3000);
 
-        var video = document.getElementById('video');
-        var handCanvas = document.getElementById('hand-canvas');
-        var handCtx = handCanvas.getContext('2d');
-        var particleCanvas = document.getElementById('particle-canvas');
-        var pCtx = particleCanvas.getContext('2d');
-        var modeText = document.getElementById('mode-text');
-        var notification = document.getElementById('notification');
-        var colorPalette = document.getElementById('color-palette');
+        // O'zgaruvchilar
+        const video = document.getElementById('video');
+        const handCanvas = document.getElementById('hand-canvas');
+        const handCtx = handCanvas.getContext('2d');
+        const particleCanvas = document.getElementById('particle-canvas');
+        const pCtx = particleCanvas.getContext('2d');
+        const modeText = document.getElementById('mode-text');
+        const notification = document.getElementById('notification');
+        const colorPalette = document.getElementById('color-palette');
         
-        handCanvas.width = window.innerWidth;
-        handCanvas.height = window.innerHeight;
-        particleCanvas.width = window.innerWidth;
-        particleCanvas.height = window.innerHeight;
-        
-        var colors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#9400D3', '#00CED1', '#fff'];
-        var currentColor = '#FF0000';
-        var currentColorRGB = {r:255, g:0, b:0};
-        var isEraser = false;
-        
+        // Canvas hajmi
+        function resizeCanvas() {
+            handCanvas.width = window.innerWidth;
+            handCanvas.height = window.innerHeight;
+            particleCanvas.width = window.innerWidth;
+            particleCanvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Ranglar
+        const colors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#9400D3', '#00CED1', '#ffffff'];
+        let currentColor = '#FF0000';
+        let currentColorRGB = {r:255, g:0, b:0};
+        let isEraser = false;
+
         function hexToRgb(hex) {
-            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
             return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : {r: 255, g: 0, b: 0};
         }
 
-        colors.forEach(function(color, index) {
-            var btn = document.createElement('div');
+        // Palitra yaratish
+        colors.forEach((color, index) => {
+            const btn = document.createElement('div');
             btn.className = 'color-btn';
             btn.style.backgroundColor = color;
             if (index === 0) btn.classList.add('active');
-            btn.onclick = function() { selectColor(color, btn, false); };
+            btn.onclick = () => selectColor(color, btn, false);
             colorPalette.appendChild(btn);
         });
 
-        var eraserBtn = document.createElement('div');
+        // O'chirg'ich tugmasi
+        const eraserBtn = document.createElement('div');
         eraserBtn.className = 'color-btn';
-        eraserBtn.innerHTML = '🗑️'; eraserBtn.style.background = '#333';
-        eraserBtn.style.display = 'flex'; eraserBtn.style.alignItems = 'center'; eraserBtn.style.justifyContent = 'center';
-        eraserBtn.style.fontSize = '24px';
-        eraserBtn.onclick = function() { selectColor('#FF0000', eraserBtn, true); };
+        eraserBtn.innerHTML = '🗑️'; 
+        eraserBtn.style.background = '#333';
+        eraserBtn.style.display = 'flex'; eraserBtn.style.justifyContent = 'center'; eraserBtn.style.alignItems = 'center';
+        eraserBtn.style.fontSize = '20px';
+        eraserBtn.onclick = () => selectColor('#FF0000', eraserBtn, true);
         colorPalette.appendChild(eraserBtn);
-        
+
         function selectColor(color, btn, eraser) {
             document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             isEraser = eraser;
-            if (!eraser) { currentColor = color; currentColorRGB = hexToRgb(color); }
-        }
-        
-        // Grid
-        for (var i = 0; i < 10; i++) {
-            var hLine = document.createElement('div'); hLine.className = 'grid-line grid-h'; hLine.style.top = (i * 10) + '%';
-            document.body.appendChild(hLine);
-            var vLine = document.createElement('div'); vLine.className = 'grid-line grid-v'; vLine.style.left = (i * 10) + '%';
-            document.body.appendChild(vLine);
-        }
-        
-        var particles = [];
-        function Particle(x, y, color) {
-            this.x = x; this.y = y; this.vx = (Math.random() - 0.5) * 2; this.vy = (Math.random() - 0.5) * 2;
-            this.life = 100; this.size = Math.random() * 3 + 1; this.color = color || {r: 0, g: 212, b: 255};
-        }
-        Particle.prototype.update = function() { this.x += this.vx; this.y += this.vy; this.life -= 2; };
-        Particle.prototype.draw = function() {
-            pCtx.fillStyle = `rgba(${this.color.r}, ${this.color.g}, ${this.color.b}, ${this.life/100})`;
-            pCtx.fillRect(this.x, this.y, this.size, this.size);
-            pCtx.shadowBlur = 10; pCtx.shadowColor = currentColor;
-        };
-        
-        function animateParticles() {
-            pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
-            for (var i = particles.length - 1; i >= 0; i--) {
-                particles[i].update(); particles[i].draw();
-                if (particles[i].life <= 0) particles.splice(i, 1);
+            if (!eraser) {
+                currentColor = color;
+                currentColorRGB = hexToRgb(color);
             }
-            requestAnimationFrame(animateParticles);
         }
-        animateParticles();
-        
-        // Three.js
-        var scene = new THREE.Scene();
-        var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        var renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+
+        // Grid chizish
+        for(let i=0; i<10; i++){
+            let h = document.createElement('div'); h.className='grid-line grid-h'; h.style.top=(i*10)+'%'; document.body.appendChild(h);
+            let v = document.createElement('div'); v.className='grid-line grid-v'; v.style.left=(i*10)+'%'; document.body.appendChild(v);
+        }
+
+        // Three.js Setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.insertBefore(renderer.domElement, document.body.firstChild);
         
         scene.add(new THREE.AmbientLight(0x404040, 2));
-        var pointLight = new THREE.PointLight(0x00d4ff, 2, 100);
+        const pointLight = new THREE.PointLight(0x00d4ff, 2, 100);
         pointLight.position.set(0, 10, 10);
         scene.add(pointLight);
         camera.position.z = 25;
-        
-        var drawingPoints = [];
-        var drawingColors = [];
-        var tempLines = [];
-        var objects3D = [];
-        var grabbedObject = null;
-        var lastNotificationTime = 0;
-        
+
+        // Logic Variables
+        let drawingPoints = [];
+        let drawingColors = [];
+        let tempLines = [];
+        let objects3D = [];
+        let grabbedObject = null;
+        let lastNotificationTime = 0;
+
         function showNotification(text) {
-            var now = Date.now();
+            let now = Date.now();
             if (now - lastNotificationTime < 2000) return;
             lastNotificationTime = now;
             notification.textContent = text;
             notification.classList.add('show');
             setTimeout(() => notification.classList.remove('show'), 2000);
         }
-        
+
+        // MAIN LOGIC
         function onResults(results) {
-            handCanvas.width = window.innerWidth;
-            handCanvas.height = window.innerHeight;
             handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
             handCtx.save();
+            // Mirror Effect
             handCtx.translate(handCanvas.width, 0);
             handCtx.scale(-1, 1);
-            
+
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                var hand = results.multiHandLandmarks[0];
-                var indexTip = hand[8];
-                var thumbTip = hand[4];
-                var indexMcp = hand[5]; // Barmoq asosi
+                const hand = results.multiHandLandmarks[0];
+                const indexTip = hand[8];
+                const thumbTip = hand[4];
+                const middleTip = hand[12];
+                const ringTip = hand[16];
+                const pinkyTip = hand[20];
                 
-                // Ekran koordinatalari
-                var screenX = (1 - indexTip.x) * window.innerWidth;
-                var screenY = indexTip.y * window.innerHeight;
+                // Koordinatalar
+                const screenX = (1 - indexTip.x) * window.innerWidth;
+                const screenY = indexTip.y * window.innerHeight;
                 
-                // 3D Koordinatalar (Full Screen chizish uchun)
-                var x = (screenX / window.innerWidth - 0.5) * 45; 
-                var y = -(screenY / window.innerHeight - 0.5) * 35; 
-                var pos = new THREE.Vector3(x, y, 0);
-                
-                // Mantiqlar:
-                // 1. Pinch (Chimshilash)
-                var isPinching = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y) < 0.11;
-                
-                // 2. Pointing (Ko'rsatish/Chizish)
-                var isPointing = hand[8].y < hand[6].y && hand[12].y > hand[10].y && hand[16].y > hand[14].y && !isPinching;
-                
-                // 3. Open Hand (Ochiq qo'l - Yaratish)
-                var isOpenHand = hand[8].y < hand[6].y && hand[12].y < hand[10].y && hand[16].y < hand[14].y && hand[20].y < hand[18].y && !isPinching;
+                // 3D Mapping (Kengaytirilgan)
+                const x = (screenX / window.innerWidth - 0.5) * 45;
+                const y = -(screenY / window.innerHeight - 0.5) * 35;
+                const pos = new THREE.Vector3(x, y, 0);
 
-                // 4. Fist (Musht - Aylantirish)
-                // Barmoqlar bukilgan: uchi (8,12,16,20) bo'g'imdan (6,10,14,18) pastda
-                var isFist = hand[8].y > hand[6].y && hand[12].y > hand[10].y && hand[16].y > hand[14].y && hand[20].y > hand[18].y;
+                // --- GESTURE DETECTION (Aniqroq mantiq) ---
 
-                var skeletonColor = '#00d4ff';
-                var glowColor = '#ffffff';
-                var glowSize = 15;
-                
-                if (isPointing) {
+                // 1. Musht (Fist) - Barcha barmoq uchlari pastda
+                // Barmoq uchi (8,12,16,20) bo'g'imdan (5,9,13,17) pastda yoki juda yaqin
+                const isFist = (hand[8].y > hand[6].y && hand[12].y > hand[10].y && hand[16].y > hand[14].y && hand[20].y > hand[18].y);
+
+                // 2. Pinch (Chimshilash) - Agar musht bo'lmasa, Index va Thumb yaqin
+                const isPinching = !isFist && (Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y) < 0.1);
+
+                // 3. Pointing (Ko'rsatish) - Agar musht va pinch bo'lmasa, faqat ko'rsatkich barmoq tik
+                const isPointing = !isFist && !isPinching && (hand[8].y < hand[6].y && hand[12].y > hand[10].y);
+
+                // 4. Open Hand (Ochiq qo'l)
+                const isOpenHand = !isFist && !isPinching && (hand[8].y < hand[6].y && hand[12].y < hand[10].y && hand[16].y < hand[14].y);
+
+                // --- VISUAL VARIABLES ---
+                let skeletonColor = '#00d4ff';
+                let glowColor = '#ffffff';
+                let glowSize = 15;
+                let activeLandmark = 8; // Default: Index tip
+
+                if (isFist) {
+                    // --- REJIM: AYLANTIRISH (ROTATE) ---
+                    modeText.textContent = 'REJIM: AYLANTIRISH (MUSHT)';
+                    skeletonColor = '#FF00FF'; // Magenta
+                    glowColor = '#FF00FF';
+                    glowSize = 25;
+                    activeLandmark = 9; // Musht bo'lganda o'rta bo'g'im yonadi
+
+                    // Obyektni topish (agar ushlanmagan bo'lsa)
+                    if (!grabbedObject) {
+                        // Musht bo'lganda radius kattaroq (8 birlik)
+                        for (let obj of objects3D) {
+                            if (pos.distanceTo(obj.position) < 8) {
+                                grabbedObject = obj;
+                                showNotification('Obyekt tanlandi: Aylantirish');
+                                break;
+                            }
+                        }
+                    }
+
+                    // Agar obyekt ushlangan bo'lsa, aylantiramiz
+                    if (grabbedObject) {
+                        // Qo'lning holatiga qarab aylantirish
+                        // Markazdan og'ishni hisoblaymiz
+                        const rotX = (indexTip.x - 0.5) * 5; // O'ng-chap
+                        const rotY = (indexTip.y - 0.5) * 5; // Tepa-past
+                        
+                        grabbedObject.rotation.y = rotX * Math.PI; 
+                        grabbedObject.rotation.x = rotY * Math.PI;
+                    }
+
+                } else if (isPinching) {
+                    // --- REJIM: KO'CHIRISH (MOVE) ---
+                    if (isEraser) {
+                        modeText.textContent = 'REJIM: OCHIRISH';
+                        skeletonColor = '#FF0000'; glowColor = '#FF0000';
+                        // O'chirish logikasi
+                        for (let i = objects3D.length - 1; i >= 0; i--) {
+                            if (pos.distanceTo(objects3D[i].position) < 5) {
+                                scene.remove(objects3D[i]);
+                                objects3D.splice(i, 1);
+                                showNotification('Obyekt o\'chirildi');
+                                grabbedObject = null;
+                                break;
+                            }
+                        }
+                    } else {
+                        modeText.textContent = 'REJIM: KO\'CHIRISH (PINCH)';
+                        skeletonColor = '#00FFFF'; // Cyan
+                        glowColor = '#00FFFF';
+                        glowSize = 20;
+
+                        if (!grabbedObject) {
+                            for (let obj of objects3D) {
+                                if (pos.distanceTo(obj.position) < 6) {
+                                    grabbedObject = obj;
+                                    showNotification('Obyekt ushlandi');
+                                    break;
+                                }
+                            }
+                        } else {
+                            // Faqat joyini o'zgartiramiz (aylantirmaymiz)
+                            grabbedObject.position.lerp(pos, 0.2);
+                        }
+                    }
+
+                } else if (isPointing) {
+                    // --- REJIM: CHIZISH ---
                     modeText.textContent = 'REJIM: CHIZISH';
-                    skeletonColor = '#FFA500'; glowColor = '#FFA500'; glowSize = 20;
-                    
+                    skeletonColor = '#FFA500'; // Orange
+                    glowColor = '#FFA500';
+                    grabbedObject = null; // Qo'yib yuborish
+
                     drawingPoints.push(pos.clone());
                     drawingColors.push(currentColor);
-                    
+
+                    // Chiziq chizish
                     if (drawingPoints.length > 1) {
-                        var last = drawingPoints[drawingPoints.length - 2];
+                        const last = drawingPoints[drawingPoints.length - 2];
                         if (last.distanceTo(pos) > 0.1) {
-                            var geometry = new THREE.CylinderGeometry(0.12, 0.12, last.distanceTo(pos), 8);
-                            var material = new THREE.MeshPhongMaterial({ color: currentColor, emissive: currentColor });
-                            var cyl = new THREE.Mesh(geometry, material);
+                            const geometry = new THREE.CylinderGeometry(0.12, 0.12, last.distanceTo(pos), 8);
+                            const material = new THREE.MeshPhongMaterial({ color: currentColor, emissive: currentColor });
+                            const cyl = new THREE.Mesh(geometry, material);
                             cyl.position.copy(last).lerp(pos, 0.5);
                             cyl.lookAt(pos);
                             cyl.rotateX(Math.PI / 2);
@@ -310,85 +370,37 @@
                             tempLines.push(cyl);
                         }
                     }
+
                 } else if (isOpenHand && drawingPoints.length > 5) {
-                    modeText.textContent = 'REJIM: 3D OBYEKT YARATISH...';
-                    showNotification('Obyekt yaratildi!');
+                    // --- REJIM: YARATISH ---
+                    modeText.textContent = 'REJIM: 3D GENERATSIYA...';
                     createHolographicObject();
+                    showNotification('Yangi obyekt yaratildi');
                     skeletonColor = '#00FF00'; glowColor = '#00FF00';
-                } else if (isPinching) {
-                    // PINCH: FAQAT MOVE (KO'CHIRISH)
-                    if (isEraser) {
-                        modeText.textContent = 'REJIM: OCHIRISH';
-                        skeletonColor = '#FF0000'; glowColor = '#FF0000';
-                        if (!grabbedObject) {
-                            for (let k = objects3D.length - 1; k >= 0; k--) {
-                                if (pos.distanceTo(objects3D[k].position) < 5) {
-                                    scene.remove(objects3D[k]); objects3D.splice(k, 1);
-                                    showNotification('Obyekt o\'chirildi'); break;
-                                }
-                            }
-                        }
-                    } else {
-                        modeText.textContent = 'REJIM: KO\'CHIRISH (MOVE)';
-                        skeletonColor = '#00FFFF'; glowColor = '#00FFFF';
-                        if (!grabbedObject) {
-                            for (let n = 0; n < objects3D.length; n++) {
-                                if (pos.distanceTo(objects3D[n].position) < 6) {
-                                    grabbedObject = objects3D[n];
-                                    showNotification('Obyekt ushlandi'); break;
-                                }
-                            }
-                        } else {
-                            // Faqat pozitsiyani o'zgartiramiz, aylantirmaymiz
-                            grabbedObject.position.lerp(pos, 0.2);
-                        }
-                    }
-                } else if (isFist) {
-                    // FIST: FAQAT ROTATE (AYLANTIRISH)
-                    modeText.textContent = 'REJIM: AYLANTIRISH (ROTATE)';
-                    skeletonColor = '#FF00FF'; glowColor = '#FF00FF';
-                    
-                    if (!grabbedObject) {
-                        // Musht bo'lsa ham eng yaqin obyektni "tanlab" turamiz
-                        for (let n = 0; n < objects3D.length; n++) {
-                            if (pos.distanceTo(objects3D[n].position) < 8) {
-                                grabbedObject = objects3D[n]; break;
-                            }
-                        }
-                    } 
-                    
-                    if (grabbedObject) {
-                        // Qo'lning X va Y bo'yicha harakatiga qarab aylantiramiz
-                        // Mushtning markazi sifatida 9-nuqta (Middle MCP) ni olamiz barqarorlik uchun
-                        var fistX = (1 - hand[9].x);
-                        var fistY = hand[9].y;
-                        
-                        grabbedObject.rotation.y = (fistX * Math.PI * 4); // Yonga
-                        grabbedObject.rotation.x = (fistY * Math.PI * 4); // Tepaga/Pastga
-                    }
+                    grabbedObject = null;
+
                 } else {
                     modeText.textContent = 'REJIM: KUTISH';
+                    skeletonColor = '#00d4ff'; glowColor = '#ffffff';
                     grabbedObject = null;
                 }
+
+                // --- VISUALS: SKELET VA NUR ---
                 
-                // SKELITNI CHIZISH
-                drawConnectors(handCtx, hand, HAND_CONNECTIONS, {color: skeletonColor, lineWidth: 3});
-                drawLandmarks(handCtx, hand, {color: skeletonColor, radius: 3, fillColor: skeletonColor});
+                // 1. Skelet chizish
+                drawConnectors(handCtx, hand, HAND_CONNECTIONS, {color: skeletonColor, lineWidth: 2});
+                drawLandmarks(handCtx, hand, {color: skeletonColor, radius: 2});
 
-                // YANGI VISUAL: Barmoq uchidagi bo'g'imni yog'on va nurli qilish
-                // Agar musht bo'lsa, barmoq uchi ko'rinmaydi, shuning uchun markazni (9) yoritamiz
-                // Agar chizayotgan bo'lsa, uchini (8) yoritamiz
-                var targetIndex = isFist ? 9 : 8;
-                var targetLandmark = hand[targetIndex];
-                var tX = (1 - targetLandmark.x) * window.innerWidth;
-                var tY = targetLandmark.y * window.innerHeight;
+                // 2. "Energy Glow" chizish (Canvasda)
+                const targetPoint = hand[activeLandmark];
+                const glowX = targetPoint.x * handCanvas.width;
+                const glowY = targetPoint.y * handCanvas.height;
 
-                // Glowing Effect Circle (Canvas API)
                 handCtx.beginPath();
-                handCtx.arc(tX, tY, glowSize, 0, 2 * Math.PI);
+                handCtx.arc(glowX, glowY, glowSize, 0, 2 * Math.PI);
                 handCtx.fillStyle = glowColor;
                 handCtx.shadowColor = glowColor;
-                handCtx.shadowBlur = 30; // Nur effekti
+                handCtx.shadowBlur = 30; // Nur effekti kuchi
                 handCtx.fill();
                 handCtx.shadowBlur = 0; // Reset
                 
@@ -397,64 +409,83 @@
             }
             handCtx.restore();
         }
-        
+
+        // Obyekt yaratish funksiyasi
         function createHolographicObject() {
             if (drawingPoints.length < 5) return;
-            var shape = new THREE.Shape();
+            const shape = new THREE.Shape();
             shape.moveTo(drawingPoints[0].x, drawingPoints[0].y);
             drawingPoints.forEach(p => shape.lineTo(p.x, p.y));
             shape.closePath();
-            
-            var geometry = new THREE.ExtrudeGeometry(shape, { depth: 2, bevelEnabled: true, bevelThickness: 0.3, bevelSize: 0.2 });
-            var dominantColor = drawingColors[Math.floor(drawingColors.length / 2)] || currentColor;
-            var material = new THREE.MeshPhongMaterial({ 
-                color: dominantColor, emissive: dominantColor, emissiveIntensity: 0.3,
+
+            const geometry = new THREE.ExtrudeGeometry(shape, { depth: 2, bevelEnabled: true, bevelThickness: 0.3, bevelSize: 0.2 });
+            const dominantColor = drawingColors[Math.floor(drawingColors.length / 2)] || currentColor;
+            const material = new THREE.MeshPhongMaterial({ 
+                color: dominantColor, emissive: dominantColor, emissiveIntensity: 0.4,
                 transparent: true, opacity: 0.9, shininess: 100
             });
-            var mesh = new THREE.Mesh(geometry, material);
+            const mesh = new THREE.Mesh(geometry, material);
             
             geometry.computeBoundingBox();
-            var center = new THREE.Vector3();
+            const center = new THREE.Vector3();
             geometry.boundingBox.getCenter(center);
             geometry.translate(-center.x, -center.y, -center.z);
             mesh.position.copy(center);
             
             scene.add(mesh);
             objects3D.push(mesh);
+            
+            // Tozalash
             drawingPoints = []; drawingColors = [];
             tempLines.forEach(l => scene.remove(l)); tempLines = [];
         }
-        
-        var hands = new Hands({ locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
+
+        // Camera Setup
+        const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
         hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.7, minTrackingConfidence: 0.7 });
         hands.onResults(onResults);
-        
-        var cam = new Camera(video, {
+
+        const cam = new Camera(video, {
             onFrame: async () => await hands.send({ image: video }),
             width: 1280, height: 720
         });
         
+        // Start
         setTimeout(() => {
             cam.start().then(() => {
-                modeText.textContent = 'TIZIM ISHGA TUSHDI';
-                showNotification('Xush kelibsiz. Tizim tayyor.');
+                showNotification('Tizim tayyor');
+                modeText.textContent = 'TIZIM FAOL';
             });
-        }, 5000);
-        
+        }, 3500);
+
+        // Animation Loop
         function animate() {
             requestAnimationFrame(animate);
+            // Ushlanmagan obyektlar sekin aylanib tursin
             objects3D.forEach(obj => {
                 if (obj !== grabbedObject) obj.rotation.y += 0.005;
             });
             renderer.render(scene, camera);
         }
         animate();
-        
+
+        // Resize
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+            resizeCanvas();
         });
+
+        // Particle System
+        const particles = [];
+        function animateParticles() {
+            pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+            // Particle logikasi shu yerda bo'lishi mumkin (optimallashtirish uchun olib tashlandi, lekin canvas turibdi)
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
     </script>
 </body>
 </html>
