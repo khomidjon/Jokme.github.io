@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JARVIS AI Chizish Tizimi</title>
+    <title>JARVIS AI 3.0</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
@@ -17,40 +17,23 @@
             color: #00d4ff;
         }
         
-        /* Orqaga tugmasi - Glassmorphism uslubida */
         .back-btn {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            padding: 10px 20px;
-            background: rgba(0, 212, 255, 0.1);
-            border: 1px solid #00d4ff;
-            color: #00d4ff;
-            text-decoration: none;
-            z-index: 10000;
-            border-radius: 5px;
-            backdrop-filter: blur(5px);
-            transition: 0.3s;
-            font-weight: bold;
-            text-transform: uppercase;
+            position: fixed; top: 20px; left: 20px; padding: 10px 20px;
+            background: rgba(0, 212, 255, 0.1); border: 1px solid #00d4ff;
+            color: #00d4ff; text-decoration: none; z-index: 10000;
+            border-radius: 5px; backdrop-filter: blur(5px);
+            transition: 0.3s; font-weight: bold; text-transform: uppercase;
             box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
         }
         .back-btn:hover {
-            background: rgba(0, 212, 255, 0.3);
-            box-shadow: 0 0 20px #00d4ff;
-            transform: scale(1.05);
+            background: rgba(0, 212, 255, 0.3); box-shadow: 0 0 20px #00d4ff; transform: scale(1.05);
         }
 
         #intro-screen {
-            position: fixed; 
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            background: #000;
-            z-index: 9999; 
-            display: flex;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #000; z-index: 9999; display: flex;
             justify-content: center; align-items: center;
-            opacity: 1;
-            transition: opacity 1s ease-out;
+            opacity: 1; transition: opacity 1s ease-out;
         }
         .intro-content { display: flex; align-items: center; gap: 30px; }
         #edge-logo {
@@ -58,8 +41,7 @@
             animation: spinIn 1.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards, glowBlue 2s infinite alternate;
         }
         #intro-text {
-            font-size: 50px; font-weight: bold; color: #00d2ff;
-            text-shadow: 0 0 15px #00d2ff;
+            font-size: 50px; font-weight: bold; color: #00d2ff; text-shadow: 0 0 15px #00d2ff;
         }
         
         @keyframes spinIn {
@@ -75,7 +57,6 @@
         #video { display: none; }
         #hand-canvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 15; }
         #particle-canvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 5; }
-        
         #hud-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 10; }
         
         #status-panel {
@@ -118,7 +99,7 @@
         }
         #notification.show { opacity: 1; transform: translateX(0); }
         
-        .fingertip-dot { position: absolute; border-radius: 50%; pointer-events: none; z-index: 25; transition: 0.1s; }
+        /* HTML dot olib tashlandi, endi canvasda chizamiz */
         
         .grid-line { position: absolute; background: rgba(0, 212, 255, 0.1); }
         .grid-h { width: 100%; height: 1px; }
@@ -127,9 +108,7 @@
 </head>
 <body>
     <script>
-        if (!localStorage.getItem('atom_user')) {
-            window.location.href = 'index.html';
-        }
+        if (!localStorage.getItem('atom_user')) { window.location.href = 'index.html'; }
     </script>
 
     <a href="dashboard.html" class="back-btn">← Orqaga</a>
@@ -144,7 +123,6 @@
     <video id="video"></video>
     <canvas id="hand-canvas"></canvas>
     <canvas id="particle-canvas"></canvas>
-    <div class="fingertip-dot" id="fingertip"></div>
     
     <div id="hud-overlay">
         <div class="scan-line"></div>
@@ -158,7 +136,6 @@
     <div id="color-palette"></div>
 
     <script>
-        // Intro ekranini o'chirish
         setTimeout(function() {
             var introScreen = document.getElementById('intro-screen');
             introScreen.style.opacity = '0';
@@ -172,7 +149,6 @@
         var pCtx = particleCanvas.getContext('2d');
         var modeText = document.getElementById('mode-text');
         var notification = document.getElementById('notification');
-        var fingertipDot = document.getElementById('fingertip');
         var colorPalette = document.getElementById('color-palette');
         
         handCanvas.width = window.innerWidth;
@@ -180,17 +156,16 @@
         particleCanvas.width = window.innerWidth;
         particleCanvas.height = window.innerHeight;
         
-        var colors = [
-            '#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF',
-            '#4B0082', '#9400D3', '#FF1493', '#00CED1', '#FFD700',
-            '#FF69B4', '#8B4513', '#2E8B57', '#DC143C', '#00BFFF',
-            '#FF6347', '#9370DB', '#3CB371', '#FF4500', '#1E90FF'
-        ];
-        
+        var colors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#9400D3', '#00CED1', '#fff'];
         var currentColor = '#FF0000';
-        var currentColorRGB = hexToRgb(currentColor);
+        var currentColorRGB = {r:255, g:0, b:0};
         var isEraser = false;
         
+        function hexToRgb(hex) {
+            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : {r: 255, g: 0, b: 0};
+        }
+
         colors.forEach(function(color, index) {
             var btn = document.createElement('div');
             btn.className = 'color-btn';
@@ -202,8 +177,7 @@
 
         var eraserBtn = document.createElement('div');
         eraserBtn.className = 'color-btn';
-        eraserBtn.innerHTML = '🗑️';
-        eraserBtn.style.background = '#333';
+        eraserBtn.innerHTML = '🗑️'; eraserBtn.style.background = '#333';
         eraserBtn.style.display = 'flex'; eraserBtn.style.alignItems = 'center'; eraserBtn.style.justifyContent = 'center';
         eraserBtn.style.fontSize = '24px';
         eraserBtn.onclick = function() { selectColor('#FF0000', eraserBtn, true); };
@@ -213,18 +187,10 @@
             document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             isEraser = eraser;
-            if (!eraser) {
-                currentColor = color;
-                currentColorRGB = hexToRgb(color);
-            }
+            if (!eraser) { currentColor = color; currentColorRGB = hexToRgb(color); }
         }
         
-        function hexToRgb(hex) {
-            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : {r: 255, g: 0, b: 0};
-        }
-        
-        // Grid chizish
+        // Grid
         for (var i = 0; i < 10; i++) {
             var hLine = document.createElement('div'); hLine.className = 'grid-line grid-h'; hLine.style.top = (i * 10) + '%';
             document.body.appendChild(hLine);
@@ -234,10 +200,8 @@
         
         var particles = [];
         function Particle(x, y, color) {
-            this.x = x; this.y = y;
-            this.vx = (Math.random() - 0.5) * 2; this.vy = (Math.random() - 0.5) * 2;
-            this.life = 100; this.size = Math.random() * 3 + 1;
-            this.color = color || {r: 0, g: 212, b: 255};
+            this.x = x; this.y = y; this.vx = (Math.random() - 0.5) * 2; this.vy = (Math.random() - 0.5) * 2;
+            this.life = 100; this.size = Math.random() * 3 + 1; this.color = color || {r: 0, g: 212, b: 255};
         }
         Particle.prototype.update = function() { this.x += this.vx; this.y += this.vy; this.life -= 2; };
         Particle.prototype.draw = function() {
@@ -256,7 +220,7 @@
         }
         animateParticles();
         
-        // Three.js Sozlamalari
+        // Three.js
         var scene = new THREE.Scene();
         var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         var renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
@@ -267,7 +231,7 @@
         var pointLight = new THREE.PointLight(0x00d4ff, 2, 100);
         pointLight.position.set(0, 10, 10);
         scene.add(pointLight);
-        camera.position.z = 25; // Kamerasini biroz uzoqlashtirdik
+        camera.position.z = 25;
         
         var drawingPoints = [];
         var drawingColors = [];
@@ -297,28 +261,38 @@
                 var hand = results.multiHandLandmarks[0];
                 var indexTip = hand[8];
                 var thumbTip = hand[4];
+                var indexMcp = hand[5]; // Barmoq asosi
                 
                 // Ekran koordinatalari
                 var screenX = (1 - indexTip.x) * window.innerWidth;
                 var screenY = indexTip.y * window.innerHeight;
                 
-                // 3D Koordinatalar (Chizish maydonini kengaytirish uchun 45 va 35 ga oshirildi)
+                // 3D Koordinatalar (Full Screen chizish uchun)
                 var x = (screenX / window.innerWidth - 0.5) * 45; 
                 var y = -(screenY / window.innerHeight - 0.5) * 35; 
                 var pos = new THREE.Vector3(x, y, 0);
                 
-                // Imo-ishoralar
+                // Mantiqlar:
+                // 1. Pinch (Chimshilash)
                 var isPinching = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y) < 0.11;
-                var isPointing = hand[8].y < hand[6].y && hand[12].y > hand[10].y && hand[16].y > hand[14].y; 
-                var isOpenHand = hand[8].y < hand[6].y && hand[12].y < hand[10].y && hand[16].y < hand[14].y && !isPinching;
+                
+                // 2. Pointing (Ko'rsatish/Chizish)
+                var isPointing = hand[8].y < hand[6].y && hand[12].y > hand[10].y && hand[16].y > hand[14].y && !isPinching;
+                
+                // 3. Open Hand (Ochiq qo'l - Yaratish)
+                var isOpenHand = hand[8].y < hand[6].y && hand[12].y < hand[10].y && hand[16].y < hand[14].y && hand[20].y < hand[18].y && !isPinching;
+
+                // 4. Fist (Musht - Aylantirish)
+                // Barmoqlar bukilgan: uchi (8,12,16,20) bo'g'imdan (6,10,14,18) pastda
+                var isFist = hand[8].y > hand[6].y && hand[12].y > hand[10].y && hand[16].y > hand[14].y && hand[20].y > hand[18].y;
 
                 var skeletonColor = '#00d4ff';
-                var dotColor = '#ffffff';
-                var dotSize = '15px';
+                var glowColor = '#ffffff';
+                var glowSize = 15;
                 
                 if (isPointing) {
                     modeText.textContent = 'REJIM: CHIZISH';
-                    skeletonColor = '#FFA500'; dotColor = '#FFA500'; dotSize = '20px';
+                    skeletonColor = '#FFA500'; glowColor = '#FFA500'; glowSize = 20;
                     
                     drawingPoints.push(pos.clone());
                     drawingColors.push(currentColor);
@@ -338,60 +312,88 @@
                     }
                 } else if (isOpenHand && drawingPoints.length > 5) {
                     modeText.textContent = 'REJIM: 3D OBYEKT YARATISH...';
-                    showNotification('Obyekt yaratildi, Janob.');
+                    showNotification('Obyekt yaratildi!');
                     createHolographicObject();
-                    skeletonColor = '#00FF00'; dotColor = '#00FF00';
+                    skeletonColor = '#00FF00'; glowColor = '#00FF00';
                 } else if (isPinching) {
+                    // PINCH: FAQAT MOVE (KO'CHIRISH)
                     if (isEraser) {
                         modeText.textContent = 'REJIM: OCHIRISH';
-                        skeletonColor = '#FF0000'; dotColor = '#FF0000';
+                        skeletonColor = '#FF0000'; glowColor = '#FF0000';
                         if (!grabbedObject) {
-                            for (var k = objects3D.length - 1; k >= 0; k--) {
+                            for (let k = objects3D.length - 1; k >= 0; k--) {
                                 if (pos.distanceTo(objects3D[k].position) < 5) {
-                                    scene.remove(objects3D[k]);
-                                    objects3D.splice(k, 1);
-                                    showNotification('Obyekt o\'chirildi');
-                                    break;
+                                    scene.remove(objects3D[k]); objects3D.splice(k, 1);
+                                    showNotification('Obyekt o\'chirildi'); break;
                                 }
                             }
                         }
                     } else {
-                        modeText.textContent = 'REJIM: BOSHQARUV (MANIPULYATSIYA)';
-                        skeletonColor = '#00FF00'; dotColor = '#00FF00';
+                        modeText.textContent = 'REJIM: KO\'CHIRISH (MOVE)';
+                        skeletonColor = '#00FFFF'; glowColor = '#00FFFF';
                         if (!grabbedObject) {
-                            for (var n = 0; n < objects3D.length; n++) {
+                            for (let n = 0; n < objects3D.length; n++) {
                                 if (pos.distanceTo(objects3D[n].position) < 6) {
                                     grabbedObject = objects3D[n];
-                                    showNotification('Obyekt ushlandi');
-                                    break;
+                                    showNotification('Obyekt ushlandi'); break;
                                 }
                             }
                         } else {
+                            // Faqat pozitsiyani o'zgartiramiz, aylantirmaymiz
                             grabbedObject.position.lerp(pos, 0.2);
-                            // 360 daraja aylantirish mantiqi
-                            // Qo'lning X o'qi bo'ylab harakati obyektni Y o'qi bo'ylab aylantiradi (va teskari)
-                            grabbedObject.rotation.y = (indexTip.x * Math.PI * 4); // 4 koeffitsient tez aylanish uchun
-                            grabbedObject.rotation.x = (indexTip.y * Math.PI * 4);
                         }
+                    }
+                } else if (isFist) {
+                    // FIST: FAQAT ROTATE (AYLANTIRISH)
+                    modeText.textContent = 'REJIM: AYLANTIRISH (ROTATE)';
+                    skeletonColor = '#FF00FF'; glowColor = '#FF00FF';
+                    
+                    if (!grabbedObject) {
+                        // Musht bo'lsa ham eng yaqin obyektni "tanlab" turamiz
+                        for (let n = 0; n < objects3D.length; n++) {
+                            if (pos.distanceTo(objects3D[n].position) < 8) {
+                                grabbedObject = objects3D[n]; break;
+                            }
+                        }
+                    } 
+                    
+                    if (grabbedObject) {
+                        // Qo'lning X va Y bo'yicha harakatiga qarab aylantiramiz
+                        // Mushtning markazi sifatida 9-nuqta (Middle MCP) ni olamiz barqarorlik uchun
+                        var fistX = (1 - hand[9].x);
+                        var fistY = hand[9].y;
+                        
+                        grabbedObject.rotation.y = (fistX * Math.PI * 4); // Yonga
+                        grabbedObject.rotation.x = (fistY * Math.PI * 4); // Tepaga/Pastga
                     }
                 } else {
                     modeText.textContent = 'REJIM: KUTISH';
                     grabbedObject = null;
                 }
                 
-                // Barmoq uchi
-                fingertipDot.style.left = screenX + 'px';
-                fingertipDot.style.top = screenY + 'px';
-                fingertipDot.style.width = dotSize; fingertipDot.style.height = dotSize;
-                fingertipDot.style.backgroundColor = dotColor;
-                fingertipDot.style.boxShadow = `0 0 20px ${dotColor}, 0 0 40px ${dotColor}`;
-                fingertipDot.style.display = 'block';
-                
+                // SKELITNI CHIZISH
                 drawConnectors(handCtx, hand, HAND_CONNECTIONS, {color: skeletonColor, lineWidth: 3});
                 drawLandmarks(handCtx, hand, {color: skeletonColor, radius: 3, fillColor: skeletonColor});
+
+                // YANGI VISUAL: Barmoq uchidagi bo'g'imni yog'on va nurli qilish
+                // Agar musht bo'lsa, barmoq uchi ko'rinmaydi, shuning uchun markazni (9) yoritamiz
+                // Agar chizayotgan bo'lsa, uchini (8) yoritamiz
+                var targetIndex = isFist ? 9 : 8;
+                var targetLandmark = hand[targetIndex];
+                var tX = (1 - targetLandmark.x) * window.innerWidth;
+                var tY = targetLandmark.y * window.innerHeight;
+
+                // Glowing Effect Circle (Canvas API)
+                handCtx.beginPath();
+                handCtx.arc(tX, tY, glowSize, 0, 2 * Math.PI);
+                handCtx.fillStyle = glowColor;
+                handCtx.shadowColor = glowColor;
+                handCtx.shadowBlur = 30; // Nur effekti
+                handCtx.fill();
+                handCtx.shadowBlur = 0; // Reset
+                
             } else {
                 modeText.textContent = 'QO\'L KIRISHI KUTILMOQDA...';
-                fingertipDot.style.display = 'none';
             }
             handCtx.restore();
         }
@@ -435,13 +437,12 @@
         setTimeout(() => {
             cam.start().then(() => {
                 modeText.textContent = 'TIZIM ISHGA TUSHDI';
-                showNotification('Xush kelibsiz. Barcha tizimlar faol.');
+                showNotification('Xush kelibsiz. Tizim tayyor.');
             });
         }, 5000);
         
         function animate() {
             requestAnimationFrame(animate);
-            // Agar obyekt ushlab turilmagan bo'lsa, sekin aylanib tursin
             objects3D.forEach(obj => {
                 if (obj !== grabbedObject) obj.rotation.y += 0.005;
             });
@@ -453,8 +454,6 @@
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
-            handCanvas.width = window.innerWidth; handCanvas.height = window.innerHeight;
-            particleCanvas.width = window.innerWidth; particleCanvas.height = window.innerHeight;
         });
     </script>
 </body>
