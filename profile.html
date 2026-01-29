@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profil Sozlamalari - Jarvis</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -47,7 +50,6 @@
             width: 100%; height: 100%; border-radius: 50%;
             border: 3px solid rgba(102, 126, 234, 0.8);
             object-fit: cover; box-shadow: 0 0 30px rgba(102, 126, 234, 0.3);
-            transition: 0.3s;
         }
         .edit-avatar-btn {
             position: absolute; bottom: 0; right: 0;
@@ -88,10 +90,10 @@
             width: 100%; padding: 15px; border-radius: 15px; border: none;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white; font-weight: bold; font-size: 16px; cursor: pointer;
-            margin-top: 10px; transition: 0.3s;
+            margin-top: 10px; transition: 0.3s; position: relative; overflow: hidden;
         }
         .btn-save:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
-        .btn-save:active { transform: translateY(0); }
+        .btn-save:disabled { background: #444; cursor: not-allowed; transform: none; }
 
         .btn-back {
             display: block; text-align: center; margin-top: 15px;
@@ -118,15 +120,15 @@
             border: 2px solid transparent; transition: 0.3s; object-fit: cover;
         }
         .avatar-option:hover { transform: scale(1.1); border-color: #667eea; }
-        
         .google-avatar-wrapper {
-            grid-column: span 3; margin-bottom: 10px;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            padding: 10px; border-radius: 10px; background: rgba(255,255,255,0.05); cursor: pointer;
+            grid-column: span 3;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(255, 255, 255, 0.05); padding: 10px;
+            border-radius: 10px; margin-bottom: 10px; cursor: pointer;
             border: 1px solid transparent; transition: 0.3s;
         }
-        .google-avatar-wrapper:hover { background: rgba(255,255,255,0.1); border-color: #667eea; }
-
+        .google-avatar-wrapper:hover { border-color: #667eea; background: rgba(255,255,255,0.1); }
+        
         .premium-upload {
             grid-column: span 3; background: rgba(255, 215, 0, 0.1);
             border: 1px dashed gold; color: gold;
@@ -135,35 +137,37 @@
         }
         .premium-upload:hover { background: rgba(255, 215, 0, 0.2); }
 
-        /* TOAST NOTIFICATION STYLES (Yangi Xabarnoma) */
-        .toast-container {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            z-index: 9999; text-align: center;
+        /* TOAST NOTIFICATION STYLES (Yangi qo'shildi) */
+        #toast-box {
+            position: fixed; top: 20px; right: 20px; z-index: 9999;
+            display: flex; flex-direction: column; gap: 10px;
         }
         .toast {
-            min-width: 300px; padding: 15px 20px; border-radius: 50px;
-            color: white; font-weight: 500; font-size: 15px;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            opacity: 0; transform: translateY(-20px); transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            pointer-events: none;
+            width: 300px; padding: 15px; border-radius: 10px;
+            background: #fff; color: #333;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            display: flex; align-items: center; gap: 15px;
+            transform: translateX(100%); opacity: 0;
+            animation: slideIn 0.5s forwards, fadeOut 0.5s forwards 3s;
         }
-        .toast.show { opacity: 1; transform: translateY(0); }
-        .toast.success { background: linear-gradient(135deg, #00b09b, #96c93d); }
-        .toast.error { background: linear-gradient(135deg, #ff5f6d, #ffc371); }
-        
-        .toast-icon { font-size: 20px; }
+        .toast.success { border-left: 5px solid #00b894; background: #f0fff4; }
+        .toast.error { border-left: 5px solid #ff7675; background: #fff0f0; }
+        .toast i { font-size: 20px; }
+        .toast.success i { color: #00b894; }
+        .toast.error i { color: #ff7675; }
+
+        @keyframes slideIn { 
+            to { transform: translateX(0); opacity: 1; } 
+        }
+        @keyframes fadeOut { 
+            to { transform: translateY(-20px); opacity: 0; } 
+        }
 
     </style>
 </head>
 <body>
 
-    <div class="toast-container">
-        <div id="toast" class="toast">
-            <span id="toast-icon" class="toast-icon"></span>
-            <span id="toast-message"></span>
-        </div>
-    </div>
+    <div id="toast-box"></div>
 
     <div class="container">
         <div class="profile-card">
@@ -217,7 +221,7 @@
                 </div>
             </div>
 
-            <button class="btn-save" onclick="saveProfile()">SAQLASH</button>
+            <button class="btn-save" id="saveBtn" onclick="saveProfile()">SAQLASH</button>
             <a href="dashboard.html" class="btn-back">&larr; Dashboardga qaytish</a>
         </div>
     </div>
@@ -226,12 +230,12 @@
         <div class="modal-content">
             <h3>Avatar tanlang</h3>
             
-            <div id="google-photo-container" style="display: none;">
-                <div class="google-avatar-wrapper" onclick="selectAvatar(originalGooglePhoto)">
-                    <img id="google-photo-preview" src="" style="width: 40px; height: 40px; border-radius: 50%;">
-                    <span>Google Rasmni qo'yish</span>
+            <div id="google-avatar-container" style="display: none;">
+                <div class="google-avatar-wrapper" onclick="selectGoogleAvatar()">
+                    <img id="google-avatar-img" src="" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;">
+                    <span style="font-size: 14px;">Google Rasmni qo'yish</span>
                 </div>
-                <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 10px 0;">
+                <p style="font-size: 12px; color: #aaa; margin-bottom: 10px;">yoki quyidagilardan tanlang:</p>
             </div>
 
             <div class="avatar-grid">
@@ -241,12 +245,12 @@
                 <img src="https://cdn-icons-png.flaticon.com/512/4140/4140047.png" class="avatar-option" onclick="selectAvatar(this.src)">
                 <img src="https://cdn-icons-png.flaticon.com/512/4140/4140037.png" class="avatar-option" onclick="selectAvatar(this.src)">
                 
-                <div class="avatar-option" style="display: flex; align-items: center; justify-content: center; background: #333;" onclick="showToast('Bu avatar pullik!', 'error')">
+                <div class="avatar-option" style="display: flex; align-items: center; justify-content: center; background: #333;" onclick="showToast('Premium funksiya', 'error')">
                       🔒
                 </div>
             </div>
 
-            <div class="premium-upload" onclick="showToast('Bu funksiya faqat Premium akkauntlar uchun!', 'error')">
+            <div class="premium-upload" onclick="showToast('Faqat Premium foydalanuvchilar uchun!', 'error')">
                 <span style="font-size: 20px;">📷</span>
                 <span>O'z rasmingizni qo'yish (Premium)</span>
             </div>
@@ -256,24 +260,39 @@
     </div>
 
     <script>
-        const userStr = localStorage.getItem('atom_user');
-        if (!userStr) window.location.href = 'index.html'; // Login qilinmagan bo'lsa
-        
-        const user = JSON.parse(userStr);
-        
-        // Google rasmni saqlab qolish (Agar birinchi marta kirayotgan bo'lsa va hali o'zgartirilmagan bo'lsa)
-        // Login vaqtida 'photoURL' Google'dan keladi deb hisoblaymiz.
-        // Biz uni 'originalPhoto' deb saqlaymiz.
-        let originalGooglePhoto = user.originalPhoto || user.picture || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-        
-        // Agar user.originalPhoto hali bazada bo'lmasa, uni saqlab qo'yamiz
-        if (!user.originalPhoto) {
-            user.originalPhoto = originalGooglePhoto;
+        // --- 1. FIREBASE CONFIG (O'zingizning kalitlaringizni shu yerga qo'ying) ---
+        const firebaseConfig = {
+            apiKey: "SIZNING_API_KEY",
+            authDomain: "SIZNING_PROJECT.firebaseapp.com",
+            projectId: "SIZNING_PROJECT_ID",
+            storageBucket: "SIZNING_BUCKET.appspot.com",
+            messagingSenderId: "SIZNING_ID",
+            appId: "SIZNING_APP_ID"
+        };
+
+        // Firebase-ni ishga tushirish (xatolik bermasligi uchun try-catch)
+        let db;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+        } catch (e) {
+            console.warn("Firebase ulanmadi yoki config noto'g'ri. Server funksiyalari ishlamaydi.", e);
         }
 
-        let tempAvatar = user.picture || originalGooglePhoto;
+        const userStr = localStorage.getItem('atom_user');
+        if (!userStr) window.location.href = 'index.html';
+        
+        const user = JSON.parse(userStr);
+        let tempAvatar = user.picture || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+        
+        // Asl Google rasmini saqlab qolish (agar u birinchi marta kirganda saqlangan bo'lsa)
+        // Agar localstorage da bo'lmasa, hozirgi rasmni (agar google link bo'lsa) saqlab olamiz
+        if (!user.originalGooglePhoto && user.picture && user.picture.includes('googleusercontent.com')) {
+            user.originalGooglePhoto = user.picture;
+            localStorage.setItem('atom_user', JSON.stringify(user));
+        }
 
-        // 1. MA'LUMOTLARNI YUKLASH
+        // --- 2. YUKLASH ---
         window.onload = function() {
             document.getElementById('p-img').src = tempAvatar;
             document.getElementById('p-name').value = user.name || "";
@@ -288,14 +307,36 @@
             }
             document.getElementById('p-nick').value = user.nickname;
 
-            // Google Photo Previewni modalka ichiga joylash
-            if (user.originalPhoto && user.originalPhoto.includes('http')) {
-                document.getElementById('google-photo-container').style.display = 'block';
-                document.getElementById('google-photo-preview').src = user.originalPhoto;
+            // Avatarda Google rasmni ko'rsatish
+            if (user.originalGooglePhoto) {
+                document.getElementById('google-avatar-container').style.display = 'block';
+                document.getElementById('google-avatar-img').src = user.originalGooglePhoto;
             }
         };
 
-        // 2. TAHRIRLASH
+        // --- 3. TOAST BILDIRISHNOMA (Alert o'rniga) ---
+        function showToast(msg, type) {
+            const box = document.getElementById('toast-box');
+            const toast = document.createElement('div');
+            toast.classList.add('toast');
+            toast.classList.add(type); // 'success' yoki 'error'
+
+            let icon = type === 'success' ? '✅' : '⚠️';
+            
+            toast.innerHTML = `
+                <i>${icon}</i>
+                <span>${msg}</span>
+            `;
+
+            box.appendChild(toast);
+
+            // 3.5 sekunddan keyin o'chirish
+            setTimeout(() => {
+                toast.remove();
+            }, 3500);
+        }
+
+        // --- 4. TAHRIRLASH ---
         function enableEdit(id) {
             const input = document.getElementById(id);
             input.removeAttribute('readonly');
@@ -303,7 +344,7 @@
             input.style.borderBottom = "1px solid #667eea";
         }
 
-        // 3. AVATAR MODALI
+        // --- 5. AVATAR FUNKSIYALARI ---
         function openAvatarModal() {
             document.getElementById('avatarModal').style.display = 'flex';
         }
@@ -318,97 +359,91 @@
             tempAvatar = src;
             document.getElementById('p-img').src = src;
             document.getElementById('avatarModal').style.display = 'none';
-            showToast("Avatar tanlandi (Saqlashni unutmang)", "success");
         }
 
-        // 4. TOAST NOTIFICATION FUNKSIYASI (Alert o'rniga)
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            const msgSpan = document.getElementById('toast-message');
-            const iconSpan = document.getElementById('toast-icon');
-
-            msgSpan.innerText = message;
-            
-            // Turlar bo'yicha dizayn
-            toast.className = 'toast show ' + type;
-            iconSpan.innerText = type === 'success' ? '✅' : '⚠️';
-
-            // 3 sekunddan keyin yo'qolish
-            setTimeout(() => {
-                toast.className = toast.className.replace("show", "");
-            }, 3000);
-        }
-
-        // 5. SERVER SIMULYATSIYASI (Unikal Nickname uchun)
-        // Haqiqiy loyihada bu qism Firebase Firestore "users" kolleksiyasida bo'ladi.
-        function isNicknameTaken(nick) {
-            // "Server"dagi barcha niklar ro'yxatini olamiz (localStorage misolida)
-            let allTakenNicks = JSON.parse(localStorage.getItem('server_all_nicks') || "[]");
-            
-            // Agar bu nik ro'yxatda bo'lsa va bu mening eski nikim bo'lmasa -> BAND
-            // (Oddiylik uchun: faqat nikni tekshiramiz. O'zimizniki ekanligini tekshirish uchun user ID kerak bo'ladi)
-            
-            // Agar o'zgarishsiz o'zining niki bo'lsa, muammo yo'q
-            if (nick === user.nickname) return false; 
-
-            if (allTakenNicks.includes(nick)) {
-                return true;
-            }
-            return false;
-        }
-
-        function saveNicknameToServer(nick) {
-            let allTakenNicks = JSON.parse(localStorage.getItem('server_all_nicks') || "[]");
-            // Eski nikni o'chirish logikasi (murakkabroq), shunchaki yangisini qo'shamiz
-            if (!allTakenNicks.includes(nick)) {
-                allTakenNicks.push(nick);
-                localStorage.setItem('server_all_nicks', JSON.stringify(allTakenNicks));
+        function selectGoogleAvatar() {
+            if (user.originalGooglePhoto) {
+                selectAvatar(user.originalGooglePhoto);
             }
         }
 
-        // 6. SAQLASH VA VALIDATSIYA
-        function saveProfile() {
+        // --- 6. ASOSIY SAQLASH (Server tekshiruvi bilan) ---
+        async function saveProfile() {
+            const saveBtn = document.getElementById('saveBtn');
             const name = document.getElementById('p-name').value.trim();
             const nick = document.getElementById('p-nick').value.trim();
             const phone = document.getElementById('p-phone').value.trim();
             const tg = document.getElementById('p-tg').value.trim();
 
             if (!name) {
-                showToast("Ism bo'sh bo'lishi mumkin emas!", "error");
+                showToast("Ism Familiya bo'sh bo'lmasligi kerak!", "error");
                 return;
             }
 
+            // Nickname validatsiyasi
             const nickRegex = /^@[a-zA-Z0-9_]{3,}$/;
             if (!nickRegex.test(nick)) {
-                showToast("Nickname noto'g'ri (@ bilan boshlang, min 4 harf)", "error");
+                showToast("Nickname noto'g'ri! (@ bilan boshlanishi va min 4 belgi)", "error");
                 return;
             }
 
-            // UNIKAL NICKNAME TEKSHIRUV
-            if (isNicknameTaken(nick)) {
-                showToast("Ushbu Nickname allaqachon band! Boshqasini tanlang.", "error");
-                return;
+            // Tugmani bloklash (spam qilinmasligi uchun)
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = "Tekshirilmoqda...";
+
+            try {
+                // --- SERVER: UNIKAL NICKNAME TEKSHIRUVI ---
+                if (db) {
+                    // 1. Agar nickname o'zgargan bo'lsa, bazadan tekshiramiz
+                    if (nick !== user.nickname) {
+                        const usersRef = db.collection('users');
+                        const snapshot = await usersRef.where('nickname', '==', nick).get();
+
+                        if (!snapshot.empty) {
+                            showToast("Bu Nickname allaqachon band! Boshqasini tanlang.", "error");
+                            saveBtn.disabled = false;
+                            saveBtn.innerHTML = "SAQLASH";
+                            return; // Jarayonni to'xtatamiz
+                        }
+                    }
+
+                    // 2. Serverga (Firestore) yozish
+                    // user.uid mavjud deb faraz qilamiz (login payti kelgan ID)
+                    // Agar uid bo'lmasa, email orqali document yasaymiz
+                    const userId = user.uid || user.email; 
+                    
+                    await db.collection('users').doc(userId).set({
+                        name: name,
+                        nickname: nick,
+                        email: user.email,
+                        phone: phone,
+                        telegram: tg,
+                        picture: tempAvatar,
+                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                } else {
+                    console.log("Server ulanmagan, faqat lokal saqlandi.");
+                }
+
+                // --- LOCAL STORAGE YANGILASH ---
+                user.name = name;
+                user.nickname = nick;
+                user.phone = phone;
+                user.telegram = tg;
+                user.picture = tempAvatar;
+
+                localStorage.setItem('atom_user', JSON.stringify(user));
+                
+                // Muvaffaqiyatli xabar (Toast)
+                showToast("Profil muvaffaqiyatli saqlandi!", "success");
+
+            } catch (error) {
+                console.error("Xatolik:", error);
+                showToast("Internetda xatolik yuz berdi!", "error");
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = "SAQLASH";
             }
-
-            // Muvaffaqiyatli o'tdi -> Saqlaymiz
-            saveNicknameToServer(nick); // Serverga (simulyatsiya) band qilamiz
-
-            user.name = name;
-            user.nickname = nick;
-            user.phone = phone;
-            user.telegram = tg;
-            user.picture = tempAvatar;
-            // Original foto saqlanib qoladi
-            
-            localStorage.setItem('atom_user', JSON.stringify(user));
-            
-            showToast("Muvaffaqiyatli saqlandi!", "success");
-            
-            // Inputlarni yana qulflash (vizual effekt uchun)
-            document.querySelectorAll('input:not(#p-email)').forEach(i => {
-                i.setAttribute('readonly', true);
-                i.style.borderBottom = "none";
-            });
         }
     </script>
 </body>
