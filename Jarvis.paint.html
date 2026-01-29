@@ -3,319 +3,420 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JARVIS Art Studio Pro</title>
+    <title>JARVIS Artist Studio</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    
+
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
         body {
-            font-family: 'Segoe UI', sans-serif; /* Zamonaviyroq font */
-            background: #000;
+            font-family: 'Segoe UI', sans-serif;
+            background: #1a1a1a; /* Sal yorqinroq qora */
             overflow: hidden;
             color: #fff;
         }
 
-        /* 1. GEMINI STYLE PROFILE (O'ng burchak) */
-        .profile-badge {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: rgba(30, 30, 40, 0.6);
-            backdrop-filter: blur(10px);
-            padding: 8px 15px 8px 20px;
-            border-radius: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 10001;
-            transition: 0.3s;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-        .profile-badge:hover {
-            background: rgba(40, 40, 60, 0.8);
-            border-color: #00d4ff;
-            transform: translateY(-2px);
-        }
-        .profile-name {
-            font-size: 14px;
-            font-weight: 600;
-            color: #e0e0e0;
-            letter-spacing: 0.5px;
-        }
-        .profile-img-box {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            overflow: hidden;
-            border: 2px solid #00d4ff;
-            box-shadow: 0 0 10px rgba(0, 212, 255, 0.4);
-        }
-        .profile-img-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* 2. ORQAGA TUGMASI */
+        /* ORQAGA TUGMASI */
         .back-btn {
-            position: fixed; top: 20px; left: 20px; padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(0, 212, 255, 0.3);
-            color: #00d4ff; text-decoration: none; z-index: 10000;
-            border-radius: 8px; backdrop-filter: blur(5px);
-            transition: 0.3s; font-weight: bold; font-size: 14px;
-            display: flex; align-items: center; gap: 8px;
+            position: fixed; top: 20px; left: 20px; padding: 10px 25px;
+            background: linear-gradient(135deg, #00d4ff, #0051ff);
+            color: white; text-decoration: none; z-index: 10000;
+            border-radius: 8px; font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+            transition: 0.3s;
         }
-        .back-btn:hover { background: rgba(0, 212, 255, 0.15); border-color: #00d4ff; }
+        .back-btn:hover { transform: scale(1.05); }
 
-        /* INTRO SCREEN */
-        #intro-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 9999; display: flex;
-            justify-content: center; align-items: center;
-            transition: opacity 1s ease-out;
+        /* GEMINI PROFIL */
+        .profile-badge {
+            position: fixed; top: 20px; right: 20px;
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px); padding: 5px 15px 5px 5px;
+            border-radius: 50px; border: 1px solid rgba(255,255,255,0.2);
+            z-index: 10001; cursor: pointer;
         }
-        #intro-text { font-family: 'Courier New', monospace; font-size: 40px; color: #00d4ff; text-shadow: 0 0 20px #00d4ff; }
+        .profile-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #00d4ff; }
+        .profile-name { font-size: 14px; color: #fff; font-weight: 600; }
 
-        /* CANVASLAR */
+        /* KANVASLAR */
         #video { display: none; }
-        #hand-canvas, #particle-canvas { position: fixed; top: 0; left: 0; pointer-events: none; }
-        #hand-canvas { z-index: 15; }
-        #particle-canvas { z-index: 5; }
-
-        /* HUD & STATUS */
-        #hud-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+        #hand-canvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 5; }
+        
+        /* HUD */
         #status-panel {
             position: absolute; top: 30px; left: 50%; transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7); border: 1px solid #00d4ff;
-            padding: 10px 25px; border-radius: 20px; text-align: center;
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+            background: rgba(0, 0, 0, 0.6); padding: 8px 20px; border-radius: 20px;
+            border: 1px solid #00d4ff; text-align: center; pointer-events: none;
+            z-index: 10;
         }
-        #jarvis-text { font-size: 20px; font-weight: bold; color: #fff; }
-        #mode-text { font-size: 12px; color: #00d4ff; margin-top: 3px; letter-spacing: 1px; }
+        #mode-text { color: #00d4ff; font-weight: bold; letter-spacing: 1px; }
 
-        /* 3. YANGILANGAN RANG PALITRASI (Scroll & Mix) */
-        #palette-container {
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: rgba(20, 20, 30, 0.9);
-            padding: 10px 20px;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex; align-items: center; gap: 15px;
-            z-index: 20; pointer-events: all;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            max-width: 90vw;
+        /* --- 1. RANG QUTILARI (TOP PALETTE) --- */
+        #paint-boxes-container {
+            position: absolute; top: 100px; right: 20px;
+            display: flex; flex-direction: column; gap: 15px;
+            z-index: 20;
+            max-height: 70vh; overflow-y: auto; padding: 10px;
         }
+        /* Scrollbar yashirish */
+        #paint-boxes-container::-webkit-scrollbar { display: none; }
 
-        /* Ranglar ro'yxati (Scroll bo'ladi) */
-        #colors-scroll {
-            display: flex; gap: 10px; overflow-x: auto; 
-            padding: 5px; max-width: 60vw;
-            scrollbar-width: none; /* Firefox */
+        .paint-box {
+            width: 50px; height: 50px;
+            background: #222;
+            border-radius: 8px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 4px 8px rgba(0,0,0,0.5);
+            border: 2px solid #444;
+            display: flex; justify-content: center; align-items: center;
+            cursor: grab; transition: 0.2s; position: relative;
         }
-        #colors-scroll::-webkit-scrollbar { display: none; } /* Chrome */
-
-        .color-btn {
+        .paint-box:active { cursor: grabbing; }
+        .paint-box.active { border-color: #fff; transform: scale(1.1); box-shadow: 0 0 15px rgba(255,255,255,0.5); }
+        
+        /* Quti ichidagi bo'yoq */
+        .paint-blob {
             width: 35px; height: 35px; border-radius: 50%;
-            border: 2px solid rgba(255,255,255,0.2);
-            cursor: pointer; transition: 0.2s; flex-shrink: 0;
+            box-shadow: inset -2px -2px 5px rgba(0,0,0,0.3), inset 2px 2px 5px rgba(255,255,255,0.4);
         }
-        .color-btn:hover { transform: scale(1.15); border-color: #fff; }
-        .color-btn.active { border: 3px solid #fff; box-shadow: 0 0 15px currentColor; transform: scale(1.1); }
 
-        /* Color Mixer (Yangi rang qo'shish) */
-        .mixer-section {
-            display: flex; align-items: center; gap: 10px;
-            padding-left: 15px; border-left: 1px solid rgba(255,255,255,0.2);
+        /* --- 2. MIXER STATION (BOTTOM) --- */
+        #mixing-station {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 180px;
+            background: linear-gradient(to top, rgba(10,10,15, 0.95), transparent);
+            z-index: 30; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 20px;
+            gap: 40px; pointer-events: none; /* Bolalariga event beramiz */
         }
-        #color-input {
-            width: 35px; height: 35px; border: none; background: none; cursor: pointer;
-            padding: 0; border-radius: 50%; overflow: hidden;
+
+        /* Aralashtirish taxtasi */
+        #mixing-board {
+            width: 300px; height: 120px;
+            background: #2a2a2a;
+            border-radius: 20px 20px 5px 5px;
+            border: 4px solid #555;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            position: relative;
+            overflow: hidden;
+            pointer-events: all;
+            display: flex; justify-content: center; align-items: center;
         }
-        #add-color-btn {
-            background: linear-gradient(135deg, #00d4ff, #0051ff);
-            border: none; color: white; width: 35px; height: 35px;
-            border-radius: 50%; font-size: 20px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
+        
+        /* Aralashgan rang "ko'lmak" */
+        #mixed-puddle {
+            width: 100px; height: 80px;
+            background: transparent; /* Boshida rangsiz */
+            border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
             transition: 0.3s;
+            cursor: grab;
+            filter: blur(5px); opacity: 0.9;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
         }
-        #add-color-btn:hover { transform: rotate(90deg); box-shadow: 0 0 15px #00d4ff; }
+        #mixed-puddle:hover { filter: blur(0px); transform: scale(1.05); }
 
-        /* Notification */
-        #notification {
-            position: absolute; top: 120px; right: 20px;
-            background: rgba(0, 0, 0, 0.8); border-left: 4px solid #00d4ff;
-            padding: 15px; border-radius: 5px; opacity: 0; transform: translateX(50px);
-            transition: 0.4s; font-family: monospace;
+        /* Latta (Rag) */
+        #rag-tool {
+            width: 80px; height: 80px;
+            background-image: url('https://cdn-icons-png.flaticon.com/512/9163/9163013.png'); /* Latta icon */
+            background-size: cover;
+            cursor: pointer; pointer-events: all;
+            transition: 0.3s; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
         }
-        #notification.show { opacity: 1; transform: translateX(0); }
+        #rag-tool:hover { transform: rotate(-10deg) scale(1.1); }
+        #rag-tool:active { transform: rotate(20deg) scale(0.9); }
+
+        /* Draggable Element (Sichqoncha bilan sudraganda paydo bo'ladi) */
+        .drag-ghost {
+            position: fixed; width: 40px; height: 40px; border-radius: 50%;
+            pointer-events: none; z-index: 9999;
+            box-shadow: 0 0 15px rgba(255,255,255,0.5);
+            opacity: 0.8;
+        }
+
+        /* Splash (Rang sachrashi) */
+        .splash {
+            position: absolute; width: 20px; height: 20px; border-radius: 50%;
+            opacity: 0.8; pointer-events: none;
+            animation: splashAnim 0.5s forwards;
+        }
+        @keyframes splashAnim {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(3); opacity: 0; }
+        }
+
+        #notification {
+            position: absolute; top: 120px; left: 50%; transform: translateX(-50%);
+            background: rgba(0, 212, 255, 0.2); padding: 10px 20px; border-radius: 5px;
+            border: 1px solid #00d4ff; opacity: 0; transition: 0.5s;
+        }
+        #notification.show { opacity: 1; top: 100px; }
 
     </style>
 </head>
 <body>
 
-    <script>
-        if (!localStorage.getItem('atom_user')) { window.location.href = 'index.html'; }
-    </script>
+    <script>if (!localStorage.getItem('atom_user')) { window.location.href = 'index.html'; }</script>
 
-    <a href="dashboard.html" class="back-btn">
-        <span>←</span> DASHBOARD
-    </a>
+    <a href="dashboard.html" class="back-btn">← ORQAGA</a>
 
     <div class="profile-badge" onclick="window.location.href='profil.html'">
-        <div class="profile-name" id="display-name">Foydalanuvchi</div>
-        <div class="profile-img-box">
-            <img id="display-img" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile">
-        </div>
+        <img id="u-img" class="profile-img" src="">
+        <span id="u-name" class="profile-name">Artist</span>
     </div>
 
-    <div id="intro-screen">
-        <div id="intro-text">JARVIS ART STUDIO...</div>
+    <div id="status-panel">
+        <div id="mode-text">TIZIM TAYYOR</div>
     </div>
+    <div id="notification">Xabar</div>
 
-    <video id="video"></video>
     <canvas id="hand-canvas"></canvas>
     
-    <div id="hud-overlay">
-        <div id="status-panel">
-            <div id="jarvis-text">JARVIS AI</div>
-            <div id="mode-text">TIZIM YUKLANMOQDA...</div>
+    <div id="paint-boxes-container">
         </div>
-        <div id="notification"></div>
-    </div>
 
-    <div id="palette-container">
-        <div class="color-btn" id="eraser-tool" style="background: #333; display: flex; align-items: center; justify-content: center; font-size: 18px;">🗑️</div>
+    <div id="mixing-station">
+        <div id="mixing-board" ondrop="dropColor(event)" ondragover="allowDrop(event)">
+            <div id="mixed-puddle" draggable="true" ondragstart="dragPuddle(event)" title="Yangi rangni olish uchun sudrang"></div>
+        </div>
         
-        <div id="colors-scroll">
-            </div>
-
-        <div class="mixer-section">
-            <input type="color" id="color-input" value="#ff0000" title="Rang tanlash">
-            <button id="add-color-btn" onclick="addNewColor()" title="Rangni palitraga qo'shish">+</button>
-        </div>
+        <div id="rag-tool" onclick="cleanMixer()" title="Tozalash"></div>
     </div>
 
     <script>
-        // --- SETUP ---
-        setTimeout(() => {
-            const intro = document.getElementById('intro-screen');
-            intro.style.opacity = '0';
-            setTimeout(() => intro.style.display = 'none', 1000);
-        }, 2000);
+        // --- 1. SETUP ---
+        const userStr = localStorage.getItem('atom_user');
+        if(userStr) {
+            const u = JSON.parse(userStr);
+            document.getElementById('u-img').src = u.picture || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+            document.getElementById('u-name').innerText = u.nickname || "Artist";
+        }
 
-        // --- PROFIL MA'LUMOTLARINI YUKLASH ---
-        window.onload = function() {
-            const userStr = localStorage.getItem('atom_user');
-            if (userStr) {
-                const u = JSON.parse(userStr);
-                document.getElementById('display-name').innerText = u.nickname || u.name || "Foydalanuvchi";
-                if(u.picture) document.getElementById('display-img').src = u.picture;
-            }
-            initPalette(); // Ranglarni ishga tushirish
-        };
-
-        // --- VARIABLES ---
-        const video = document.getElementById('video');
-        const handCanvas = document.getElementById('hand-canvas');
-        const handCtx = handCanvas.getContext('2d');
-        const modeText = document.getElementById('mode-text');
         const notification = document.getElementById('notification');
+        const modeText = document.getElementById('mode-text');
         
-        // Canvas Resize
-        function resize() {
-            handCanvas.width = window.innerWidth;
-            handCanvas.height = window.innerHeight;
+        function notify(text) {
+            notification.innerText = text;
+            notification.classList.add('show');
+            setTimeout(() => notification.classList.remove('show'), 2000);
         }
-        window.addEventListener('resize', resize);
-        resize();
 
-        // --- COLOR MIXER LOGIC ---
-        let currentColor = '#FF0000';
-        let isEraser = false;
-        // Boshlang'ich ranglar
-        const defaultColors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#00FFFF', '#FF00FF', '#FFFFFF'];
+        // --- 2. RANG TIZIMI (PALITRA & MIXER) ---
+        // Yorqin ranglar ro'yxati
+        let paletteColors = [
+            '#FF0000', '#00FF00', '#0000FF', // RGB
+            '#FFFF00', '#00FFFF', '#FF00FF', // CMY
+            '#FF8C00', '#8A2BE2', '#FFFFFF'  // Extra
+        ];
+        
+        let currentColor = '#FF0000'; // Hozirgi tanlangan rang
+        let mixedColorRGB = null; // Aralashgan rang holati
 
-        function initPalette() {
-            const scrollBox = document.getElementById('colors-scroll');
-            scrollBox.innerHTML = ''; // Tozalash
+        const container = document.getElementById('paint-boxes-container');
+        const mixingBoard = document.getElementById('mixing-board');
+        const puddle = document.getElementById('mixed-puddle');
+
+        // Palitrani chizish
+        function renderPalette() {
+            container.innerHTML = '';
+            paletteColors.forEach(color => {
+                const box = document.createElement('div');
+                box.className = 'paint-box';
+                if(color === currentColor) box.classList.add('active');
+                
+                // Quti ichidagi bo'yoq
+                const blob = document.createElement('div');
+                blob.className = 'paint-blob';
+                blob.style.backgroundColor = color;
+                
+                // Drag Events (Qutidagi rangni sudrash)
+                box.draggable = true;
+                box.ondragstart = (e) => {
+                    e.dataTransfer.setData("color", color);
+                    e.dataTransfer.effectAllowed = "copy";
+                };
+                
+                // Click (Rangni tanlash)
+                box.onclick = () => {
+                    currentColor = color;
+                    document.querySelectorAll('.paint-box').forEach(b => b.classList.remove('active'));
+                    box.classList.add('active');
+                    notify("Rang tanlandi");
+                };
+
+                box.appendChild(blob);
+                container.appendChild(box);
+            });
             
-            defaultColors.forEach(color => createColorBtn(color));
-            
-            // O'chirg'ich logikasi
-            document.getElementById('eraser-tool').onclick = function() {
-                activateColor(this, true);
+            // Yangi quti qo'shish zonasi (Puddle drop zone)
+            const addZone = document.createElement('div');
+            addZone.className = 'paint-box';
+            addZone.style.border = '2px dashed #555';
+            addZone.innerHTML = '<span style="font-size:20px; color:#555">+</span>';
+            addZone.ondragover = allowDrop;
+            addZone.ondrop = (e) => {
+                e.preventDefault();
+                const newColor = e.dataTransfer.getData("newColor");
+                if(newColor) {
+                    paletteColors.push(newColor);
+                    renderPalette();
+                    cleanMixer();
+                    notify("Yangi rang palitraga qo'shildi!");
+                }
             };
-            // Birinchi rangni aktiv qilish
-            if(scrollBox.children.length > 0) activateColor(scrollBox.children[0], false, defaultColors[0]);
+            container.appendChild(addZone);
         }
 
-        function createColorBtn(color) {
-            const btn = document.createElement('div');
-            btn.className = 'color-btn';
-            btn.style.backgroundColor = color;
-            btn.onclick = () => activateColor(btn, false, color);
-            document.getElementById('colors-scroll').appendChild(btn);
-            return btn;
-        }
+        // --- MIXER LOGIC ---
+        function allowDrop(e) { e.preventDefault(); }
 
-        function addNewColor() {
-            const newColor = document.getElementById('color-input').value;
-            const btn = createColorBtn(newColor);
-            // Yangi qo'shilgan rangni darhol tanlaymiz
-            activateColor(btn, false, newColor);
-            // Scrollni oxiriga o'tkazish
-            const scrollBox = document.getElementById('colors-scroll');
-            scrollBox.scrollLeft = scrollBox.scrollWidth;
-            showNotification(`Yangi rang qo'shildi: ${newColor}`);
-        }
+        function dropColor(e) {
+            e.preventDefault();
+            const colorHex = e.dataTransfer.getData("color");
+            if(!colorHex) return;
 
-        function activateColor(element, eraserMode, colorCode) {
-            // Hamma tugmalardan active ni olib tashlash
-            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('eraser-tool').classList.remove('active');
+            // Vizual effekt (Splash)
+            createSplash(e.clientX, e.clientY, colorHex);
+
+            // Rangni aralashtirish logikasi
+            const rgb = hexToRgb(colorHex);
             
-            element.classList.add('active');
-            isEraser = eraserMode;
-            
-            if (!eraserMode) {
-                currentColor = colorCode;
+            if (!mixedColorRGB) {
+                mixedColorRGB = rgb; // Birinchi rang
+            } else {
+                // O'rtacha rangni olish
+                mixedColorRGB.r = Math.floor((mixedColorRGB.r + rgb.r) / 2);
+                mixedColorRGB.g = Math.floor((mixedColorRGB.g + rgb.g) / 2);
+                mixedColorRGB.b = Math.floor((mixedColorRGB.b + rgb.b) / 2);
             }
+
+            // Puddle ni yangilash
+            const newHex = rgbToHex(mixedColorRGB.r, mixedColorRGB.g, mixedColorRGB.b);
+            puddle.style.backgroundColor = newHex;
+            puddle.style.boxShadow = `0 0 20px ${newHex}`;
+            
+            // Avtomatik shu rangni tanlash
+            currentColor = newHex;
         }
 
-        // --- THREE.JS SETUP ---
+        function dragPuddle(e) {
+            if(!mixedColorRGB) {
+                e.preventDefault(); return;
+            }
+            const hex = rgbToHex(mixedColorRGB.r, mixedColorRGB.g, mixedColorRGB.b);
+            e.dataTransfer.setData("newColor", hex);
+        }
+
+        function cleanMixer() {
+            mixedColorRGB = null;
+            puddle.style.backgroundColor = 'transparent';
+            puddle.style.boxShadow = 'none';
+            
+            // Latta animatsiyasi
+            const rag = document.getElementById('rag-tool');
+            rag.style.transform = "translateX(-100px) rotate(-20deg)";
+            setTimeout(() => {
+                rag.style.transform = "none";
+            }, 300);
+            notify("Mixer tozalandi");
+        }
+
+        function createSplash(x, y, color) {
+            const splash = document.createElement('div');
+            splash.className = 'splash';
+            splash.style.backgroundColor = color;
+            splash.style.left = (x - 150) + 'px'; // Offset parentga moslash
+            splash.style.top = (y - window.innerHeight + 180) + 'px';
+            mixingBoard.appendChild(splash);
+            setTimeout(() => splash.remove(), 500);
+        }
+
+        // Helpers
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : {r:0,g:0,b:0};
+        }
+        function rgbToHex(r, g, b) {
+            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+        }
+
+        renderPalette(); // Ishga tushirish
+
+        // --- 3. THREE.JS & MOUSE PAINTING ---
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.insertBefore(renderer.domElement, document.body.firstChild);
         
-        scene.add(new THREE.AmbientLight(0x404040, 2));
-        const pLight = new THREE.PointLight(0x00d4ff, 2, 100);
-        pLight.position.set(0, 10, 10);
-        scene.add(pLight);
+        // Yorug'lik
+        scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        dirLight.position.set(5, 10, 7);
+        scene.add(dirLight);
         camera.position.z = 25;
 
-        // --- LOGIC VARS ---
-        let drawingPoints = [];
-        let drawingColors = [];
-        let tempLines = [];
+        // Variables
+        let drawingPoints = []; // Hand tracking uchun
         let objects3D = [];
-        let grabbedObject = null;
-        let currentLayerZ = 0; // Layering uchun
+        let isMouseDown = false;
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
 
-        function showNotification(text) {
-            notification.innerText = text;
-            notification.classList.add('show');
-            setTimeout(() => notification.classList.remove('show'), 2000);
+        // --- MOUSE PAINTING LOGIC (Sichqoncha bilan bo'yash) ---
+        window.addEventListener('mousedown', (e) => { isMouseDown = true; paintOnObject(e); });
+        window.addEventListener('mouseup', () => { isMouseDown = false; });
+        window.addEventListener('mousemove', (e) => {
+            if(isMouseDown) paintOnObject(e);
+        });
+
+        function paintOnObject(event) {
+            // Sichqoncha koordinatalari (-1 dan +1 gacha)
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            // Raycasting
+            raycaster.setFromCamera(mouse, camera);
+            
+            // Faqat 3D obyektlarni tekshirish
+            const intersects = raycaster.intersectObjects(objects3D);
+
+            if (intersects.length > 0) {
+                // Obyekt ustida!
+                const intersect = intersects[0];
+                const point = intersect.point;
+                const normal = intersect.face.normal;
+                
+                // Bo'yoq (Decal o'rniga kichik sfera ishlatamiz soddalik uchun)
+                // Yoki line chizamiz, lekin sirtga yopishgan
+                const paintGeo = new THREE.CircleGeometry(0.15, 8); // Kichik doira
+                const paintMat = new THREE.MeshBasicMaterial({ 
+                    color: currentColor, 
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const paintDot = new THREE.Mesh(paintGeo, paintMat);
+                
+                // Joylashtirish (ozgina sirt tepasiga)
+                paintDot.position.copy(point).add(normal.multiplyScalar(0.05));
+                paintDot.lookAt(point.clone().add(normal)); // Yuzaga moslashish
+                
+                // Bo'yoqni obyektning O'ZIGA yopishtiramiz (aylanganda birga aylanadi)
+                intersect.object.attach(paintDot);
+            }
+            // Agar intersects.length == 0 bo'lsa, hech narsa chizilmaydi (Masking)
         }
 
-        // --- HAND TRACKING LOOP ---
+
+        // --- 4. HAND TRACKING (Obyekt yaratish uchun) ---
+        const videoElement = document.createElement('video'); // Virtual video element
+        const handCanvas = document.getElementById('hand-canvas');
+        const handCtx = handCanvas.getContext('2d');
+        
         function onResults(results) {
+            handCanvas.width = window.innerWidth;
+            handCanvas.height = window.innerHeight;
             handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
             handCtx.save();
             handCtx.translate(handCanvas.width, 0);
@@ -325,141 +426,75 @@
                 const hand = results.multiHandLandmarks[0];
                 const indexTip = hand[8];
                 const thumbTip = hand[4];
-
-                // Koordinatalar (Full Screen Mapping)
+                
+                // Koordinatalar
                 const screenX = (1 - indexTip.x) * window.innerWidth;
                 const screenY = indexTip.y * window.innerHeight;
-                
-                // 3D olamga o'tkazish
                 const x = (screenX / window.innerWidth - 0.5) * 45; 
                 const y = -(screenY / window.innerHeight - 0.5) * 35; 
                 const pos = new THREE.Vector3(x, y, 0);
 
-                // --- GESTURES ---
-                // 1. Musht (Fist) -> Aylantirish
-                const isFist = (hand[8].y > hand[6].y && hand[12].y > hand[10].y && hand[16].y > hand[14].y && hand[20].y > hand[18].y);
-                // 2. Pinch -> Ko'chirish
+                // Gestures
+                const isFist = (hand[8].y > hand[6].y && hand[12].y > hand[10].y && hand[16].y > hand[14].y);
                 const isPinching = !isFist && (Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y) < 0.1);
-                // 3. Pointing -> Chizish
                 const isPointing = !isFist && !isPinching && (hand[8].y < hand[6].y && hand[12].y > hand[10].y);
-                // 4. Open Hand -> Yaratish
-                const isOpenHand = !isFist && !isPinching && (hand[8].y < hand[6].y && hand[12].y < hand[10].y && hand[16].y < hand[14].y);
+                const isOpenHand = !isFist && !isPinching && !isPointing; // Taxminan ochiq qo'l
 
-                let skeletonColor = '#00d4ff';
-                let glowColor = '#fff';
-                let activePoint = hand[8]; // Default index tip
-
-                if (isFist) {
-                    // --- REJIM: AYLANTIRISH ---
-                    modeText.innerText = "MUSHT: AYLANTIRISH";
-                    skeletonColor = '#FF00FF'; glowColor = '#FF00FF';
-                    activePoint = hand[9]; // O'rta bo'g'im
-
-                    if (!grabbedObject) {
-                        for(let obj of objects3D) {
-                            if (pos.distanceTo(obj.position) < 8) {
-                                grabbedObject = obj; showNotification("Obyekt tanlandi"); break;
-                            }
-                        }
-                    }
-                    if (grabbedObject) {
-                        grabbedObject.rotation.y = (indexTip.x - 0.5) * 6;
-                        grabbedObject.rotation.x = (indexTip.y - 0.5) * 6;
-                    }
-
-                } else if (isPinching) {
-                    // --- REJIM: KO'CHIRISH / O'CHIRISH ---
-                    if (isEraser) {
-                        modeText.innerText = "OCHIRG'ICH";
-                        skeletonColor = '#FF0000'; glowColor = '#FF0000';
-                        // O'chirish logikasi (Hamma rangdagi obyektlarni o'chiradi)
-                        for(let i = objects3D.length-1; i>=0; i--) {
-                            if (pos.distanceTo(objects3D[i].position) < 5) {
-                                scene.remove(objects3D[i]); objects3D.splice(i, 1);
-                                showNotification("Obyekt o'chirildi"); break;
-                            }
-                        }
-                    } else {
-                        modeText.innerText = "KO'CHIRISH";
-                        skeletonColor = '#00FFFF'; glowColor = '#00FFFF';
-                        if (!grabbedObject) {
-                            for(let obj of objects3D) {
-                                if (pos.distanceTo(obj.position) < 6) {
-                                    grabbedObject = obj; showNotification("Ushlandi"); break;
-                                }
-                            }
-                        } else {
-                            // Faqat X va Y o'zgaradi, Z joyida qoladi
-                            grabbedObject.position.x = THREE.MathUtils.lerp(grabbedObject.position.x, pos.x, 0.2);
-                            grabbedObject.position.y = THREE.MathUtils.lerp(grabbedObject.position.y, pos.y, 0.2);
-                        }
-                    }
-
-                } else if (isPointing) {
-                    // --- REJIM: CHIZISH ---
-                    modeText.innerText = "CHIZISH";
-                    skeletonColor = '#FFA500'; glowColor = currentColor;
-                    grabbedObject = null;
-
+                // Logic
+                if (isPointing) {
+                    modeText.innerText = "YANGI OBYEKT CHIZISH";
                     drawingPoints.push(pos.clone());
-                    drawingColors.push(currentColor);
-
-                    if (drawingPoints.length > 1) {
+                    
+                    // Vaqtinchalik chiziq (Hand Canvasda)
+                    if(drawingPoints.length > 1) {
+                        handCtx.beginPath();
+                        handCtx.moveTo((1-drawingPoints[drawingPoints.length-2].x/22.5 - 0.5)*window.innerWidth, 0); // Logic complex, using ThreeJS render for line is better
+                        // Soddalashtirilgan vizualizatsiya: ThreeJS da chizamiz
                         const last = drawingPoints[drawingPoints.length-2];
-                        if (last.distanceTo(pos) > 0.1) {
-                            const geo = new THREE.CylinderGeometry(0.12, 0.12, last.distanceTo(pos), 6);
-                            const mat = new THREE.MeshBasicMaterial({ color: currentColor });
-                            const line = new THREE.Mesh(geo, mat);
-                            line.position.copy(last).lerp(pos, 0.5);
-                            line.lookAt(pos); line.rotateX(Math.PI/2);
+                        if(last.distanceTo(pos) > 0.1) {
+                            const lineGeo = new THREE.BufferGeometry().setFromPoints([last, pos]);
+                            const lineMat = new THREE.LineBasicMaterial({ color: currentColor });
+                            const line = new THREE.Line(lineGeo, lineMat);
                             scene.add(line);
-                            tempLines.push(line);
+                            // Clean up later
                         }
                     }
-
-                } else if (isOpenHand && drawingPoints.length > 5) {
-                    // --- REJIM: YARATISH ---
-                    modeText.innerText = "3D OBYEKT YARATILDI";
-                    createHologram();
-                    showNotification("Yangi 3D San'at!");
-                    skeletonColor = '#00FF00'; glowColor = '#00FF00';
-
-                } else {
-                    modeText.innerText = "KUTISH REJIMI";
-                    grabbedObject = null;
+                } 
+                else if (isOpenHand && drawingPoints.length > 10) {
+                    modeText.innerText = "3D OBYEKT YARATISH";
+                    create3DObject();
+                    notify("Obyekt yaratildi! Endi sichqoncha bilan bo'yang.");
+                }
+                else if (isFist) {
+                    modeText.innerText = "OBYEKTNI AYLANTIRISH";
+                    // Eng yaqin obyektni aylantirish
+                    if (objects3D.length > 0) {
+                        // Oxirgi yaratilgan yoki yaqin obyekt
+                        const obj = objects3D[objects3D.length-1]; 
+                        obj.rotation.y += 0.02;
+                        obj.rotation.x += 0.01;
+                    }
                 }
 
-                // --- VISUALIZATSIYA ---
-                drawConnectors(handCtx, hand, HAND_CONNECTIONS, {color: skeletonColor, lineWidth: 2});
-                drawLandmarks(handCtx, hand, {color: skeletonColor, radius: 2});
-
-                // NUR (GLOW)
-                const gX = (1 - activePoint.x) * handCanvas.width;
-                const gY = activePoint.y * handCanvas.height;
-                
-                handCtx.beginPath();
-                handCtx.arc(gX, gY, 15, 0, 2*Math.PI);
-                handCtx.fillStyle = glowColor;
-                handCtx.shadowBlur = 20; handCtx.shadowColor = glowColor;
-                handCtx.fill();
-                handCtx.shadowBlur = 0;
-
-            } else {
-                modeText.innerText = "QO'L KO'RINMAYAPTI";
+                drawConnectors(handCtx, hand, HAND_CONNECTIONS, {color: '#00d4ff', lineWidth: 2});
+                drawLandmarks(handCtx, hand, {color: '#fff', radius: 2});
             }
             handCtx.restore();
         }
 
-        function createHologram() {
-            if (drawingPoints.length < 5) return;
+        function create3DObject() {
+            if (drawingPoints.length < 3) return;
+            
             const shape = new THREE.Shape();
             shape.moveTo(drawingPoints[0].x, drawingPoints[0].y);
             drawingPoints.forEach(p => shape.lineTo(p.x, p.y));
+            shape.closePath();
+
+            const extrudeSettings = { depth: 2, bevelEnabled: true, bevelSegments: 2, steps: 2, bevelSize: 0.2, bevelThickness: 0.2 };
+            const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+            // Oq material (Bo'yash oson bo'lishi uchun)
+            const material = new THREE.MeshPhongMaterial({ color: 0xcccccc, shininess: 50 });
             
-            const geometry = new THREE.ExtrudeGeometry(shape, { depth: 2, bevelEnabled: true, bevelThickness:0.2, bevelSize:0.1 });
-            // Dominant rangni olamiz
-            const domColor = drawingColors[Math.floor(drawingColors.length/2)];
-            const material = new THREE.MeshPhongMaterial({ color: domColor, transparent: true, opacity: 0.9 });
             const mesh = new THREE.Mesh(geometry, material);
             
             // Markazlash
@@ -469,42 +504,37 @@
             geometry.translate(-center.x, -center.y, -center.z);
             mesh.position.copy(center);
             
-            // Layering (Yangi obyekt orqaga ketadi)
-            currentLayerZ -= 1;
-            mesh.position.z = currentLayerZ;
-
             scene.add(mesh);
             objects3D.push(mesh);
             
-            // Tozalash
-            drawingPoints=[]; drawingColors=[];
-            tempLines.forEach(l => scene.remove(l)); tempLines=[];
+            // Tozalash (Eski chiziqlarni o'chirish logikasi kerak bo'lsa)
+            drawingPoints = [];
+            // Sahna tozalash (faqat chiziqlarni, meshlar qoladi)
+            scene.children = scene.children.filter(child => child.type !== 'Line');
         }
 
-        // --- INIT CAMERA ---
-        const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
-        hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.7, minTrackingConfidence: 0.7 });
+        // Camera loop
+        const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+        hands.setOptions({maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.7, minTrackingConfidence: 0.7});
         hands.onResults(onResults);
 
-        const cam = new Camera(video, {
-            onFrame: async () => await hands.send({ image: video }),
+        const cam = new Camera(videoElement, {
+            onFrame: async () => await hands.send({image: videoElement}),
             width: 1280, height: 720
         });
-        
-        cam.start().then(() => {
-            showNotification("Kameraga ulandi");
-            modeText.innerText = "TAYYOR";
-        });
+        cam.start();
 
-        // Animation Loop
         function animate() {
             requestAnimationFrame(animate);
-            objects3D.forEach(obj => {
-                if(obj !== grabbedObject) obj.rotation.y += 0.005;
-            });
             renderer.render(scene, camera);
         }
         animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
 
     </script>
 </body>
