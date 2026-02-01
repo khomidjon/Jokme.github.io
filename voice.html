@@ -3,31 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JARVIS: Voice Tuner</title>
+    <title>JARVIS: Voice Memory</title>
     <style>
-        body { margin: 0; background: #050505; overflow: hidden; font-family: 'Segoe UI', sans-serif; color: #fff; }
+        body { margin: 0; background: #050505; overflow: hidden; font-family: 'Segoe UI', sans-serif; color: #fff; cursor: none; }
         
-        /* Sozlamalar Paneli (Yangi) */
-        .settings-panel {
-            position: fixed; top: 80px; right: 25px; z-index: 10001;
-            background: rgba(0, 20, 40, 0.8); backdrop-filter: blur(15px);
-            padding: 20px; border-radius: 15px; border: 1px solid #00d2ff;
-            width: 250px; box-shadow: 0 0 20px rgba(0, 210, 255, 0.2);
-            display: none; /* Boshida yashirin */
+        /* --- GLASS CURSOR --- */
+        #glass-cursor {
+            position: fixed; top: 0; left: 0; width: 30px; height: 30px; border-radius: 50%;
+            background: rgba(0, 210, 255, 0.1); backdrop-filter: blur(5px);
+            border: 1px solid rgba(0, 210, 255, 0.4); box-shadow: 0 0 10px rgba(0, 210, 255, 0.3);
+            pointer-events: none; z-index: 99999; transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s, background 0.2s;
         }
-        .settings-panel label { font-size: 12px; color: #00d2ff; display: block; margin-bottom: 5px; }
-        .settings-panel select, .settings-panel input {
-            width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #00d2ff;
-            color: white; padding: 5px; margin-bottom: 15px; border-radius: 5px;
-        }
-        .settings-btn {
-            position: fixed; top: 25px; right: 100px; z-index: 10001;
-            background: transparent; border: 1px solid #00d2ff; color: #00d2ff;
-            padding: 8px 15px; border-radius: 20px; cursor: pointer;
-        }
-        .settings-btn:hover { background: rgba(0, 210, 255, 0.2); }
+        #glass-cursor.hovered { width: 50px; height: 50px; background: rgba(0, 210, 255, 0.2); box-shadow: 0 0 20px #00d2ff; }
+        #glass-cursor.clicked { transform: translate(-50%, -50%) scale(0.8); background: rgba(0, 210, 255, 0.6); }
 
-        /* Asosiy UI */
+        /* --- UI ELEMENTS --- */
         .glass-back-btn {
             position: fixed; top: 25px; left: 25px; padding: 12px 25px;
             text-decoration: none; color: #00d2ff; z-index: 10001; font-weight: bold;
@@ -35,24 +26,53 @@
             border: 1px solid rgba(0, 210, 255, 0.3); border-radius: 20px;
         }
 
-        #status-container {
+        .settings-btn {
+            position: fixed; top: 25px; right: 25px; z-index: 10001;
+            background: rgba(0, 0, 0, 0.5); border: 1px solid #00d2ff; color: #00d2ff;
+            padding: 10px 20px; border-radius: 20px; cursor: none; font-weight: bold;
+        }
+
+        /* SOZLAMALAR PANELI */
+        .settings-panel {
+            position: fixed; top: 80px; right: 25px; z-index: 10002;
+            background: rgba(0, 15, 30, 0.9); backdrop-filter: blur(20px);
+            padding: 25px; border-radius: 20px; border: 1px solid #00d2ff;
+            width: 300px; box-shadow: 0 0 30px rgba(0, 210, 255, 0.15);
+            display: none; transform: translateX(120%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .settings-panel.active { transform: translateX(0); display: block; }
+        
+        .settings-panel label { font-size: 12px; color: #aaa; margin-top: 10px; display: block; }
+        .settings-panel select, .settings-panel input {
+            width: 100%; background: rgba(255,255,255,0.1); border: 1px solid #00d2ff;
+            color: white; padding: 8px; margin-bottom: 10px; border-radius: 8px; outline: none; cursor: none;
+        }
+        .btn-save {
+            width: 100%; background: linear-gradient(45deg, #00d2ff, #007bff); 
+            border: none; color: black; padding: 12px; margin-top: 10px;
+            cursor: none; font-weight: bold; border-radius: 10px;
+        }
+
+        /* ASOSIY EKRAN */
+        #ui-container {
             position: fixed; bottom: 10%; width: 100%; text-align: center; pointer-events: none; z-index: 10;
             display: flex; flex-direction: column; gap: 15px;
         }
         #user-transcript {
-            font-size: 32px; color: #fff; font-weight: 300; 
-            text-shadow: 0 0 15px rgba(255,255,255,0.6); min-height: 40px;
+            font-size: 36px; color: #fff; font-weight: 800; 
+            text-shadow: 0 0 20px rgba(0, 210, 255, 0.5); min-height: 50px;
         }
         #system-status {
             font-size: 14px; color: #00d2ff; text-transform: uppercase; letter-spacing: 4px;
             text-shadow: 0 0 20px #00d2ff; font-weight: bold; opacity: 0.8;
         }
 
+        /* Start Overlay */
         #start-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 20000;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            cursor: pointer;
+            cursor: none;
         }
         #start-text { font-size: 24px; color: #00d2ff; letter-spacing: 5px; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 0.5; } 100% { opacity: 1; } }
@@ -62,25 +82,29 @@
 </head>
 <body>
 
+    <div id="glass-cursor"></div>
+
     <div id="start-overlay" onclick="initializeSystem()">
-        <div style="font-size: 50px; margin-bottom: 20px;">⚛️</div>
-        <div id="start-text">TIZIMNI YOQISH</div>
+        <div style="font-size: 60px; margin-bottom: 20px; color: #00d2ff;">⚛️</div>
+        <div id="start-text">TIZIMNI ISHGA TUSHIRISH</div>
     </div>
 
     <a href="dashboard.html" class="glass-back-btn">‹ DASHBOARD</a>
-    <button class="settings-btn" onclick="toggleSettings()">⚙️ OVOZ SOZLAMALARI</button>
+    <button class="settings-btn" onclick="toggleSettings()">⚙️ SOZLAMALAR</button>
 
     <div class="settings-panel" id="settingsPanel">
-        <label>OVOZ TURI (Voice):</label>
-        <select id="voiceSelect" onchange="testVoice()"></select>
-
-        <label>TONALNOST (Pitch): <span id="pitchVal">0.7</span></label>
-        <input type="range" id="pitchRange" min="0.1" max="2" step="0.1" value="0.7" oninput="updateSettings()">
-
-        <label>TEZLIK (Rate): <span id="rateVal">1</span></label>
-        <input type="range" id="rateRange" min="0.5" max="2" step="0.1" value="1" oninput="updateSettings()">
+        <h3 style="color: #00d2ff; margin-top: 0;">JARVIS SETTINGS</h3>
         
-        <button onclick="testVoice()" style="width:100%; background:#00d2ff; border:none; color:black; padding:10px; cursor:pointer; font-weight:bold;">SINOV (TEST)</button>
+        <label>OVOZ (Voice):</label>
+        <select id="voiceSelect" onchange="previewVoice()"></select>
+
+        <label>TON (Pitch): <span id="pitchVal">0.7</span></label>
+        <input type="range" id="pitchRange" min="0.1" max="2" step="0.1" value="0.7" oninput="updateUIValues()">
+
+        <label>TEZLIK (Rate): <span id="rateVal">1.0</span></label>
+        <input type="range" id="rateRange" min="0.5" max="2" step="0.1" value="1.0" oninput="updateUIValues()">
+        
+        <button class="btn-save" onclick="saveAndClose()">SAQLASH VA YOPISH</button>
     </div>
 
     <div id="ui-container">
@@ -88,17 +112,22 @@
         <div id="system-status">KUTILMOQDA...</div>
     </div>
 
-    <canvas id="textCanvas"></canvas>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        // --- 1. SOZLAMALAR ---
+        // --- 1. SOZLAMALAR (DEFAULT) ---
         const CONFIG = {
-            particleCount: 22000,
+            particleCount: 25000,
             particleColor: 0x00d2ff,
             angryColor: 0xff0000,
             silenceDelay: 800
+        };
+
+        // Saqlangan sozlamalar (LocalStorage)
+        let savedSettings = JSON.parse(localStorage.getItem('jarvis_settings')) || {
+            voiceURI: null,
+            pitch: 0.7,
+            rate: 1.0
         };
 
         let scene, camera, renderer, particles, geometry;
@@ -108,73 +137,108 @@
         let recognition;
         let silenceTimer;
         
-        // Ovoz o'zgaruvchilari
         let voices = [];
         let selectedVoice = null;
-        let pitch = 0.7;
-        let rate = 1;
-
+        
         let audioContext, analyser, dataArray, isListening = false;
 
-        // --- 2. OVOZLARNI YUKLASH VA PANELGA CHIQARISH ---
-        function populateVoiceList() {
+        // --- 2. OVOZLARNI YUKLASH VA TIKLASH ---
+        function loadVoices() {
             voices = synth.getVoices();
             const voiceSelect = document.getElementById('voiceSelect');
             voiceSelect.innerHTML = '';
 
+            let foundSavedVoice = false;
+
             voices.forEach((voice, index) => {
                 const option = document.createElement('option');
                 option.textContent = `${voice.name} (${voice.lang})`;
-                option.value = index;
-                // Avtomatik ingliz erkak ovozini tanlashga harakat qilamiz
-                if (voice.name.includes("Google US English") || voice.name.includes("Male")) {
+                option.value = voice.voiceURI; // URI orqali saqlaymiz (ishonchliroq)
+                
+                // Saqlangan ovozni tiklash
+                if (savedSettings.voiceURI && voice.voiceURI === savedSettings.voiceURI) {
                     option.selected = true;
                     selectedVoice = voice;
+                    foundSavedVoice = true;
                 }
+                
                 voiceSelect.appendChild(option);
             });
-            
-            // Agar hech narsa tanlanmasa birinchisini olamiz
-            if (!selectedVoice && voices.length > 0) selectedVoice = voices[0];
+
+            // Agar saqlangan ovoz topilmasa, default (erkak) ovozni olamiz
+            if (!foundSavedVoice) {
+                const defaultVoice = voices.find(v => v.name.includes("Google UK English Male")) || 
+                                     voices.find(v => v.name.includes("Male")) || 
+                                     voices[0];
+                if (defaultVoice) {
+                    selectedVoice = defaultVoice;
+                    voiceSelect.value = defaultVoice.voiceURI;
+                }
+            }
+
+            // Inputlarni tiklash
+            document.getElementById('pitchRange').value = savedSettings.pitch;
+            document.getElementById('rateRange').value = savedSettings.rate;
+            updateUIValues();
         }
 
         if (speechSynthesis.onvoiceschanged !== undefined) {
-            speechSynthesis.onvoiceschanged = populateVoiceList;
+            speechSynthesis.onvoiceschanged = loadVoices;
         }
 
-        function updateSettings() {
-            pitch = parseFloat(document.getElementById('pitchRange').value);
-            rate = parseFloat(document.getElementById('rateRange').value);
-            document.getElementById('pitchVal').innerText = pitch;
-            document.getElementById('rateVal').innerText = rate;
+        function updateUIValues() {
+            document.getElementById('pitchVal').innerText = document.getElementById('pitchRange').value;
+            document.getElementById('rateVal').innerText = document.getElementById('rateRange').value;
+        }
+
+        function previewVoice() {
+            const uri = document.getElementById('voiceSelect').value;
+            selectedVoice = voices.find(v => v.voiceURI === uri);
+            const p = parseFloat(document.getElementById('pitchRange').value);
+            const r = parseFloat(document.getElementById('rateRange').value);
             
-            const index = document.getElementById('voiceSelect').value;
-            selectedVoice = voices[index];
+            // Sinov uchun gapiradi
+            const ut = new SpeechSynthesisUtterance("System check.");
+            ut.voice = selectedVoice;
+            ut.pitch = p;
+            ut.rate = r;
+            synth.cancel();
+            synth.speak(ut);
+        }
+
+        function saveAndClose() {
+            // Sozlamalarni yangilash
+            savedSettings.voiceURI = document.getElementById('voiceSelect').value;
+            savedSettings.pitch = parseFloat(document.getElementById('pitchRange').value);
+            savedSettings.rate = parseFloat(document.getElementById('rateRange').value);
+
+            // LocalStorage ga yozish
+            localStorage.setItem('jarvis_settings', JSON.stringify(savedSettings));
+            
+            // Ovozni tanlash
+            selectedVoice = voices.find(v => v.voiceURI === savedSettings.voiceURI);
+
+            toggleSettings();
+            speak("Settings saved, sir.");
         }
 
         function toggleSettings() {
-            const panel = document.getElementById('settingsPanel');
-            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+            document.getElementById('settingsPanel').classList.toggle('active');
         }
 
-        function testVoice() {
-            updateSettings();
-            speak("System check. My name is Jarvis.");
-        }
-
-        // --- 3. START SYSTEM ---
+        // --- 3. SYSTEM START ---
         async function initializeSystem() {
             document.getElementById('start-overlay').style.display = 'none';
-            setupAudio(); // Mikrafon ruxsati
-            populateVoiceList(); // Ovozlar
             
-            initThree(); // Grafika
-            startListening(); // Eshitish
+            await setupAudio();
+            loadVoices(); // Ovozlar tayyorligini tekshirish
+            initThree();
+            startListening();
             
-            setTimeout(() => speak("Welcome back, sir."), 1000);
+            setTimeout(() => speak("Welcome back, sir. Systems online."), 800);
         }
 
-        // --- 4. AUDIO VIZUALIZATOR ---
+        // --- 4. AUDIO VIZUALIZATOR (Mic) ---
         async function setupAudio() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -206,6 +270,7 @@
                 const phi = Math.acos(-1 + (2 * i) / CONFIG.particleCount);
                 const theta = Math.sqrt(CONFIG.particleCount * Math.PI) * phi;
                 const r = 12;
+                
                 homePos[i*3] = r * Math.cos(theta) * Math.sin(phi);
                 homePos[i*3+1] = r * Math.sin(theta) * Math.sin(phi);
                 homePos[i*3+2] = r * Math.cos(phi);
@@ -224,7 +289,7 @@
             
             const material = new THREE.PointsMaterial({
                 size: 0.18, color: CONFIG.particleColor,
-                transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending
+                transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending
             });
 
             particles = new THREE.Points(geometry, material);
@@ -275,7 +340,7 @@
             renderer.render(scene, camera);
         }
 
-        // --- 6. TEXT RENDER ---
+        // --- 6. TEXT RENDER (CRYSTAL CLEAR) ---
         function textToParticles(text, isAngry = false) {
             isTextMode = true;
             particles.material.color.set(isAngry ? CONFIG.angryColor : CONFIG.particleColor);
@@ -288,13 +353,13 @@
             
             ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
             ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.font = `900 100px Arial`;
+            ctx.font = `900 120px Arial`;
 
             // Wrap Text
             const words = text.split(' ');
             let line = '';
             let lines = [];
-            const maxWidth = w * 0.8; 
+            const maxWidth = w * 0.85; 
 
             for(let n = 0; n < words.length; n++) {
                 const testLine = line + words[n] + ' ';
@@ -304,7 +369,7 @@
             }
             lines.push(line);
 
-            const lineHeight = 120;
+            const lineHeight = 140;
             const startY = (h - (lines.length * lineHeight)) / 2 + (lineHeight / 2);
             for (let k = 0; k < lines.length; k++) {
                 ctx.fillText(lines[k], w / 2, startY + (k * lineHeight));
@@ -312,7 +377,7 @@
 
             const data = ctx.getImageData(0, 0, w, h).data;
             const validPixels = [];
-            const step = 6; 
+            const step = 5; 
 
             for (let y = 0; y < h; y += step) {
                 for (let x = 0; x < w; x += step) {
@@ -322,6 +387,7 @@
                 }
             }
 
+            // Barcha zarralarni majburan matnga yig'ish (Yorqinlik)
             for (let i = 0; i < CONFIG.particleCount; i++) {
                 const p = validPixels[i % validPixels.length]; 
                 if (p) {
@@ -339,24 +405,25 @@
             document.getElementById('system-status').innerText = "TINGLANMOQDA...";
         }
 
-        // --- 7. OVOZ (TTS) ---
+        // --- 7. JARVIS OVOZI (TTS) ---
         function speak(text) {
             if (synth.speaking) synth.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
             
-            // Sozlamalar Panelidan olingan qiymatlar
+            // Saqlangan sozlamalarni ishlatish
             if (selectedVoice) utterance.voice = selectedVoice;
-            utterance.pitch = pitch;
-            utterance.rate = rate;
+            utterance.pitch = savedSettings.pitch;
+            utterance.rate = savedSettings.rate;
             
             synth.speak(utterance);
         }
 
-        // --- 8. TINGLASH ---
+        // --- 8. TINGLASH (STT) ---
         function startListening() {
             if (!('webkitSpeechRecognition' in window)) { alert("Chrome ishlating"); return; }
 
             recognition = new webkitSpeechRecognition();
+            // Default O'zbek tili, lekin inglizcha/ruscha so'zlarni ham qisman taniydi
             recognition.lang = 'uz-UZ'; 
             recognition.continuous = true;
             recognition.interimResults = true;
@@ -380,7 +447,8 @@
                     }
                 }
                 
-                document.getElementById('user-transcript').innerText = (final || interim).replace(/[.,]/g, '');
+                let displayText = (final || interim).replace(/[.,]/g, '');
+                document.getElementById('user-transcript').innerText = displayText;
 
                 if (interim.length > 0) {
                     silenceTimer = setTimeout(() => {
@@ -403,15 +471,21 @@
             let display = "";
             let isAngry = false;
 
-            if (lowerText.includes("assalomu") || lowerText.includes("salom")) {
+            // --- 3 TILLI MANTIQ ---
+            
+            // 1. SALOM
+            if (['assalomu', 'salom', 'hello', 'hi', 'privet'].some(v => lowerText.includes(v))) {
                 display = "VAALAYKUM ASSALOM"; response = "Vaalaykum assalom, sir.";
             } 
+            // 2. SO'KISH
+            else if (['fuck', 'suka', 'blat', 'foku'].some(v => lowerText.includes(v))) {
+                display = "LANGUAGE WARNING"; response = "Watch your language."; isAngry = true;
+            } 
+            // 3. JARVIS
             else if (lowerText.includes("jarvis")) {
                 display = "YES SIR"; response = "I am here.";
             }
-            else if (lowerText.includes("fuck") || lowerText.includes("suka")) {
-                display = "FUCK YOU TOO!"; response = "Fuck you too."; isAngry = true;
-            } 
+            // 4. ECHO (Hamma narsa)
             else {
                 display = text.toUpperCase(); response = text; 
             }
@@ -419,8 +493,23 @@
             textToParticles(display, isAngry);
             document.getElementById('system-status').innerText = "JAVOB BERILMOQDA...";
             speak(response);
+            
             setTimeout(returnToSphere, 3000 + (response.length * 60));
         }
+
+        // --- KURSOR MANTIQI ---
+        const cursor = document.getElementById('glass-cursor');
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px'; cursor.style.top = e.clientY + 'px';
+        });
+        document.addEventListener('mousedown', () => cursor.classList.add('clicked'));
+        document.addEventListener('mouseup', () => cursor.classList.remove('clicked'));
+        
+        const interactables = document.querySelectorAll('button, a, select, input');
+        interactables.forEach(el => {
+            el.addEventListener('mouseenter', () => cursor.classList.add('hovered'));
+            el.addEventListener('mouseleave', () => cursor.classList.remove('hovered'));
+        });
 
     </script>
 </body>
