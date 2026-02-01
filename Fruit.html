@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fruit Ninja AI | Ultimate</title>
+    <title>Fruit Ninja </title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -13,13 +13,13 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
     <style>
-        /* --- DIZAYN (NEON & GLASSMORPHISM) --- */
+        /* --- DIZAYN --- */
         :root {
             --neon-green: #39ff14;
             --neon-red: #ff073a;
             --neon-yellow: #fff01f;
-            --glass-bg: rgba(20, 20, 20, 0.85);
-            --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-bg: rgba(15, 15, 15, 0.9);
+            --glass-border: rgba(255, 255, 255, 0.2);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; user-select: none; }
@@ -31,7 +31,6 @@
             color: white;
         }
 
-        /* Orqaga tugmasi */
         .glass-back-btn {
             position: fixed; top: 20px; left: 20px;
             padding: 10px 20px;
@@ -41,21 +40,18 @@
             backdrop-filter: blur(10px); z-index: 100; font-weight: bold;
             display: flex; align-items: center; gap: 5px; transition: 0.3s;
         }
-        .glass-back-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.05); }
 
-        /* O'yin Konteyneri */
         #game-container { 
             position: relative; width: 100%; height: 100%; 
             display: flex; justify-content: center; align-items: center;
         }
         
-        #input-video { display: none; } /* Videoni yashiramiz, canvasga chizamiz */
+        #input-video { display: none; }
         
         canvas {
             display: block; width: 100%; height: 100%; object-fit: cover;
         }
 
-        /* UI Qavatlari (HUD) */
         .ui-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 10;
@@ -68,11 +64,14 @@
         }
         .score-box { color: var(--neon-yellow); margin-bottom: 5px; font-size: 32px; }
         .lives-box { color: var(--neon-red); letter-spacing: 5px; }
+        .user-name-display {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            font-size: 18px; color: rgba(255,255,255,0.7); font-weight: bold;
+        }
 
-        /* Menyu va Game Over oynalari */
         .overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.95);
             display: flex; justify-content: center; align-items: center;
             z-index: 20; transition: opacity 0.3s;
         }
@@ -91,17 +90,26 @@
             font-style: italic; margin-bottom: 10px; letter-spacing: -2px;
         }
 
+        .btn-group {
+            display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 20px;
+        }
+
         button {
-            margin-top: 20px; padding: 15px 50px;
-            font-size: 22px; font-weight: bold;
+            padding: 15px 30px;
+            font-size: 18px; font-weight: bold;
             background: linear-gradient(45deg, var(--neon-green), #2db300);
             border: none; border-radius: 50px; color: black;
             cursor: pointer; box-shadow: 0 0 20px rgba(57,255,20,0.4);
-            transition: 0.2s;
+            transition: 0.2s; min-width: 160px;
         }
         button:hover { transform: scale(1.05); filter: brightness(1.2); }
 
-        /* Reyting Jadvali */
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white; box-shadow: none; border: 1px solid rgba(255,255,255,0.3);
+        }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.3); }
+
         .leaderboard {
             margin-top: 25px; text-align: left;
             background: rgba(255,255,255,0.05);
@@ -116,9 +124,8 @@
         }
         .rank-1 { color: #ffd700; font-weight: bold; }
         
-        .hidden { opacity: 0; pointer-events: none; display: none; }
+        .hidden { display: none !important; }
 
-        /* Loading */
         .loader {
             border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--neon-green);
             border-radius: 50%; width: 40px; height: 40px;
@@ -129,7 +136,7 @@
 </head>
 <body>
 
-    <a href="index.html" class="glass-back-btn">
+    <a href="dashboard.html" class="glass-back-btn">
         <span>‹</span> Chiqish
     </a>
 
@@ -138,7 +145,7 @@
         <canvas id="game-canvas"></canvas>
 
         <div class="ui-layer" id="game-ui" style="display: none;">
-            <div class="hud">
+            <div class="user-name-display" id="hud-username"></div> <div class="hud">
                 <div class="score-box"><span id="score">0</span></div>
                 <div class="lives-box" id="lives">❤️❤️❤️</div>
             </div>
@@ -147,7 +154,7 @@
         <div id="menu-screen" class="overlay">
             <div class="glass-card">
                 <h1>FRUIT NINJA</h1>
-                <p id="welcome-msg" style="color: #aaa; margin-bottom: 20px;">AI Yuklanmoqda...</p>
+                <p id="welcome-msg" style="color: #aaa; margin-bottom: 20px;">Yuklanmoqda...</p>
                 
                 <div id="camera-loading" style="display: none;">
                     <div class="loader"></div>
@@ -168,22 +175,24 @@
         <div id="gameover-screen" class="overlay hidden">
             <div class="glass-card">
                 <h1 style="color: var(--neon-red);">TUGADI!</h1>
-                <p>Sizning natijangiz:</p>
+                <p id="gameover-user" style="color: #ccc; margin-bottom: 5px;"></p> <p>Natija:</p>
                 <h2 style="font-size: 60px; margin: 15px 0; color: white;" id="final-score">0</h2>
-                <p id="new-record-msg" style="color: #ffd700; display: none; margin-bottom: 10px;">✨ YANGI REKORD! ✨</p>
-                <button onclick="resetGame()">QAYTA O'YNASH</button>
+                <p id="new-record-msg" style="color: #ffd700; display: none; margin-bottom: 20px;">✨ YANGI REKORD! ✨</p>
+                
+                <div class="btn-group">
+                    <button onclick="resetGame()">QAYTA O'YNASH</button>
+                    <button class="btn-secondary" onclick="goHome()">🏠 BOSH MENYU</button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         // =========================================================
-        // 1. SOZLAMALAR (CONFIG)
+        // 1. CONFIG (O'ZINGIZNIKINI QO'YING)
         // =========================================================
-        
-        // DIQQAT: Bu yerga o'zingizning Firebase Configingizni qo'ying!
         const firebaseConfig = {
-            apiKey: "AIzaSyAg_n9-MsYSI41l_BqHWHuXrkE7I0fRfmo", // <-- O'ZINGIZNIKINI TEKSHIRING
+            apiKey: "AIzaSyAg_n9-MsYSI41l_BqHWHuXrkE7I0fRfmo", 
             authDomain: "my-universe-a5416.firebaseapp.com",
             projectId: "my-universe-a5416",
             storageBucket: "my-universe-a5416.appspot.com",
@@ -196,90 +205,78 @@
         }
         const db = firebase.firestore();
 
-        // Foydalanuvchini aniqlash (Guest Mode qo'shildi)
-        let currentUser = JSON.parse(localStorage.getItem('atom_user'));
-        if (!currentUser) {
-            currentUser = { name: "Mehmon", email: "guest@demo.com" }; // Fallback
+        // =========================================================
+        // 2. USER PROFILE (NICKNAME) ANIQLASH
+        // =========================================================
+        let currentUser = null;
+        try {
+            // Profile.html va Login tizimida saqlangan ma'lumotni olamiz
+            currentUser = JSON.parse(localStorage.getItem('atom_user'));
+        } catch (e) { console.error("User data xatosi"); }
+
+        if (!currentUser || !currentUser.name) {
+            currentUser = { name: "Mehmon", email: "guest@demo.com" };
         }
+
+        // Ismni ekranga chiqarish
         document.getElementById('welcome-msg').innerText = `Jangchi: ${currentUser.name}`;
+        document.getElementById('hud-username').innerText = currentUser.name;
+        document.getElementById('gameover-user').innerText = currentUser.name;
 
         // =========================================================
-        // 2. O'YIN O'ZGARUVCHILARI
+        // 3. O'YIN SETUP
         // =========================================================
         const canvas = document.getElementById('game-canvas');
         const ctx = canvas.getContext('2d');
         const videoElement = document.getElementById('input-video');
 
-        // Optimal o'lcham (Kamera 640x480 da ishlaydi, CSS uni ekranga cho'zadi)
         const GAME_WIDTH = 640;
         const GAME_HEIGHT = 480;
         canvas.width = GAME_WIDTH;
         canvas.height = GAME_HEIGHT;
 
         let state = {
-            screen: 'MENU', // MENU, PLAYING, GAMEOVER
+            screen: 'MENU',
             score: 0,
             lives: 3,
             lastSpawn: 0,
-            comboQueue: []
+            comboQueue: [],
+            isLoopRunning: false // Loopni nazorat qilish uchun
         };
 
-        // Pointer (Qo'l harakati)
-        let pointer = { 
-            x: -100, y: -100, 
-            prevX: -100, prevY: -100,
-            speed: 0, 
-            active: false 
-        };
-
+        let pointer = { x: -100, y: -100, prevX: -100, prevY: -100, speed: 0, active: false };
         let fruits = [];
         let particles = [];
         let trails = [];
         let floatTexts = [];
 
         // =========================================================
-        // 3. MEDIAPIPE (AI QO'L ANIQLASH)
+        // 4. MEDIAPIPE
         // =========================================================
         const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-        
         hands.setOptions({
-            maxNumHands: 1,
-            modelComplexity: 0, // 0 = Tezkor, 1 = Aniq
-            minDetectionConfidence: 0.5,
-            minTrackingConfidence: 0.5
+            maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5
         });
 
-        hands.onResults(onHandsResults);
-
-        function onHandsResults(results) {
+        hands.onResults((results) => {
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                // 8 - Ko'rsatkich barmoq uchi
                 const lm = results.multiHandLandmarks[0][8]; 
-                
                 pointer.active = true;
 
-                // MIRROR FIX: X koordinatasini (1 - x) qilamiz
                 const currentX = (1 - lm.x) * GAME_WIDTH; 
                 const currentY = lm.y * GAME_HEIGHT;
 
-                // Birinchi marta kirganda speed sakrab ketmasligi uchun
                 if (pointer.x !== -100) {
                     const dx = currentX - pointer.x;
                     const dy = currentY - pointer.y;
                     pointer.speed = Math.sqrt(dx*dx + dy*dy);
                 }
-
-                pointer.prevX = pointer.x;
-                pointer.prevY = pointer.y;
-                pointer.x = currentX;
-                pointer.y = currentY;
-
+                pointer.prevX = pointer.x; pointer.prevY = pointer.y;
+                pointer.x = currentX; pointer.y = currentY;
             } else {
-                pointer.active = false;
-                pointer.speed = 0;
-                pointer.x = -100; // Ekranda yo'qolishi uchun
+                pointer.active = false; pointer.speed = 0; pointer.x = -100;
             }
-        }
+        });
 
         const camera = new Camera(videoElement, {
             onFrame: async () => { await hands.send({image: videoElement}); },
@@ -287,28 +284,48 @@
         });
 
         // =========================================================
-        // 4. O'YIN LOGIKASI (LOOP)
+        // 5. O'YIN LOGIKASI VA TUGMALAR
         // =========================================================
         
-        // O'yinni boshlash (Kamerani yoqish)
+        // O'YINNI BOSHLASH
         function startGameInit() {
             document.getElementById('btn-start').style.display = 'none';
             document.getElementById('camera-loading').style.display = 'block';
 
             camera.start().then(() => {
-                document.getElementById('menu-screen').style.display = 'none';
+                document.getElementById('menu-screen').classList.add('hidden');
                 document.getElementById('game-ui').style.display = 'block';
+                
                 resetGameVariables();
                 state.screen = 'PLAYING';
-                loop();
+                startLoop();
             });
         }
 
-        // Qayta boshlash
+        // QAYTA O'YNASH (RESTART FIX)
         function resetGame() {
             document.getElementById('gameover-screen').classList.add('hidden');
+            document.getElementById('game-ui').style.display = 'block';
+            
             resetGameVariables();
             state.screen = 'PLAYING';
+            
+            // Agar loop to'xtab qolgan bo'lsa, qayta yurgizamiz
+            if (!state.isLoopRunning) {
+                startLoop();
+            }
+        }
+
+        // BOSH MENUGA QAYTISH
+        function goHome() {
+            document.getElementById('gameover-screen').classList.add('hidden');
+            document.getElementById('game-ui').style.display = 'none';
+            document.getElementById('menu-screen').classList.remove('hidden');
+            document.getElementById('btn-start').style.display = 'inline-block';
+            document.getElementById('camera-loading').style.display = 'none';
+            
+            state.screen = 'MENU';
+            state.isLoopRunning = false; // Loopni to'xtatamiz
         }
 
         function resetGameVariables() {
@@ -318,37 +335,42 @@
             particles = [];
             trails = [];
             floatTexts = [];
-            pointer.x = -100; 
-            pointer.speed = 0;
+            pointer.x = -100; pointer.speed = 0;
             updateHUD();
         }
 
-        // Asosiy Loop
+        // ASOSIY LOOP
+        function startLoop() {
+            if (state.isLoopRunning) return; // Ikki marta yurgizmaslik uchun
+            state.isLoopRunning = true;
+            loop();
+        }
+
         function loop() {
             if (state.screen === 'PLAYING') {
                 spawnFruit();
                 update();
                 draw();
                 requestAnimationFrame(loop);
+            } else {
+                state.isLoopRunning = false; // Agar o'yin to'xtasa (Menu yoki Gameover)
             }
         }
 
-        // Meva yaratish
         function spawnFruit() {
-            if (Date.now() - state.lastSpawn > 1200) { // Har 1.2 sekundda
-                const isBomb = Math.random() < 0.15; // 15% bomba
+            if (Date.now() - state.lastSpawn > 1200) { 
+                const isBomb = Math.random() < 0.15;
                 const emojis = ['🍎','🍊','🍌','🍉','🍇','🍓','🍍','🥝'];
-                const emoji = emojis[Math.floor(Math.random() * emojis.length)];
                 
                 fruits.push({
                     x: Math.random() * (GAME_WIDTH - 100) + 50,
-                    y: GAME_HEIGHT + 50, // Pastdan chiqadi
-                    vx: (Math.random() - 0.5) * 6, // Yon tomonga uchish
-                    vy: -(Math.random() * 5 + 13), // Tepaga otilish kuchi
+                    y: GAME_HEIGHT + 50,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: -(Math.random() * 5 + 13),
                     size: 50,
                     rotation: 0,
                     rotSpeed: (Math.random() - 0.5) * 0.2,
-                    emoji: isBomb ? '💣' : emoji,
+                    emoji: isBomb ? '💣' : emojis[Math.floor(Math.random() * emojis.length)],
                     isBomb: isBomb,
                     color: isBomb ? '#fff' : '#'+Math.floor(Math.random()*16777215).toString(16),
                     sliced: false
@@ -357,17 +379,12 @@
             }
         }
 
-        // Fizika va To'qnashuvlar
         function update() {
             // Mevalar
             for (let i = fruits.length - 1; i >= 0; i--) {
                 let f = fruits[i];
-                f.x += f.vx;
-                f.y += f.vy;
-                f.vy += 0.25; // Gravitatsiya
-                f.rotation += f.rotSpeed;
+                f.x += f.vx; f.y += f.vy; f.vy += 0.25; f.rotation += f.rotSpeed;
 
-                // Pastga tushib ketsa
                 if (f.y > GAME_HEIGHT + 100) {
                     if (!f.isBomb && !f.sliced) {
                         state.lives--;
@@ -378,41 +395,27 @@
                     continue;
                 }
 
-                // Kesish (Collision)
                 if (pointer.active && !f.sliced) {
                     const dist = Math.hypot(pointer.x - f.x, pointer.y - f.y);
-                    
-                    // Kesish uchun barmoq meva ustida bo'lishi VA tez harakatlanishi kerak
                     if (dist < f.size + 10 && pointer.speed > 10) { 
-                        if (f.isBomb) {
-                            gameOver();
-                        } else {
-                            sliceFruit(f);
-                        }
+                        if (f.isBomb) gameOver();
+                        else sliceFruit(f);
                     }
                 }
             }
 
-            // Zarrachalar (Particles)
+            // Zarrachalar
             particles.forEach((p, i) => {
                 p.x += p.vx; p.y += p.vy; p.vy += 0.5; p.life -= 0.03;
                 if(p.life <= 0) particles.splice(i, 1);
             });
 
-            // Trails (Iz)
-            if (pointer.active) {
-                trails.push({x: pointer.x, y: pointer.y, life: 1.0});
-            }
-            trails.forEach((t, i) => {
-                t.life -= 0.15;
-                if(t.life <= 0) trails.splice(i, 1);
-            });
+            // Trails
+            if (pointer.active) trails.push({x: pointer.x, y: pointer.y, life: 1.0});
+            trails.forEach((t, i) => { t.life -= 0.15; if(t.life <= 0) trails.splice(i, 1); });
 
-            // Suzuvchi matnlar
-            floatTexts.forEach((t, i) => {
-                t.y -= 1; t.life -= 0.02;
-                if(t.life <= 0) floatTexts.splice(i, 1);
-            });
+            // Texts
+            floatTexts.forEach((t, i) => { t.y -= 1; t.life -= 0.02; if(t.life <= 0) floatTexts.splice(i, 1); });
         }
 
         function sliceFruit(f) {
@@ -420,92 +423,55 @@
             state.score += 10;
             state.comboQueue.push(Date.now());
             updateHUD();
-
-            // Effektlar
             createParticles(f.x, f.y, f.color);
             fruits.splice(fruits.indexOf(f), 1);
-
-            // Combo tekshirish (400ms ichida ketma-ket kesish)
+            
             const now = Date.now();
             state.comboQueue = state.comboQueue.filter(t => now - t < 400);
-            
             if (state.comboQueue.length >= 3) {
                 const bonus = state.comboQueue.length * 5;
                 state.score += bonus;
-                floatTexts.push({
-                    text: `${state.comboQueue.length} COMBO!`,
-                    x: pointer.x, y: pointer.y, life: 1.5, color: '#fff01f', size: 30
-                });
+                floatTexts.push({ text: `${state.comboQueue.length} COMBO!`, x: pointer.x, y: pointer.y, life: 1.5, color: '#fff01f', size: 30 });
                 state.comboQueue = [];
             }
         }
 
         function createParticles(x, y, color) {
-            for(let i=0; i<10; i++) {
-                particles.push({
-                    x: x, y: y,
-                    vx: (Math.random()-0.5)*12, vy: (Math.random()-0.5)*12,
-                    color: color, life: 1.0
-                });
+            for(let i=0; i<8; i++) {
+                particles.push({x: x, y: y, vx: (Math.random()-0.5)*12, vy: (Math.random()-0.5)*12, color: color, life: 1.0});
             }
         }
 
-        // =========================================================
-        // 5. CHIZISH (RENDER)
-        // =========================================================
         function draw() {
             ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-            // 1. VIDEONI CHIZISH (MIRROR EFFECT)
             ctx.save();
-            ctx.translate(GAME_WIDTH, 0); // O'ngga suramiz
-            ctx.scale(-1, 1); // Chapga qaratib flip qilamiz
+            ctx.translate(GAME_WIDTH, 0); ctx.scale(-1, 1);
             ctx.drawImage(videoElement, 0, 0, GAME_WIDTH, GAME_HEIGHT);
-            ctx.restore(); 
+            ctx.restore();
 
-            // 2. QILICH IZI (TRAIL)
             if (trails.length > 1) {
-                ctx.beginPath();
-                ctx.moveTo(trails[0].x, trails[0].y);
+                ctx.beginPath(); ctx.moveTo(trails[0].x, trails[0].y);
                 for(let t of trails) ctx.lineTo(t.x, t.y);
-                ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
-                ctx.lineWidth = 6;
-                ctx.lineCap = "round";
-                ctx.stroke();
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.5)"; ctx.lineWidth = 5; ctx.lineCap = "round"; ctx.stroke();
             }
 
-            // 3. MEVALAR
             fruits.forEach(f => {
-                ctx.save();
-                ctx.translate(f.x, f.y);
-                ctx.rotate(f.rotation);
-                ctx.font = `${f.size}px Segoe UI Emoji`;
-                ctx.textAlign = "center"; ctx.textBaseline = "middle";
-                
-                // Soya
+                ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(f.rotation);
+                ctx.font = `${f.size}px Segoe UI Emoji`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
                 ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 10;
-                ctx.fillText(f.emoji, 0, 0);
-                ctx.restore();
+                ctx.fillText(f.emoji, 0, 0); ctx.restore();
             });
 
-            // 4. ZARRACHALAR
             particles.forEach(p => {
-                ctx.fillStyle = p.color;
-                ctx.globalAlpha = p.life;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, Math.random()*5 + 2, 0, Math.PI*2);
-                ctx.fill();
+                ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
+                ctx.beginPath(); ctx.arc(p.x, p.y, Math.random()*5+2, 0, Math.PI*2); ctx.fill();
             });
             ctx.globalAlpha = 1;
 
-            // 5. MATNLAR
             floatTexts.forEach(t => {
-                ctx.font = `bold ${t.size}px Arial`;
-                ctx.fillStyle = t.color;
-                ctx.strokeStyle = "black";
-                ctx.lineWidth = 3;
-                ctx.strokeText(t.text, t.x, t.y);
-                ctx.fillText(t.text, t.x, t.y);
+                ctx.font = `bold ${t.size}px Arial`; ctx.fillStyle = t.color; ctx.strokeStyle = "black";
+                ctx.lineWidth = 2; ctx.strokeText(t.text, t.x, t.y); ctx.fillText(t.text, t.x, t.y);
             });
         }
 
@@ -519,73 +485,50 @@
         // =========================================================
         async function gameOver() {
             state.screen = 'GAMEOVER';
+            state.isLoopRunning = false; // Loopni to'xtatamiz
+            
             document.getElementById('gameover-screen').classList.remove('hidden');
+            document.getElementById('game-ui').style.display = 'none'; // HUD yashirish
             document.getElementById('final-score').innerText = state.score;
             document.getElementById('new-record-msg').style.display = 'none';
 
-            if(currentUser.email === "guest@demo.com") return; // Mehmonlarga saqlanmaydi
+            if(currentUser.email === "guest@demo.com") return;
 
             const userRef = db.collection('scores').doc(currentUser.email);
-            
             try {
                 const doc = await userRef.get();
                 let isNewRecord = false;
-
                 if (doc.exists) {
                     if (state.score > doc.data().score) {
                         await userRef.update({ score: state.score, date: new Date() });
                         isNewRecord = true;
                     }
                 } else {
-                    await userRef.set({
-                        name: currentUser.name,
-                        score: state.score,
-                        date: new Date()
-                    });
+                    await userRef.set({ name: currentUser.name, score: state.score, date: new Date() });
                     isNewRecord = true;
                 }
-
                 if (isNewRecord) {
                     document.getElementById('new-record-msg').style.display = 'block';
                     loadLeaderboard();
                 }
-
-            } catch (e) {
-                console.error("Score Save Error:", e);
-            }
+            } catch (e) { console.error(e); }
         }
 
         async function loadLeaderboard() {
             const list = document.getElementById('leaderboard-list');
             list.innerHTML = "Yuklanmoqda...";
-            
             try {
-                const snapshot = await db.collection('scores')
-                    .orderBy('score', 'desc')
-                    .limit(10)
-                    .get();
-
+                const snapshot = await db.collection('scores').orderBy('score', 'desc').limit(10).get();
                 list.innerHTML = "";
                 let rank = 1;
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     let rankClass = rank === 1 ? 'rank-1' : '';
-                    
-                    list.innerHTML += `
-                        <div class="rank-item">
-                            <span class="${rankClass}">#${rank} ${data.name}</span>
-                            <span>${data.score}</span>
-                        </div>
-                    `;
+                    list.innerHTML += `<div class="rank-item"><span class="${rankClass}">#${rank} ${data.name}</span><span>${data.score}</span></div>`;
                     rank++;
                 });
-            } catch (e) {
-                list.innerHTML = "Xatolik!";
-                console.error(e);
-            }
+            } catch (e) { list.innerHTML = "Xatolik!"; }
         }
-
-        // Dastlabki yuklanish
         loadLeaderboard();
 
     </script>
