@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jarvis-HOME</title>
+    <title>Jarvis-HOME1</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -244,44 +244,44 @@
         const cursor = document.getElementById('glass-cursor');
 
 // 1. Sichqoncha harakati
-document.addEventListener('mousemove', (e) => {
-    cursor.style.left = e.clientX + 'px';
-    cursor.style.top = e.clientY + 'px';
-});
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
 
 // 2. Bosganda (Click) animatsiyasi
-document.addEventListener('mousedown', () => cursor.classList.add('clicked'));
-document.addEventListener('mouseup', () => cursor.classList.remove('clicked'));
+        document.addEventListener('mousedown', () => cursor.classList.add('clicked'));
+        document.addEventListener('mouseup', () => cursor.classList.remove('clicked'));
 
 // 3. Tugmalar va Linklar ustiga borganda kattalashishi
 // Barcha tugma va 'a' teglarini olamiz
-const interactables = document.querySelectorAll('button, a, .mic-icon, select');
+        const interactables = document.querySelectorAll('button, a, .mic-icon, select');
 
-interactables.forEach(el => {
-    el.addEventListener('mouseenter', () => cursor.classList.add('hovered'));
-    el.addEventListener('mouseleave', () => cursor.classList.remove('hovered'));
-});
-        // Default rasm
-        const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+        interactables.forEach(el => {
+            el.addEventListener('mouseenter', () => cursor.classList.add('hovered'));
+            el.addEventListener('mouseleave', () => cursor.classList.remove('hovered'));
+        });
+                // Default rasm
+                const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
-        // LocalStorage dan user ma'lumotini olish
-        const userStr = localStorage.getItem('atom_user');
+                // LocalStorage dan user ma'lumotini olish
+                const userStr = localStorage.getItem('atom_user');
 
-        if (!userStr) {
-            window.location.href = 'index.html';
-        } else {
-            const user = JSON.parse(userStr);
+                if (!userStr) {
+                    window.location.href = 'index.html';
+                } else {
+                    const user = JSON.parse(userStr);
             
-            document.getElementById('u-name').innerText = user.name || "Foydalanuvchi";
-            document.getElementById('u-email').innerText = user.email || "";
+                    document.getElementById('u-name').innerText = user.name || "Foydalanuvchi";
+                    document.getElementById('u-email').innerText = user.email || "";
             
-            const imgElement = document.getElementById('u-img');
-            imgElement.src = user.picture ? user.picture : defaultAvatar;
+                    const imgElement = document.getElementById('u-img');
+                    imgElement.src = user.picture ? user.picture : defaultAvatar;
             
-            imgElement.onerror = function() {
-                this.src = defaultAvatar;
-            };
-        }
+                    imgElement.onerror = function() {
+                        this.src = defaultAvatar;
+                    };
+                }
 
         // Chiqish funksiyasi
         function logoutUser() {
