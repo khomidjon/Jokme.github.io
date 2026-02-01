@@ -15,6 +15,7 @@
             padding: 50px 20px;
             overflow-x: hidden;
             display: flex; flex-direction: column; align-items: center;
+            cursor: none; /* <-- TUZATILDI: Bu qator joyiga qo'yildi */
         }
 
         /* Orqa fon animatsiyasi */
@@ -47,7 +48,6 @@
             border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 25px;
             transition: 0.3s ease; animation: slideDown 0.6s ease-out;
-            /* Faqat shu yerga cursor qo'shildi, bosilishi bilinishi uchun */
             cursor: pointer; 
         }
         @keyframes slideDown {
@@ -142,21 +142,21 @@
         @media (max-width: 768px) {
             .grid { grid-template-columns: 1fr; }
         }
-        cursor: none; /* Asl kursorni yashiramiz */
-        }
+        
+        /* TUZATILDI: Noto'g'ri joylashgan kodlar olib tashlandi */
 
         #glass-cursor {
             position: fixed;
             top: 0; left: 0;
             width: 30px; height: 30px;
             border-radius: 50%;
-    
+            
             /* GLASS EFFECT */
             background: rgba(0, 210, 255, 0.1); /* Havorang shaffof */
             backdrop-filter: blur(5px); /* Orqasini xiralashtirish */
             border: 1px solid rgba(0, 210, 255, 0.4); /* Cheti */
             box-shadow: 0 0 10px rgba(0, 210, 255, 0.3); /* Neon nur */
-    
+            
             pointer-events: none; /* Kursor bosishga xalaqit bermasligi uchun */
             z-index: 99999; /* Hamma narsani ustida turadi */
             transform: translate(-50%, -50%); /* Markazga to'g'irlash */
@@ -222,6 +222,7 @@
                     <p>Fruit Ninja Hands</p>
                 </div>
             </a>
+            
             <a href="voice.html" class="project-card">
                 <div class="preview-content">
                     <video src="paint-preview.mp4" autoplay muted loop></video>
@@ -243,45 +244,43 @@
     <script>
         const cursor = document.getElementById('glass-cursor');
 
-// 1. Sichqoncha harakati
+        // 1. Sichqoncha harakati
         document.addEventListener('mousemove', (e) => {
             cursor.style.left = e.clientX + 'px';
             cursor.style.top = e.clientY + 'px';
         });
 
-// 2. Bosganda (Click) animatsiyasi
+        // 2. Bosganda (Click) animatsiyasi
         document.addEventListener('mousedown', () => cursor.classList.add('clicked'));
         document.addEventListener('mouseup', () => cursor.classList.remove('clicked'));
 
-// 3. Tugmalar va Linklar ustiga borganda kattalashishi
-// Barcha tugma va 'a' teglarini olamiz
-        const interactables = document.querySelectorAll('button, a, .mic-icon, select');
+        // 3. Tugmalar va Linklar ustiga borganda kattalashishi
+        const interactables = document.querySelectorAll('button, a, .mic-icon, select, .user-card, .logout');
 
         interactables.forEach(el => {
             el.addEventListener('mouseenter', () => cursor.classList.add('hovered'));
             el.addEventListener('mouseleave', () => cursor.classList.remove('hovered'));
         });
-                // Default rasm
-                const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
-                // LocalStorage dan user ma'lumotini olish
-                const userStr = localStorage.getItem('atom_user');
+        // --- USER PROFILE MANTIQI ---
+        const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+        const userStr = localStorage.getItem('atom_user');
 
-                if (!userStr) {
-                    window.location.href = 'index.html';
-                } else {
-                    const user = JSON.parse(userStr);
+        if (!userStr) {
+            window.location.href = 'index.html';
+        } else {
+            const user = JSON.parse(userStr);
             
-                    document.getElementById('u-name').innerText = user.name || "Foydalanuvchi";
-                    document.getElementById('u-email').innerText = user.email || "";
+            document.getElementById('u-name').innerText = user.name || "Foydalanuvchi";
+            document.getElementById('u-email').innerText = user.email || "";
             
-                    const imgElement = document.getElementById('u-img');
-                    imgElement.src = user.picture ? user.picture : defaultAvatar;
+            const imgElement = document.getElementById('u-img');
+            imgElement.src = user.picture ? user.picture : defaultAvatar;
             
-                    imgElement.onerror = function() {
-                        this.src = defaultAvatar;
-                    };
-                }
+            imgElement.onerror = function() {
+                this.src = defaultAvatar;
+            };
+        }
 
         // Chiqish funksiyasi
         function logoutUser() {
