@@ -3,45 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JARVIS</title>
+    <title>JARVIS: Voice Tuner</title>
     <style>
         body { margin: 0; background: #050505; overflow: hidden; font-family: 'Segoe UI', sans-serif; color: #fff; }
         
-        /* Boshlash Pardasi (Ovoz ishlashi uchun shart) */
-        #start-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 20000;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            cursor: pointer; transition: opacity 0.5s;
+        /* Sozlamalar Paneli (Yangi) */
+        .settings-panel {
+            position: fixed; top: 80px; right: 25px; z-index: 10001;
+            background: rgba(0, 20, 40, 0.8); backdrop-filter: blur(15px);
+            padding: 20px; border-radius: 15px; border: 1px solid #00d2ff;
+            width: 250px; box-shadow: 0 0 20px rgba(0, 210, 255, 0.2);
+            display: none; /* Boshida yashirin */
         }
-        #start-text {
-            font-size: 24px; color: #00d2ff; text-transform: uppercase; letter-spacing: 5px;
-            animation: pulse 1.5s infinite; text-align: center;
+        .settings-panel label { font-size: 12px; color: #00d2ff; display: block; margin-bottom: 5px; }
+        .settings-panel select, .settings-panel input {
+            width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #00d2ff;
+            color: white; padding: 5px; margin-bottom: 15px; border-radius: 5px;
         }
+        .settings-btn {
+            position: fixed; top: 25px; right: 100px; z-index: 10001;
+            background: transparent; border: 1px solid #00d2ff; color: #00d2ff;
+            padding: 8px 15px; border-radius: 20px; cursor: pointer;
+        }
+        .settings-btn:hover { background: rgba(0, 210, 255, 0.2); }
 
-        /* Profil va Til (O'ng burchak) */
-        .profile-container {
-            position: fixed; top: 25px; right: 25px; z-index: 10001;
-            display: flex; align-items: center; gap: 15px;
-            background: rgba(0, 210, 255, 0.1); backdrop-filter: blur(10px);
-            padding: 10px 20px; border-radius: 50px;
-            border: 1px solid rgba(0, 210, 255, 0.3);
-        }
-        .profile-img {
-            width: 40px; height: 40px; border-radius: 50%; border: 2px solid #00d2ff;
-            object-fit: cover;
-        }
-        .profile-info { display: flex; flex-direction: column; }
-        .profile-name { font-size: 14px; font-weight: bold; color: #fff; }
-        
-        /* Til Tanlash */
-        #lang-select {
-            background: transparent; border: none; color: #00d2ff; font-size: 12px;
-            outline: none; cursor: pointer; text-transform: uppercase; font-weight: bold;
-        }
-        #lang-select option { background: #000; color: #fff; }
-
-        /* Orqaga tugmasi */
+        /* Asosiy UI */
         .glass-back-btn {
             position: fixed; top: 25px; left: 25px; padding: 12px 25px;
             text-decoration: none; color: #00d2ff; z-index: 10001; font-weight: bold;
@@ -49,44 +35,52 @@
             border: 1px solid rgba(0, 210, 255, 0.3); border-radius: 20px;
         }
 
-        /* Status va Subtitr */
-        #ui-container {
+        #status-container {
             position: fixed; bottom: 10%; width: 100%; text-align: center; pointer-events: none; z-index: 10;
             display: flex; flex-direction: column; gap: 15px;
         }
         #user-transcript {
             font-size: 32px; color: #fff; font-weight: 300; 
-            text-shadow: 0 0 15px rgba(255,255,255,0.6);
-            min-height: 40px;
+            text-shadow: 0 0 15px rgba(255,255,255,0.6); min-height: 40px;
         }
         #system-status {
             font-size: 14px; color: #00d2ff; text-transform: uppercase; letter-spacing: 4px;
             text-shadow: 0 0 20px #00d2ff; font-weight: bold; opacity: 0.8;
         }
 
-        @keyframes pulse { 0% { opacity: 0.5; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
+        #start-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 20000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            cursor: pointer;
+        }
+        #start-text { font-size: 24px; color: #00d2ff; letter-spacing: 5px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 0.5; } 100% { opacity: 1; } }
+
         #textCanvas { display: none; }
     </style>
 </head>
 <body>
 
     <div id="start-overlay" onclick="initializeSystem()">
-        <div style="font-size: 60px; margin-bottom: 20px;">⚛️</div>
-        <div id="start-text">TIZIMNI YUKLASH UCHUN BOSING</div>
+        <div style="font-size: 50px; margin-bottom: 20px;">⚛️</div>
+        <div id="start-text">TIZIMNI YOQISH</div>
     </div>
 
-    <a href="dashboard.html" class="glass-back-btn">‹Oqaga</a>
+    <a href="dashboard.html" class="glass-back-btn">‹ DASHBOARD</a>
+    <button class="settings-btn" onclick="toggleSettings()">⚙️ OVOZ SOZLAMALARI</button>
 
-    <div class="profile-container">
-        <img id="p-img" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="profile-img">
-        <div class="profile-info">
-            <span class="profile-name" id="p-name">Foydalanuvchi</span>
-            <select id="lang-select" onchange="changeLanguage()">
-                <option value="uz-UZ">O'ZBEK</option>
-                <option value="ru-RU">РУССКИЙ</option>
-                <option value="en-US">ENGLISH</option>
-            </select>
-        </div>
+    <div class="settings-panel" id="settingsPanel">
+        <label>OVOZ TURI (Voice):</label>
+        <select id="voiceSelect" onchange="testVoice()"></select>
+
+        <label>TONALNOST (Pitch): <span id="pitchVal">0.7</span></label>
+        <input type="range" id="pitchRange" min="0.1" max="2" step="0.1" value="0.7" oninput="updateSettings()">
+
+        <label>TEZLIK (Rate): <span id="rateVal">1</span></label>
+        <input type="range" id="rateRange" min="0.5" max="2" step="0.1" value="1" oninput="updateSettings()">
+        
+        <button onclick="testVoice()" style="width:100%; background:#00d2ff; border:none; color:black; padding:10px; cursor:pointer; font-weight:bold;">SINOV (TEST)</button>
     </div>
 
     <div id="ui-container">
@@ -101,11 +95,10 @@
     <script>
         // --- 1. SOZLAMALAR ---
         const CONFIG = {
-            particleCount: 30000,     // Super aniqlik
-            voicePitch: 0.6,          // JARVIS Ovozi (Past)
-            voiceRate: 1.1,           // Biroz tezkor
+            particleCount: 22000,
             particleColor: 0x00d2ff,
-            angryColor: 0xff0000
+            angryColor: 0xff0000,
+            silenceDelay: 800
         };
 
         let scene, camera, renderer, particles, geometry;
@@ -114,40 +107,75 @@
         let synth = window.speechSynthesis;
         let recognition;
         let silenceTimer;
-        let jarvisVoice = null;
-        let audioContext, analyser, dataArray;
-        let isListening = false;
-        let currentLang = 'uz-UZ';
+        
+        // Ovoz o'zgaruvchilari
+        let voices = [];
+        let selectedVoice = null;
+        let pitch = 0.7;
+        let rate = 1;
 
-        // Profilni yuklash
-        const user = JSON.parse(localStorage.getItem('atom_user'));
-        if(user) {
-            document.getElementById('p-name').innerText = user.nickname || user.name;
-            if(user.picture) document.getElementById('p-img').src = user.picture;
+        let audioContext, analyser, dataArray, isListening = false;
+
+        // --- 2. OVOZLARNI YUKLASH VA PANELGA CHIQARISH ---
+        function populateVoiceList() {
+            voices = synth.getVoices();
+            const voiceSelect = document.getElementById('voiceSelect');
+            voiceSelect.innerHTML = '';
+
+            voices.forEach((voice, index) => {
+                const option = document.createElement('option');
+                option.textContent = `${voice.name} (${voice.lang})`;
+                option.value = index;
+                // Avtomatik ingliz erkak ovozini tanlashga harakat qilamiz
+                if (voice.name.includes("Google US English") || voice.name.includes("Male")) {
+                    option.selected = true;
+                    selectedVoice = voice;
+                }
+                voiceSelect.appendChild(option);
+            });
+            
+            // Agar hech narsa tanlanmasa birinchisini olamiz
+            if (!selectedVoice && voices.length > 0) selectedVoice = voices[0];
         }
 
-        // --- 2. OVOZNI SOZLASH (JARVIS) ---
-        function loadVoices() {
-            let voices = synth.getVoices();
-            // Bizga inglizcha "erkak" ovozi kerak (Jarvis effekti uchun eng yaxshisi)
-            // Hatto o'zbekcha gapirganda ham shuni ishlatamiz (shunda aksent bilan "robot" kabi chiqadi)
-            jarvisVoice = voices.find(v => v.name.includes("Google UK English Male")) || 
-                          voices.find(v => v.name.includes("Microsoft David")) || 
-                          voices.find(v => v.lang.includes("en")) || 
-                          voices[0];
-        }
         if (speechSynthesis.onvoiceschanged !== undefined) {
-            speechSynthesis.onvoiceschanged = loadVoices;
+            speechSynthesis.onvoiceschanged = populateVoiceList;
         }
 
-        // --- 3. TIZIMNI ISHGA TUSHIRISH ---
-        async function initializeSystem() {
-            // Pardani yo'qotish
-            const overlay = document.getElementById('start-overlay');
-            overlay.style.opacity = '0';
-            setTimeout(() => overlay.remove(), 500);
+        function updateSettings() {
+            pitch = parseFloat(document.getElementById('pitchRange').value);
+            rate = parseFloat(document.getElementById('rateRange').value);
+            document.getElementById('pitchVal').innerText = pitch;
+            document.getElementById('rateVal').innerText = rate;
+            
+            const index = document.getElementById('voiceSelect').value;
+            selectedVoice = voices[index];
+        }
 
-            // Audio Context (Vizualizator uchun)
+        function toggleSettings() {
+            const panel = document.getElementById('settingsPanel');
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function testVoice() {
+            updateSettings();
+            speak("System check. My name is Jarvis.");
+        }
+
+        // --- 3. START SYSTEM ---
+        async function initializeSystem() {
+            document.getElementById('start-overlay').style.display = 'none';
+            setupAudio(); // Mikrafon ruxsati
+            populateVoiceList(); // Ovozlar
+            
+            initThree(); // Grafika
+            startListening(); // Eshitish
+            
+            setTimeout(() => speak("Welcome back, sir."), 1000);
+        }
+
+        // --- 4. AUDIO VIZUALIZATOR ---
+        async function setupAudio() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -157,21 +185,12 @@
                 analyser.fftSize = 256;
                 dataArray = new Uint8Array(analyser.frequencyBinCount);
             } catch (err) { console.error("Mic Error:", err); }
-
-            // Ovozni yuklash
-            loadVoices();
-            
-            // "Hello Sir" deb boshlash
-            speak("Welcome back, sir. Systems online.");
-            
-            // Tinglashni boshlash
-            startListening();
         }
 
-        // --- 4. THREE.JS (GRAFIKA) ---
+        // --- 5. THREE.JS GRAFIKA ---
         function initThree() {
             scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x000000, 0.015);
+            scene.fog = new THREE.FogExp2(0x000000, 0.02);
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.z = 45;
 
@@ -186,23 +205,26 @@
             for (let i = 0; i < CONFIG.particleCount; i++) {
                 const phi = Math.acos(-1 + (2 * i) / CONFIG.particleCount);
                 const theta = Math.sqrt(CONFIG.particleCount * Math.PI) * phi;
-                const r = 13; 
-
-                const x = r * Math.cos(theta) * Math.sin(phi);
-                const y = r * Math.sin(theta) * Math.sin(phi);
-                const z = r * Math.cos(phi);
-
-                homePos[i*3] = x; homePos[i*3+1] = y; homePos[i*3+2] = z;
-                currentPos[i*3] = x; currentPos[i*3+1] = y; currentPos[i*3+2] = z;
-                targetPos[i*3] = x; targetPos[i*3+1] = y; targetPos[i*3+2] = z;
+                const r = 12;
+                homePos[i*3] = r * Math.cos(theta) * Math.sin(phi);
+                homePos[i*3+1] = r * Math.sin(theta) * Math.sin(phi);
+                homePos[i*3+2] = r * Math.cos(phi);
+                
+                currentPos[i*3] = homePos[i*3];
+                currentPos[i*3+1] = homePos[i*3+1];
+                currentPos[i*3+2] = homePos[i*3+2];
+                
+                targetPos[i*3] = homePos[i*3];
+                targetPos[i*3+1] = homePos[i*3+1];
+                targetPos[i*3+2] = homePos[i*3+2];
             }
 
             geometry = new THREE.BufferGeometry();
             geometry.setAttribute('position', new THREE.BufferAttribute(currentPos, 3));
             
             const material = new THREE.PointsMaterial({
-                size: 0.15, color: CONFIG.particleColor,
-                transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending
+                size: 0.18, color: CONFIG.particleColor,
+                transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending
             });
 
             particles = new THREE.Points(geometry, material);
@@ -214,14 +236,14 @@
             requestAnimationFrame(animate);
             const positions = particles.geometry.attributes.position.array;
 
-            // Audio Vizualizator
+            // Audio Reaksiya
             let audioScale = 1;
             if (analyser && !isTextMode) {
                 analyser.getByteFrequencyData(dataArray);
                 let sum = 0;
                 for(let i = 0; i < dataArray.length; i++) sum += dataArray[i];
                 let average = sum / dataArray.length;
-                if(average > 10) audioScale = 1 + (average / 128) * 0.6; 
+                if(average > 10) audioScale = 1 + (average / 128) * 0.6;
             }
 
             for (let i = 0; i < CONFIG.particleCount * 3; i+=3) {
@@ -253,7 +275,7 @@
             renderer.render(scene, camera);
         }
 
-        // --- 5. TINIQ MATN (NEON) ---
+        // --- 6. TEXT RENDER ---
         function textToParticles(text, isAngry = false) {
             isTextMode = true;
             particles.material.color.set(isAngry ? CONFIG.angryColor : CONFIG.particleColor);
@@ -265,15 +287,14 @@
             canvas.width = w; canvas.height = h;
             
             ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
-            ctx.fillStyle = '#fff'; 
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.font = `900 120px Arial`;
+            ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.font = `900 100px Arial`;
 
             // Wrap Text
             const words = text.split(' ');
             let line = '';
             let lines = [];
-            const maxWidth = w * 0.9; 
+            const maxWidth = w * 0.8; 
 
             for(let n = 0; n < words.length; n++) {
                 const testLine = line + words[n] + ' ';
@@ -283,7 +304,7 @@
             }
             lines.push(line);
 
-            const lineHeight = 140;
+            const lineHeight = 120;
             const startY = (h - (lines.length * lineHeight)) / 2 + (lineHeight / 2);
             for (let k = 0; k < lines.length; k++) {
                 ctx.fillText(lines[k], w / 2, startY + (k * lineHeight));
@@ -291,7 +312,7 @@
 
             const data = ctx.getImageData(0, 0, w, h).data;
             const validPixels = [];
-            const step = 5; 
+            const step = 6; 
 
             for (let y = 0; y < h; y += step) {
                 for (let x = 0; x < w; x += step) {
@@ -301,7 +322,6 @@
                 }
             }
 
-            // Zarralarni taqsimlash
             for (let i = 0; i < CONFIG.particleCount; i++) {
                 const p = validPixels[i % validPixels.length]; 
                 if (p) {
@@ -319,47 +339,31 @@
             document.getElementById('system-status').innerText = "TINGLANMOQDA...";
         }
 
-        // --- 6. JARVIS OVOZI (TTS) ---
+        // --- 7. OVOZ (TTS) ---
         function speak(text) {
             if (synth.speaking) synth.cancel();
-            
             const utterance = new SpeechSynthesisUtterance(text);
             
-            // OVOZNI O'ZGARTIRISH (MODIFICATION)
-            utterance.voice = jarvisVoice; 
-            utterance.pitch = CONFIG.voicePitch; // 0.6 (Past)
-            utterance.rate = CONFIG.voiceRate;   // 1.1 (Tez)
+            // Sozlamalar Panelidan olingan qiymatlar
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.pitch = pitch;
+            utterance.rate = rate;
             
-            // Til sozlamasi
-            // Agar o'zbekcha bo'lsa ham Ingliz Engine o'qisin (Aksent uchun)
-            // Ruscha bo'lsa Google Russian ishlatish mumkin
-            if (currentLang === 'ru-RU') {
-                utterance.lang = 'ru-RU'; // Ruschani to'g'ri o'qisin
-            } else {
-                utterance.lang = 'en-GB'; // Jarvis effekti
-            }
-
             synth.speak(utterance);
         }
 
-        // --- 7. TINGLASH (Multi-Language) ---
-        function changeLanguage() {
-            currentLang = document.getElementById('lang-select').value;
-            if (recognition) {
-                recognition.stop(); // Qayta ishga tushirish uchun
-            }
-        }
-
+        // --- 8. TINGLASH ---
         function startListening() {
-            if (!('webkitSpeechRecognition' in window)) return;
+            if (!('webkitSpeechRecognition' in window)) { alert("Chrome ishlating"); return; }
 
             recognition = new webkitSpeechRecognition();
-            recognition.lang = currentLang; 
+            recognition.lang = 'uz-UZ'; 
             recognition.continuous = true;
             recognition.interimResults = true;
 
             recognition.onstart = () => {
-                document.getElementById('system-status').innerText = "ONLINE | " + currentLang.toUpperCase();
+                isListening = true;
+                document.getElementById('system-status').innerText = "TINGLANMOQDA...";
             };
 
             recognition.onresult = (event) => {
@@ -381,14 +385,11 @@
                 if (interim.length > 0) {
                     silenceTimer = setTimeout(() => {
                         processCommand(interim);
-                    }, 800);
+                    }, CONFIG.silenceDelay);
                 }
             };
 
-            recognition.onend = () => {
-                setTimeout(() => recognition.start(), 1000); // Doimiy qayta yoqish
-            };
-            
+            recognition.onerror = () => { isListening = false; };
             recognition.start();
         }
 
@@ -402,50 +403,24 @@
             let display = "";
             let isAngry = false;
 
-            // --- 3 TILLI MANTIQ ---
-            
-            // 1. SALOM
-            if (['salom', 'assalomu', 'hello', 'hi', 'privet', 'zdravstvuy'].some(v => lowerText.includes(v))) {
-                if (currentLang === 'uz-UZ') { display = "VAALAYKUM ASSALOM"; response = "Vaalaykum assalom, xo'jayin."; }
-                else if (currentLang === 'ru-RU') { display = "ПРИВЕТСТВУЮ"; response = "Приветствую вас, сер."; }
-                else { display = "HELLO SIR"; response = "Hello sir, system ready."; }
+            if (lowerText.includes("assalomu") || lowerText.includes("salom")) {
+                display = "VAALAYKUM ASSALOM"; response = "Vaalaykum assalom, sir.";
+            } 
+            else if (lowerText.includes("jarvis")) {
+                display = "YES SIR"; response = "I am here.";
             }
-            // 2. SO'KISH
-            else if (['fuck', 'suka', 'blat', 'jalab', 'foku'].some(v => lowerText.includes(v))) {
-                display = "LANGUAGE WARNING";
-                response = "Watch your language, sir.";
-                isAngry = true;
-            }
-            // 3. HOL-AHVOL
-            else if (['qalay', 'ishlar', 'how are', 'kak dela'].some(v => lowerText.includes(v))) {
-                display = "SYSTEM STABLE";
-                response = "All systems functioning at 100 percent.";
-            }
-            // 4. BOSHQA SO'ZLAR (ECHO)
+            else if (lowerText.includes("fuck") || lowerText.includes("suka")) {
+                display = "FUCK YOU TOO!"; response = "Fuck you too."; isAngry = true;
+            } 
             else {
-                display = text.toUpperCase();
-                response = text;
+                display = text.toUpperCase(); response = text; 
             }
 
             textToParticles(display, isAngry);
             document.getElementById('system-status').innerText = "JAVOB BERILMOQDA...";
-            
             speak(response);
-
-            // Tiklanish
             setTimeout(returnToSphere, 3000 + (response.length * 60));
         }
-
-        // --- BOSHLASH ---
-        window.onload = () => {
-            initThree();
-        };
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
 
     </script>
 </body>
