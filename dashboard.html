@@ -5,9 +5,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jarvis-HOME1</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
+        * { 
+            margin: 0; padding: 0; box-sizing: border-box; 
+            cursor: none !important; /* <--- ENG MUHIM QATOR: Hammasini yashiradi */
+        }
         body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0f0f1e 100%);
+            min-height: 100vh;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            padding: 50px 20px;
+            overflow-x: hidden;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        /* --- 2. YANGI "MOGA BLACK" KURSOR --- */
+        #custom-cursor {
+            position: fixed;
+            top: 0; left: 0;
+            width: 32px; height: 32px;
+            z-index: 999999;
+            pointer-events: none; /* Bosishga xalaqit bermaydi */
+            
+            /* SVG Rasm: Qora O'q + Neon Ko'k Chegara */
+            background-image: url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 2L11 20L14 12L22 9L2 2Z' fill='black' stroke='%2300d2ff' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-size: contain;
+            background-repeat: no-repeat;
+            
+            transition: transform 0.05s ease-out; /* Juda tez reaksiya */
+            transform: translate(-2px, -2px); /* Uchini to'g'irlash */
+            filter: drop-shadow(0 0 8px rgba(0, 210, 255, 0.6)); /* Neon nur */
+        }
+
+        /* Hover effekti (Tugma ustida) */
+        #custom-cursor.hovered {
+            transform: translate(-2px, -2px) scale(1.3); /* Kattalashadi */
+            filter: drop-shadow(0 0 15px rgba(0, 210, 255, 1)); /* Qattiqroq yonadi */
+        }
+
+        /* Bosganda (Click) */
+        #custom-cursor.clicked {
+            transform: translate(-2px, -2px) scale(0.9);
+        }
+            
             background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0f0f1e 100%);
             min-height: 100vh;
             color: #fff;
@@ -143,40 +183,6 @@
             .grid { grid-template-columns: 1fr; }
         }
         
-        /* TUZATILDI: Noto'g'ri joylashgan kodlar olib tashlandi */
-
-        #glass-cursor {
-            position: fixed;
-            top: 0; left: 0;
-            width: 30px; height: 30px;
-            border-radius: 50%;
-            
-            /* GLASS EFFECT */
-            background: rgba(0, 210, 255, 0.1); /* Havorang shaffof */
-            backdrop-filter: blur(5px); /* Orqasini xiralashtirish */
-            border: 1px solid rgba(0, 210, 255, 0.4); /* Cheti */
-            box-shadow: 0 0 10px rgba(0, 210, 255, 0.3); /* Neon nur */
-            
-            pointer-events: none; /* Kursor bosishga xalaqit bermasligi uchun */
-            z-index: 99999; /* Hamma narsani ustida turadi */
-            transform: translate(-50%, -50%); /* Markazga to'g'irlash */
-            transition: width 0.2s, height 0.2s, background 0.2s; /* Animatsiya */
-        }
-
-        /* Tugma ustiga borganda kattalashishi */
-        #glass-cursor.hovered {
-            width: 50px;
-            height: 50px;
-            background: rgba(0, 210, 255, 0.2);
-            border-color: #00d2ff;
-            box-shadow: 0 0 20px #00d2ff;
-        }
-
-        /* Bosganda (Click) kichrayishi */
-        #glass-cursor.clicked {
-            transform: translate(-50%, -50%) scale(0.8);
-            background: rgba(0, 210, 255, 0.6);
-        }
     </style>
 </head>
 <body>
@@ -242,20 +248,19 @@
     </div>
 
     <script>
-        const cursor = document.getElementById('glass-cursor');
+        const cursor = document.getElementById('custom-cursor');
 
-        // 1. Sichqoncha harakati
-        document.addEventListener('mousemove', (e) => {
+       document.addEventListener('mousemove', (e) => {
             cursor.style.left = e.clientX + 'px';
             cursor.style.top = e.clientY + 'px';
         });
 
-        // 2. Bosganda (Click) animatsiyasi
+        // 2. Click effekti
         document.addEventListener('mousedown', () => cursor.classList.add('clicked'));
         document.addEventListener('mouseup', () => cursor.classList.remove('clicked'));
 
-        // 3. Tugmalar va Linklar ustiga borganda kattalashishi
-        const interactables = document.querySelectorAll('button, a, .mic-icon, select, .user-card, .logout');
+        // 3. Hover effekti (Barcha bosiladigan narsalar uchun)
+        const interactables = document.querySelectorAll('button, a, .user-card, .logout, input');
 
         interactables.forEach(el => {
             el.addEventListener('mouseenter', () => cursor.classList.add('hovered'));
