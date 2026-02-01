@@ -3,63 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atom - Galaxy AI</title>
+    <title>JARVIS - Ultimate Atom Engine</title>
     <style>
-        /* --- ASOSIY STYLE --- */
-        * { cursor: none !important; margin: 0; padding: 0; box-sizing: border-box; }
-        body { margin: 0; background: #000; overflow: hidden; font-family: 'Segoe UI', sans-serif; color: #fff; }
+        /* =========================================
+           1. ASOSIY DIZAYN VA KURSORNI YASHIRISH
+           ========================================= */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none !important; /* Tizim kursorini butunlay yashirish */
+            user-select: none;
+        }
 
-        /* --- GLASS KURSOR --- */
+        body {
+            background: #000;
+            overflow: hidden;
+            font-family: 'Segoe UI', sans-serif;
+            color: #fff;
+        }
+
+        /* =========================================
+           2. GLASS KURSOR (Sizga yoqqan dumaloq)
+           ========================================= */
         #glass-cursor {
-            position: fixed; top: 0; left: 0; width: 30px; height: 30px; border-radius: 50%;
-            background: rgba(0, 210, 255, 0.1); backdrop-filter: blur(5px);
-            border: 1px solid rgba(0, 210, 255, 0.4); box-shadow: 0 0 10px rgba(0, 210, 255, 0.3);
-            pointer-events: none; z-index: 99999; transform: translate(-50%, -50%);
-            transition: width 0.2s, height 0.2s, background 0.2s;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(0, 210, 255, 0.15);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(0, 210, 255, 0.5);
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
+            pointer-events: none;
+            z-index: 99999;
+            transform: translate(-50%, -50%);
+            transition: width 0.15s, height 0.15s, background 0.15s;
         }
-        #glass-cursor.hovered { width: 50px; height: 50px; background: rgba(0, 210, 255, 0.2); box-shadow: 0 0 20px #00d2ff; }
-        #glass-cursor.clicked { transform: translate(-50%, -50%) scale(0.8); background: rgba(0, 210, 255, 0.6); }
 
-        /* --- PROFIL --- */
+        /* Hover effekti */
+        #glass-cursor.hovered {
+            width: 60px;
+            height: 60px;
+            background: rgba(0, 210, 255, 0.25);
+            border-color: #00d2ff;
+            box-shadow: 0 0 30px #00d2ff;
+        }
+
+        #glass-cursor.clicked {
+            transform: translate(-50%, -50%) scale(0.8);
+            background: rgba(0, 210, 255, 0.8);
+        }
+
+        /* =========================================
+           3. PROFIL QISMI (Chap tepa burchak)
+           ========================================= */
         .profile-container {
-            position: fixed; top: 25px; left: 25px; z-index: 10001;
-            display: flex; align-items: center; gap: 10px;
-            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);
-            padding: 8px 15px; border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: 0.3s; pointer-events: auto;
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            z-index: 10001;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(20, 20, 30, 0.6);
+            backdrop-filter: blur(15px);
+            padding: 10px 20px;
+            border-radius: 50px;
+            border: 1px solid rgba(0, 210, 255, 0.3);
+            transition: 0.3s ease;
+            pointer-events: auto; /* Bosish mumkin bo'lishi uchun */
         }
-        .profile-container:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.05); }
-        .profile-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #00d2ff; }
-        .profile-name { font-weight: bold; font-size: 14px; color: #fff; text-transform: uppercase; }
 
-        /* --- INTRO SCREEN --- */
+        .profile-container:hover {
+            background: rgba(20, 20, 30, 0.9);
+            border-color: #00d2ff;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.2);
+        }
+
+        .profile-img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #00d2ff;
+            box-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .profile-name {
+            font-weight: 800;
+            font-size: 16px;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .profile-status {
+            font-size: 10px;
+            color: #00d2ff;
+            font-weight: bold;
+        }
+
+        /* =========================================
+           4. INTRO EKRANI (Yuklanish)
+           ========================================= */
         #intro-screen {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #000; z-index: 9999; display: flex;
-            justify-content: center; align-items: center; transition: opacity 1s ease-out;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 20000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 1.5s ease-out;
         }
-        .intro-content { display: flex; align-items: center; gap: 30px; }
-        #edge-logo { width: 120px; animation: spinIn 1.5s forwards, glowBlue 2s infinite alternate; }
-        #intro-text { font-size: 50px; font-weight: bold; color: #00d2ff; text-shadow: 0 0 15px #00d2ff; opacity: 0; transform: translateX(-50px); animation: slideInText 1s forwards 1.2s; }
 
-        @keyframes spinIn { 0% { transform: rotate(0deg) scale(0); opacity: 0; } 100% { transform: rotate(720deg) scale(1); opacity: 1; } }
-        @keyframes slideInText { to { opacity: 1; transform: translateX(0); } }
-        @keyframes glowBlue { 0% { filter: drop-shadow(0 0 5px #00d2ff); } 100% { filter: drop-shadow(0 0 20px #00d2ff); } }
+        .intro-content {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            flex-direction: column;
+        }
 
-        /* --- SETTINGS --- */
+        #edge-logo {
+            width: 100px;
+            animation: spinIn 2s forwards, glowBlue 2s infinite alternate;
+        }
+
+        #intro-text {
+            font-size: 40px;
+            font-weight: bold;
+            color: #00d2ff;
+            text-shadow: 0 0 20px #00d2ff;
+            opacity: 0;
+            animation: slideInText 1.5s forwards 0.5s;
+        }
+
+        @keyframes spinIn { 0% { transform: scale(0) rotate(-180deg); opacity: 0; } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
+        @keyframes slideInText { to { opacity: 1; transform: translateY(0); } from { opacity: 0; transform: translateY(20px); } }
+        @keyframes glowBlue { 0% { filter: drop-shadow(0 0 5px #00d2ff); } 100% { filter: drop-shadow(0 0 25px #00d2ff); } }
+
+        /* =========================================
+           5. UI ELEMENTLARI (Slider, Canvas)
+           ========================================= */
         .settings-panel {
-            position: fixed; top: 25px; right: 25px; z-index: 10001;
-            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);
-            padding: 15px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.2);
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            z-index: 10001;
+            background: rgba(20, 20, 30, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 210, 255, 0.3);
+            text-align: right;
             pointer-events: auto;
         }
 
-        #ui_overlay {
-            position: absolute; bottom: 20px; right: 20px;
-            width: 240px; height: 180px; border: 1px solid #00d2ff;
-            background: rgba(0, 210, 255, 0.1); border-radius: 10px; transform: scaleX(-1);
+        .settings-panel label {
+            color: #00d2ff;
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
         }
+
+        input[type=range] {
+            width: 150px;
+            accent-color: #00d2ff;
+            cursor: none;
+        }
+
+        #ui_overlay {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            width: 240px;
+            height: 180px;
+            border: 2px solid #00d2ff;
+            background: rgba(0, 20, 40, 0.5);
+            border-radius: 15px;
+            transform: scaleX(-1); /* Oynasimon aks */
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.2);
+        }
+
         #input_video { display: none; }
+        
+        #mode-status {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #00d2ff;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 0 0 10px #00d2ff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -68,13 +220,18 @@
 
     <div class="profile-container" onclick="window.location.href='dashboard.html'">
         <img id="p-img" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="profile-img">
-        <span id="p-name" class="profile-name">USER</span>
+        <div class="profile-info">
+            <span id="p-name" class="profile-name">USER</span>
+            <span class="profile-status">ONLINE • JARVIS</span>
+        </div>
     </div>
 
     <div class="settings-panel">
-        <label>Atom: <span id="count-val">10000</span></label><br>
-        <input type="range" id="particle-count" min="1000" max="50000" step="1000" value="10000">
+        <label>ZARRALAR: <span id="count-val">15000</span></label><br>
+        <input type="range" id="particle-count" min="1000" max="50000" step="1000" value="15000">
     </div>
+
+    <div id="mode-status">TIZIM TAYYOR</div>
 
     <div id="intro-screen">
         <div class="intro-content">
@@ -92,339 +249,505 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        // --- 1. GLOBAL O'ZGARUVCHILAR (ENG TEPADA) ---
-        let count = 10000;
+        /**
+         * ==========================================================
+         * JARVIS ATOM ENGINE - ADVANCED PHYSICS & GESTURES
+         * ==========================================================
+         */
+
+        // --- GLOBAL O'ZGARUVCHILAR ---
+        let particleCount = 15000;
         let scene, camera, renderer, particles, geometry;
-        let middleFingerTimer = null;
+        
+        // Animatsiya holatlari
         let isMiddleFingerSequence = false;
         let middleFingerStage = 'NONE';
-        let isModeActive = false; // Quyosh/Galaktika rejimi uchun
+        let middleFingerTimer = null;
+        let isGalaxyMode = false;
+        
+        // Qo'l Rotatsiyasi (Sync)
+        let handRotX = 0;
+        let handRotY = 0;
+        let handRotZ = 0;
 
-        // Hand Rotation Uchun
-        let targetRotationX = 0;
-        let targetRotationY = 0;
-        let targetRotationZ = 0;
+        // Ma'lumotlarni saqlash (Positions)
+        const shapes = {
+            scatter: [],        // Tarqoq
+            sphere: [],         // Shar (Default)
+            solarSystem: [],    // 4 Barmoq
+            galaxy: [],         // 5 Barmoq
+            middleFinger3D: [], // O'rta barmoq shakli
+            textMessage: []     // "FUCK YOU" yozuvi
+        };
 
-        // Ma'lumotlar saqlash
-        const shapes = { scatter: [], sphere: [], heart: [], torus: [], middleFinger: [], solarSystem: [], galaxy: [], text: [] };
-        const colors = { default: [], solar: [], galaxy: [], middle: [] };
+        // Ranglarni saqlash (Colors)
+        const colors = {
+            default: [],        // Moviy
+            solar: [],          // Realistik (Sariq, Ko'k, Qizil)
+            galaxy: [],         // Binafsha/Oq gradient
+            danger: []          // Qizil (O'rta barmoq uchun)
+        };
 
+        // DOM Elementlar
         const videoElement = document.getElementById('input_video');
         const uiCanvas = document.getElementById('ui_overlay');
         const uiCtx = uiCanvas.getContext('2d');
         const slider = document.getElementById('particle-count');
         const countDisplay = document.getElementById('count-val');
+        const statusText = document.getElementById('mode-status');
 
-        // --- 2. INTRO LOGIC ---
-        setTimeout(() => {
-            const intro = document.getElementById('intro-screen');
-            intro.style.opacity = '0';
-            setTimeout(() => intro.remove(), 1000);
-        }, 5000);
-
-        // --- 3. PROFIL YUKLASH ---
+        // --- 1. PROFILNI YUKLASH ---
         try {
             const user = JSON.parse(localStorage.getItem('atom_user'));
             if(user) {
                 document.getElementById('p-name').innerText = user.nickname || user.name;
                 if(user.picture) document.getElementById('p-img').src = user.picture;
             }
-        } catch(e) {}
+        } catch(e) { console.log("Profil topilmadi"); }
 
-        // --- 4. KURSOR ---
+        // --- 2. INTRONI O'CHIRISH ---
+        setTimeout(() => {
+            const intro = document.getElementById('intro-screen');
+            intro.style.opacity = '0';
+            setTimeout(() => intro.remove(), 1000);
+        }, 4000);
+
+        // --- 3. GLASS KURSOR MANTIQI ---
         const cursor = document.getElementById('glass-cursor');
         document.addEventListener('mousemove', e => {
-            cursor.style.left = e.clientX + 'px'; cursor.style.top = e.clientY + 'px';
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
         });
+        document.addEventListener('mousedown', () => cursor.classList.add('clicked'));
+        document.addEventListener('mouseup', () => cursor.classList.remove('clicked'));
+        // Hover effektlar
         document.querySelectorAll('.profile-container, input').forEach(el => {
             el.addEventListener('mouseenter', () => cursor.classList.add('hovered'));
             el.addEventListener('mouseleave', () => cursor.classList.remove('hovered'));
         });
-        document.addEventListener('mousedown', () => cursor.classList.add('clicked'));
-        document.addEventListener('mouseup', () => cursor.classList.remove('clicked'));
 
-        // --- 5. GENERATOR (SHAKLLAR VA RANGLAR) ---
-        function createPointsData(newCount) {
-            // Tozalash
-            for(let k in shapes) shapes[k] = [];
-            for(let k in colors) colors[k] = [];
+        // ==========================================================
+        //  SHAKLLAR VA RANGLARNI HISOBLASH (GENERATOR)
+        // ==========================================================
+        function createParticleData(count) {
+            // Massivlarni tozalash
+            for(let key in shapes) shapes[key] = [];
+            for(let key in colors) colors[key] = [];
 
-            for (let i = 0; i < newCount; i++) {
-                // DEFAULT (Blue)
+            for (let i = 0; i < count; i++) {
+                // --- DEFAULT RANG (Moviy Neon) ---
                 colors.default.push(0, 0.8, 1);
+                colors.danger.push(1, 0, 0); // Qizil
 
-                // SCATTER
-                shapes.scatter.push((Math.random()-0.5)*30, (Math.random()-0.5)*30, (Math.random()-0.5)*30);
+                // --- 1. SCATTER (Tarqoq) ---
+                shapes.scatter.push((Math.random()-0.5)*40, (Math.random()-0.5)*40, (Math.random()-0.5)*40);
 
-                // SPHERE
-                const phi = Math.acos(-1 + (2 * i) / newCount);
-                const theta = Math.sqrt(newCount * Math.PI) * phi;
-                shapes.sphere.push(4 * Math.cos(theta) * Math.sin(phi), 4 * Math.sin(theta) * Math.sin(phi), 4 * Math.cos(phi));
+                // --- 2. SPHERE (Shar - Default) ---
+                const phi = Math.acos(-1 + (2 * i) / count);
+                const theta = Math.sqrt(count * Math.PI) * phi;
+                shapes.sphere.push(
+                    4.5 * Math.cos(theta) * Math.sin(phi),
+                    4.5 * Math.sin(theta) * Math.sin(phi),
+                    4.5 * Math.cos(phi)
+                );
 
-                // SOLAR SYSTEM (4 Barmoq)
+                // --- 3. SOLAR SYSTEM (4 Barmoq - Realistik) ---
                 let sx, sy, sz, sr, sg, sb;
-                if (i < newCount * 0.15) { // QUYOSH
-                    const sPhi = Math.acos(-1 + (2 * i) / (newCount * 0.15));
-                    const sTheta = Math.sqrt((newCount * 0.15) * Math.PI) * sPhi;
+                
+                // Quyosh (15% zarra - Markazda, Sariq)
+                if (i < count * 0.15) {
+                    const sPhi = Math.acos(-1 + (2 * i) / (count * 0.15));
+                    const sTheta = Math.sqrt((count * 0.15) * Math.PI) * sPhi;
                     sx = 2 * Math.cos(sTheta) * Math.sin(sPhi);
                     sy = 2 * Math.sin(sTheta) * Math.sin(sPhi);
                     sz = 2 * Math.cos(sPhi);
-                    sr=1; sg=0.8; sb=0; // Sariq
-                } else if (i < newCount * 0.25) { // YER
-                    const ang = Math.random() * Math.PI * 2;
-                    sx = 6 * Math.cos(ang) + (Math.random()-0.5);
-                    sz = 6 * Math.sin(ang) + (Math.random()-0.5);
-                    sy = (Math.random()-0.5);
-                    sr=0; sg=0.4; sb=1; // Moviy
-                } else { // YULDUZLAR
-                    const dist = 4 + Math.random() * 12;
-                    const ang = Math.random() * Math.PI * 2;
-                    sx = dist * Math.cos(ang);
-                    sz = dist * Math.sin(ang);
+                    sr=1; sg=0.9; sb=0; // Oltin sariq
+                } 
+                // Yer (15% zarra - Orbitada, Ko'k/Yashil)
+                else if (i < count * 0.30) {
+                    // Yer shar shaklida, lekin markazdan uzoqda
+                    const eIdx = i - (count * 0.15);
+                    const eCount = count * 0.15;
+                    const ePhi = Math.acos(-1 + (2 * eIdx) / eCount);
+                    const eTheta = Math.sqrt(eCount * Math.PI) * ePhi;
+                    
+                    // Orbitada turishi uchun X va Z ga offset beramiz
+                    sx = 0.8 * Math.cos(eTheta) * Math.sin(ePhi) + 6; 
+                    sy = 0.8 * Math.sin(eTheta) * Math.sin(ePhi);
+                    sz = 0.8 * Math.cos(ePhi);
+                    sr=0; sg=0.5; sb=1; // Dengiz rangi
+                }
+                // Mars (10% zarra - Qizil)
+                else if (i < count * 0.40) {
+                    const mAngle = Math.random() * Math.PI * 2;
+                    sx = 9 * Math.cos(mAngle);
                     sy = (Math.random()-0.5)*0.5;
-                    sr=0.7; sg=0.7; sb=0.7;
+                    sz = 9 * Math.sin(mAngle);
+                    sr=1; sg=0.3; sb=0.1; // Qizil
+                }
+                // Saturn Halqalari va Asteroidlar (Qolgani)
+                else {
+                    const dist = 11 + Math.random() * 8;
+                    const angle = Math.random() * Math.PI * 2;
+                    sx = dist * Math.cos(angle);
+                    sz = dist * Math.sin(angle);
+                    sy = (Math.random()-0.5) * 0.2; // Yassi
+                    sr=0.8; sg=0.8; sb=0.7; // Chang rangi
                 }
                 shapes.solarSystem.push(sx, sy, sz);
                 colors.solar.push(sr, sg, sb);
 
-                // GALAXY (5 Barmoq)
-                const arm = i % 3;
-                const r = Math.random() * 15;
-                const spin = r * 0.8 + (arm * (Math.PI * 2 / 3));
-                const spread = (Math.random()-0.5)*2;
-                shapes.galaxy.push(
-                    (r * Math.cos(spin)) + spread,
-                    (Math.random()-0.5) * (15-r) * 0.2,
-                    (r * Math.sin(spin)) + spread
-                );
-                // Markaz oq, chetlar binafsha
-                if(r < 3) colors.galaxy.push(1, 0.9, 0.7);
-                else colors.galaxy.push(0.5, 0, 1);
+                // --- 4. GALAXY (5 Barmoq - Spiral) ---
+                const armIndex = i % 3; // 3 ta spiral qo'li
+                const radius = Math.random() * 15;
+                const spinAngle = radius * 0.8 + (armIndex * (Math.PI * 2 / 3));
+                const spread = (Math.random() - 0.5) * 1.5; // Tarqoqlik
+                
+                const gx = (radius * Math.cos(spinAngle)) + spread;
+                const gy = (Math.random() - 0.5) * (15 - radius) * 0.15; // Markaz qalin, cheti yupqa
+                const gz = (radius * Math.sin(spinAngle)) + spread;
+                
+                shapes.galaxy.push(gx, gy, gz);
+                
+                // Ranglar: Markaz (Oq/Sariq) -> Chetlar (Binafsha/Ko'k)
+                const distToCenter = Math.sqrt(gx*gx + gz*gz);
+                if (distToCenter < 2) { colors.galaxy.push(1, 0.95, 0.8); }
+                else if (distToCenter < 8) { colors.galaxy.push(1, 0.4, 0.8); } // Pushti
+                else { colors.galaxy.push(0.3, 0, 1); } // Binafsha
 
-                // MIDDLE FINGER (Qo'l shakli)
+                // --- 5. 3D MIDDLE FINGER (Model simulyatsiyasi) ---
+                // Barmoqlarni matematik shakllar (silindrlar) yordamida chizamiz
                 let mx, my, mz;
-                if (i < newCount * 0.4) { // Kaft
-                    mx = (Math.random()-0.5)*4; my = (Math.random()-0.5)*4; mz = (Math.random()-0.5);
-                } else if (i < newCount * 0.6) { // O'rta barmoq
-                    mx = (Math.random()-0.5); my = 2 + Math.random()*5; mz = (Math.random()-0.5);
-                } else { // Bukilganlar
-                    const f = Math.floor(Math.random()*4); // 0,1,2,3
-                    mx = ((f-1.5)*1.5) + (Math.random()-0.5);
-                    my = -1 + (Math.random()-0.5);
-                    mz = 1.5 + (Math.random()-0.5);
+                
+                // Kaft (Palm) - 40% zarra
+                if (i < count * 0.4) {
+                    mx = (Math.random()-0.5) * 3.5;
+                    my = (Math.random()-0.5) * 3.5 - 1; // Sal pastroqda
+                    mz = (Math.random()-0.5) * 1;
                 }
-                shapes.middleFinger.push(mx, my, mz);
-                colors.middle.push(1, 0.1, 0.1); // Qizil
-
-                // TEXT
-                shapes.text.push(0,0,0);
+                // O'rta barmoq (Middle) - 30% zarra (Tik turgan)
+                else if (i < count * 0.7) {
+                    const h = Math.random() * 5; // Uzunligi
+                    const r = 0.6; // Qalinligi
+                    const ang = Math.random() * Math.PI * 2;
+                    mx = r * Math.cos(ang);
+                    my = h + 1; // Kaftdan tepada
+                    mz = r * Math.sin(ang);
+                }
+                // Boshqa barmoqlar (Bukilgan) - 30% zarra
+                else {
+                    // 4 ta bukilgan barmoq uchun joylar
+                    const fingerIdx = Math.floor(Math.random() * 4); // 0,1,2,3
+                    // X bo'yicha tarqatamiz (-2, -1, 1, 2)
+                    let xOffset = 0;
+                    if (fingerIdx == 0) xOffset = -1.8; // Index
+                    if (fingerIdx == 1) xOffset = -0.8; // Ring (Middle o'rniga bukilgan joy bo'sh qolmasligi uchun ozgina to'ldirish mumkin, lekin biz middle tik turibdi dedik)
+                    if (fingerIdx == 2) xOffset = 1.0;  // Ring
+                    if (fingerIdx == 3) xOffset = 2.0;  // Pinky
+                    
+                    // Bukilgan shakl (yarim shar kabi)
+                    mx = xOffset + (Math.random()-0.5)*0.6;
+                    my = 0 + (Math.random()-0.5); 
+                    mz = 1.2 + (Math.random()-0.5); // Oldinga chiqqan
+                }
+                shapes.middleFinger3D.push(mx, my, mz);
+                
+                // Text va boshqalar uchun bo'sh joy
+                shapes.textMessage.push(0,0,0);
             }
         }
 
-        function generateTextParticles(text) {
-            const c = document.createElement('canvas');
-            const ctx = c.getContext('2d');
-            c.width = 500; c.height = 200;
-            ctx.fillStyle = '#000'; ctx.fillRect(0,0,500,200);
-            ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.font = 'bold 80px Arial';
-            ctx.fillText(text, 250, 100);
+        // --- MATNNI ZARRACHALARGA AYLANTIRISH ---
+        function generateTextPositions(text) {
+            const tempCanvas = document.createElement('canvas');
+            const tCtx = tempCanvas.getContext('2d');
+            const W = 600, H = 200;
+            tempCanvas.width = W; tempCanvas.height = H;
             
-            const data = ctx.getImageData(0,0,500,200).data;
-            const pixels = [];
-            for(let y=0; y<200; y+=4) {
-                for(let x=0; x<500; x+=4) {
-                    if(data[(y*500+x)*4] > 128) pixels.push({x:(x-250)*0.06, y:-(y-100)*0.06});
+            tCtx.fillStyle = '#000'; tCtx.fillRect(0,0,W,H);
+            tCtx.fillStyle = '#fff'; 
+            tCtx.font = 'bold 80px Arial';
+            tCtx.textAlign = 'center'; 
+            tCtx.textBaseline = 'middle';
+            tCtx.fillText(text, W/2, H/2);
+            
+            const imgData = tCtx.getImageData(0,0,W,H).data;
+            const validPixels = [];
+            
+            // Piksellarni skanerlash
+            for(let y=0; y<H; y+=4) {
+                for(let x=0; x<W; x+=4) {
+                    if (imgData[(y*W+x)*4] > 128) { // Oq piksel
+                        validPixels.push({
+                            x: (x - W/2) * 0.05, 
+                            y: -(y - H/2) * 0.05
+                        });
+                    }
                 }
             }
             
-            for(let i=0; i<count; i++) {
-                const p = pixels[i%pixels.length];
-                if(p) {
-                    shapes.text[i*3] = p.x; shapes.text[i*3+1] = p.y; shapes.text[i*3+2] = 0;
+            // Zarralarni joylashtirish
+            for(let i=0; i<particleCount; i++) {
+                const p = validPixels[i % validPixels.length];
+                if (p) {
+                    shapes.textMessage[i*3] = p.x;
+                    shapes.textMessage[i*3+1] = p.y;
+                    shapes.textMessage[i*3+2] = 0;
                 } else {
-                    shapes.text[i*3] = (Math.random()-0.5)*60; 
-                    shapes.text[i*3+1] = (Math.random()-0.5)*60; 
-                    shapes.text[i*3+2] = (Math.random()-0.5)*60;
+                    // Ortiqcha zarralarni orqaga yashiramiz
+                    shapes.textMessage[i*3] = (Math.random()-0.5)*50;
+                    shapes.textMessage[i*3+1] = (Math.random()-0.5)*50;
+                    shapes.textMessage[i*3+2] = -20;
                 }
             }
         }
 
-        // --- 6. THREE.JS INIT ---
+        // ==========================================================
+        //  THREE.JS SAHNASINI YARATISH
+        // ==========================================================
         function initThree() {
             scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.z = 16;
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.body.appendChild(renderer.domElement);
 
-            createPointsData(count);
+            createParticleData(particleCount);
 
             geometry = new THREE.BufferGeometry();
             geometry.setAttribute('position', new THREE.Float32BufferAttribute(shapes.scatter, 3));
             geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors.default, 3));
 
             const mat = new THREE.PointsMaterial({
-                size: 0.08, vertexColors: true, transparent: true,
-                blending: THREE.AdditiveBlending, depthWrite: false
+                size: 0.09,
+                vertexColors: true, // <-- HAR XIL RANGLAR UCHUN
+                transparent: true,
+                opacity: 0.9,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
             });
 
             particles = new THREE.Points(geometry, mat);
             scene.add(particles);
         }
 
-        // --- 7. LOGIKA (HANDS) ---
-        function handleLogic(hands) {
+        // ==========================================================
+        //  MANTIQ MARKAZI (HAND TRACKING LOGIC)
+        // ==========================================================
+        function handleHandLogic(hands) {
             const posAttr = geometry.attributes.position;
             const colAttr = geometry.attributes.color;
+            
             let target = shapes.sphere;
             let targetCol = colors.default;
             
-            // Default aylanish (agar qo'l bo'lmasa)
-            let rotX = 0, rotZ = 0;
-
-            if (hands.length > 0) {
+            // Default holat (qo'l yo'q)
+            if (hands.length === 0) {
+                target = shapes.scatter;
+                particles.rotation.y += 0.001; // Sekin aylanish
+                statusText.innerText = "TIZIM KUTMOQDA...";
+            } 
+            else {
                 const h = hands[0];
 
-                // --- ROTATION SYNC ---
-                // Qo'lning burchagini hisoblash
+                // 1. QO'L ROTATSIYASINI HISOBLASH (Sync)
+                // Bilak (0) va O'rta barmoq uchi (9) orasidagi burchak
                 const dx = h[9].x - h[0].x;
                 const dy = h[9].y - h[0].y;
-                targetRotationZ = -Math.atan2(dx, dy) + Math.PI; // Z o'qi bo'yicha
-                targetRotationX = (h[9].z) * 2; // X o'qi (oldin-orqa)
+                // Ekranda (Z o'qi bo'yicha aylanish)
+                handRotZ = -Math.atan2(dx, dy) + Math.PI;
+                // Oldinga/Orqaga (X o'qi - chuqurlikdan taxminiy)
+                handRotX = (h[9].z) * 3; 
+                // Y o'qi (chap/o'ng harakat)
+                handRotY = (h[9].x - 0.5) * 2;
 
-                // --- BARMOQ SANASH ---
-                const tips = [8, 12, 16, 20];
-                const pips = [6, 10, 14, 18];
-                let fingers = 0;
-                let states = [false, false, false, false]; // Index, Middle, Ring, Pinky
+                // 2. BARMOQLARNI ANIQLASH
+                const tips = [8, 12, 16, 20]; // Index, Middle, Ring, Pinky
+                const pips = [6, 10, 14, 18]; // Bo'g'inlar
+                
+                let extendedCount = 0;
+                let isIndexUp = h[8].y < h[6].y;
+                let isMiddleUp = h[12].y < h[10].y;
+                let isRingUp = h[16].y < h[14].y;
+                let isPinkyUp = h[20].y < h[18].y;
+                
+                // Bosh barmoq (Thumb)
+                if (h[4].x < h[3].x) extendedCount++; 
 
-                // Bosh barmoq (taxminiy)
-                if(h[4].x < h[3].x) fingers++; 
+                if (isIndexUp) extendedCount++;
+                if (isMiddleUp) extendedCount++;
+                if (isRingUp) extendedCount++;
+                if (isPinkyUp) extendedCount++;
 
-                for(let i=0; i<4; i++) {
-                    if(h[tips[i]].y < h[pips[i]].y) { // Tik turibdi
-                        fingers++;
-                        states[i] = true;
-                    }
-                }
+                // 3. MIDDLE FINGER (O'rta barmoq) REJIMI
+                // Shart: Faqat o'rta barmoq tik, qolganlari bukilgan
+                const isOnlyMiddle = (!isIndexUp && isMiddleUp && !isRingUp && !isPinkyUp);
 
-                // --- O'RTA BARMOQ (Index=0, Middle=1, Ring=2, Pinky=3) ---
-                const isMiddle = (!states[0] && states[1] && !states[2] && !states[3]);
-
+                // --- ANIMATSIYA BOSHQARUVI ---
                 if (isMiddleFingerSequence) {
-                    // Animatsiya ketmoqda...
-                }
-                else if (isMiddle) {
-                    // START SEQUENCE
-                    isMiddleFingerSequence = true;
-                    generateTextParticles("FUCK YOU BITCH");
-                    middleFingerStage = 'TEXT';
-                    
-                    setTimeout(() => { middleFingerStage = 'HAND'; }, 3000);
-                    setTimeout(() => { isMiddleFingerSequence = false; middleFingerStage = 'NONE'; }, 6000);
-                }
-                else if (fingers === 4) {
+                    // Animatsiya ketayotganda boshqa narsaga o'tmaymiz
+                    if (middleFingerStage === 'TEXT') {
+                        target = shapes.textMessage;
+                        targetCol = colors.danger;
+                        statusText.innerText = "XABAR YUBORILDI";
+                    } else if (middleFingerStage === 'HAND') {
+                        target = shapes.middleFinger3D;
+                        targetCol = colors.danger;
+                        statusText.innerText = "FUCK YOU!";
+                        // Silkinish effekti
+                        particles.rotation.z = Math.sin(Date.now() * 0.02) * 0.3; 
+                    }
+                } 
+                else if (isOnlyMiddle) {
+                    // Animatsiyani boshlash
+                    startFuckSequence();
+                } 
+                else if (extendedCount === 4) {
+                    // SOLAR SYSTEM
                     target = shapes.solarSystem;
                     targetCol = colors.solar;
-                    isModeActive = true;
-                }
-                else if (fingers === 5) {
+                    statusText.innerText = "QUYOSH TIZIMI";
+                    isGalaxyMode = true;
+                } 
+                else if (extendedCount === 5) {
+                    // GALAXY
                     target = shapes.galaxy;
                     targetCol = colors.galaxy;
-                    isModeActive = true;
-                }
+                    statusText.innerText = "GALAKTIKA";
+                    isGalaxyMode = true;
+                } 
                 else {
-                    isModeActive = false;
-                    // Agar 2 qo'l bo'lsa
+                    // NORMAL (Qo'l bilan boshqarish)
+                    isGalaxyMode = false;
+                    statusText.innerText = "FAOL REJIM";
+                    
+                    // 2 ta qo'l bo'lsa kattalashtirish
                     if (hands.length === 2) {
                         const d = Math.hypot(hands[0][9].x - hands[1][9].x, hands[0][9].y - hands[1][9].y);
-                        particles.scale.setScalar(d * 10);
+                        particles.scale.setScalar(d * 8); // Zoom
                     } else {
                         particles.scale.setScalar(1);
                     }
                 }
-            } else {
-                target = shapes.scatter;
-                // Qo'l yo'q bo'lsa sekin aylanadi
-                particles.rotation.y += 0.002;
             }
 
-            // --- ANIMATSIYA BOSQICHLARI ---
-            if (isMiddleFingerSequence) {
-                targetCol = colors.middle;
-                if (middleFingerStage === 'TEXT') target = shapes.text;
-                else if (middleFingerStage === 'HAND') target = shapes.middleFinger;
-            }
-
-            // --- LERP (SILJISH) ---
-            for(let i=0; i<count; i++) {
+            // --- FIZIKA: ZARRALAR HARAKATI (LERP) ---
+            for(let i=0; i<particleCount; i++) {
+                // Pozitsiya silliq o'zgarishi
                 posAttr.array[i*3] += (target[i*3] - posAttr.array[i*3]) * 0.12;
                 posAttr.array[i*3+1] += (target[i*3+1] - posAttr.array[i*3+1]) * 0.12;
                 posAttr.array[i*3+2] += (target[i*3+2] - posAttr.array[i*3+2]) * 0.12;
                 
+                // Rang silliq o'zgarishi
                 colAttr.array[i*3] += (targetCol[i*3] - colAttr.array[i*3]) * 0.08;
                 colAttr.array[i*3+1] += (targetCol[i*3+1] - colAttr.array[i*3+1]) * 0.08;
                 colAttr.array[i*3+2] += (targetCol[i*3+2] - colAttr.array[i*3+2]) * 0.08;
             }
 
-            // --- ROTATION SYNC ---
-            if (hands.length > 0 && !isMiddleFingerSequence) {
-                // Qo'l bilan sinxronlash
-                particles.rotation.x += (targetRotationX - particles.rotation.x) * 0.1;
-                particles.rotation.z += (targetRotationZ - particles.rotation.z) * 0.1;
-            } 
-            // Maxsus rejimda (Quyosh/Galaktika) o'zi ham aylansin
-            if (isModeActive) {
-                particles.rotation.y += 0.005; 
+            // --- ROTATION SYNC (Qo'l harakati bilan burish) ---
+            if (!isMiddleFingerSequence && hands.length > 0) {
+                // Agar galaktika bo'lsa, o'zi ham aylansin, ham qo'lga bo'ysunsun
+                if (isGalaxyMode) {
+                    particles.rotation.y += 0.005; // Avto aylanish
+                }
+                
+                // Qo'lga moslashish
+                particles.rotation.x += (handRotX - particles.rotation.x) * 0.1;
+                particles.rotation.z += (handRotZ - particles.rotation.z) * 0.1;
+                if (!isGalaxyMode) particles.rotation.y += (handRotY - particles.rotation.y) * 0.1;
             }
 
             posAttr.needsUpdate = true;
             colAttr.needsUpdate = true;
         }
 
-        // --- 8. MEDIAPIPE INIT (CDN TUZATILDI) ---
+        // --- SEQUENCE MANAGER ---
+        function startFuckSequence() {
+            if (isMiddleFingerSequence) return;
+            isMiddleFingerSequence = true;
+            
+            // 1. Matnni generatsiya qilish
+            generateTextPositions("FUCK YOU BITCH");
+            middleFingerStage = 'TEXT';
+            
+            // 2. 3 sekunddan keyin qo'lga o'tish
+            setTimeout(() => {
+                middleFingerStage = 'HAND';
+            }, 3000);
+
+            // 3. Yana 3 sekunddan keyin tugatish
+            setTimeout(() => {
+                isMiddleFingerSequence = false;
+                middleFingerStage = 'NONE';
+                particles.rotation.set(0,0,0); // Reset rotation
+            }, 6000);
+        }
+
+        // ==========================================================
+        //  INIT & RENDER LOOP
+        // ==========================================================
         const handsTracker = new Hands({
             locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/${file}`
         });
-        handsTracker.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.5 });
+        
+        handsTracker.setOptions({
+            maxNumHands: 2,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.6,
+            minTrackingConfidence: 0.6
+        });
+
         handsTracker.onResults(results => {
             uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
-            if(results.multiHandLandmarks) {
-                for(const l of results.multiHandLandmarks) drawConnectors(uiCtx, l, HAND_CONNECTIONS, {color: '#00d2ff'});
-                handleLogic(results.multiHandLandmarks);
+            // Qo'l chizig'ini chizish (Optional, faqat debug uchun chiroyli ko'rinadi)
+            if (results.multiHandLandmarks) {
+                for (const l of results.multiHandLandmarks) {
+                    drawConnectors(uiCtx, l, HAND_CONNECTIONS, {color: 'rgba(0, 210, 255, 0.3)', lineWidth: 1});
+                }
+                handleHandLogic(results.multiHandLandmarks);
+            } else {
+                handleHandLogic([]); // Qo'l yo'q
             }
         });
 
         const cam = new Camera(videoElement, {
-            onFrame: async () => { 
-                if(videoElement.videoWidth) await handsTracker.send({image: videoElement}); 
+            onFrame: async () => {
+                await handsTracker.send({image: videoElement});
             },
-            width: 640, height: 480
+            width: 640,
+            height: 480
         });
         cam.start();
 
+        // Scene Start
         initThree();
+
         function animate() {
             requestAnimationFrame(animate);
             renderer.render(scene, camera);
         }
+        animate();
+
+        // Slider Event
         slider.oninput = function() {
-            count = parseInt(this.value);
-            countDisplay.textContent = count;
-            createPointsData(count);
+            particleCount = parseInt(this.value);
+            countDisplay.innerText = particleCount;
+            // Qayta hisoblash
+            createParticleData(particleCount);
+            // Geometriyani yangilash
             geometry.setAttribute('position', new THREE.Float32BufferAttribute(shapes.scatter, 3));
             geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors.default, 3));
         };
-        animate();
 
+        // Resize Event
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
+
     </script>
 </body>
 </html>
