@@ -137,7 +137,7 @@
         }
         .premium-upload:hover { background: rgba(255, 215, 0, 0.2); }
 
-        /* TOAST NOTIFICATION STYLES (Yangi qo'shildi) */
+        /* TOAST NOTIFICATION STYLES */
         #toast-box {
             position: fixed; top: 20px; right: 20px; z-index: 9999;
             display: flex; flex-direction: column; gap: 10px;
@@ -198,7 +198,7 @@
             </div>
 
             <div class="input-wrapper">
-                <div class="label">Game Nickname <span class="required">*</span></div>
+                <div class="label">Game Nickname (Unikal) <span class="required">*</span></div>
                 <div class="input-container">
                     <input type="text" id="p-nick" readonly placeholder="@Player_..." oninput="handleNickInput(this.value)">
                     <div class="edit-icon" onclick="enableEdit('p-nick')">✏️</div>
@@ -261,84 +261,7 @@
     </div>
 
     <script>
-        let typingTimer; 
-const doneTypingInterval = 500; // 0.5 soniya kutish vaqti
-const nickStatus = document.getElementById('nick-status');
-const saveButton = document.getElementById('saveBtn');
-
-// Inputga yozganda ishlaydigan funksiya
-function handleNickInput(val) {
-    // 1. Avvalgi taymerni tozalaymiz
-    clearTimeout(typingTimer);
-    
-    // 2. Agar bo'sh bo'lsa
-    if (!val) {
-        nickStatus.innerHTML = "";
-        saveButton.disabled = false;
-        return;
-    }
-
-    // 3. Statusni "Tekshirilmoqda..." ga o'zgartiramiz
-    nickStatus.style.color = "#ffa502"; // Sariq rang
-    nickStatus.innerHTML = "⏳ Tekshirilmoqda...";
-    saveButton.disabled = true; // Tekshiruv paytida saqlab bo'lmaydi
-
-    // 4. Taymerni ishga tushiramiz (yozib bo'lgach ishlaydi)
-    typingTimer = setTimeout(() => {
-        checkNicknameLive(val);
-    }, doneTypingInterval);
-}
-
-// Jonli tekshirish funksiyasi
-async function checkNicknameLive(nick) {
-    const trimmedNick = nick.trim();
-    
-    // REGEX VALIDATSIYA
-    const nickRegex = /^@[a-zA-Z0-9_]{3,}$/;
-    if (!nickRegex.test(trimmedNick)) {
-        nickStatus.style.color = "#ff4b4b"; // Qizil
-        nickStatus.innerHTML = "❌ Noto'g'ri format! (@bilan, min 4 belgi)";
-        return; // Tugma disabled bo'lib qolaveradi
-    }
-
-    // Agar o'zining eski niki bo'lsa (o'zgartirmagan bo'lsa)
-    if (trimmedNick === user.nickname) {
-        nickStatus.style.color = "#00b894"; // Yashil
-        nickStatus.innerHTML = "✅ Bu sizning hozirgi nikingiz";
-        saveButton.disabled = false;
-        return;
-    }
-
-    try {
-        // SERVERDAN TEKSHIRISH (Firebase)
-        if (db) {
-            const usersRef = db.collection('users');
-            const snapshot = await usersRef.where('nickname', '==', trimmedNick).get();
-
-            if (!snapshot.empty) {
-                // Band bo'lsa
-                nickStatus.style.color = "#ff4b4b";
-                nickStatus.innerHTML = "⚠️ Bu nik allaqachon band!";
-                saveButton.disabled = true; // Saqlashni bloklaymiz
-            } else {
-                // Bo'sh bo'lsa (Muvaffaqiyatli)
-                nickStatus.style.color = "#00b894";
-                nickStatus.innerHTML = "✅ Bu nik bo'sh, ishlata olasiz!";
-                saveButton.disabled = false; // Saqlashni yoqamiz
-            }
-        } else {
-            // Server ulanmagan bo'lsa
-            nickStatus.style.color = "#aaa";
-            nickStatus.innerHTML = "Server ulanmagan (Lokal rejim)";
-            saveButton.disabled = false;
-        }
-    } catch (error) {
-        console.error("Tekshirishda xatolik:", error);
-        nickStatus.style.color = "#ff4b4b";
-        nickStatus.innerHTML = "Internet xatosi!";
-    }
-}
-        // --- 1. FIREBASE CONFIG (O'zingizning kalitlaringizni shu yerga qo'ying) ---
+        // --- 1. SIZ BERGAN HAQIQIY FIREBASE CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyAg_n9-MsYSI41l_BqHWHuXrkE7I0fRfmo",
             authDomain: "my-universe-a5416.firebaseapp.com",
@@ -349,29 +272,34 @@ async function checkNicknameLive(nick) {
             measurementId: "G-FT3XEBVPZ8"
         };
 
-        // Firebase-ni ishga tushirish (xatolik bermasligi uchun try-catch)
+        // Firebase-ni ishga tushirish
         let db;
         try {
             firebase.initializeApp(firebaseConfig);
             db = firebase.firestore();
+            console.log("Firebase muvaffaqiyatli ulandi!");
         } catch (e) {
-            console.warn("Firebase ulanmadi yoki config noto'g'ri. Server funksiyalari ishlamaydi.", e);
+            console.error("Firebase ulanish xatosi:", e);
+            showToast("Serverga ulanib bo'lmadi", "error");
         }
 
+        // LocalStorage dan user ma'lumotlarini olish
         const userStr = localStorage.getItem('atom_user');
-        if (!userStr) window.location.href = 'index.html';
+        if (!userStr) {
+            // Agar login qilmagan bo'lsa, chiqib ketish kerak
+            window.location.href = 'index.html';
+        }
         
         const user = JSON.parse(userStr);
         let tempAvatar = user.picture || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
         
-        // Asl Google rasmini saqlab qolish (agar u birinchi marta kirganda saqlangan bo'lsa)
-        // Agar localstorage da bo'lmasa, hozirgi rasmni (agar google link bo'lsa) saqlab olamiz
+        // Google rasmni saqlab qo'yish (asl rasm sifatida)
         if (!user.originalGooglePhoto && user.picture && user.picture.includes('googleusercontent.com')) {
             user.originalGooglePhoto = user.picture;
             localStorage.setItem('atom_user', JSON.stringify(user));
         }
 
-        // --- 2. YUKLASH ---
+        // --- 2. SAHIFA YUKLANGANDA ---
         window.onload = function() {
             document.getElementById('p-img').src = tempAvatar;
             document.getElementById('p-name').value = user.name || "";
@@ -379,74 +307,84 @@ async function checkNicknameLive(nick) {
             document.getElementById('p-phone').value = user.phone || "";
             document.getElementById('p-tg').value = user.telegram || "";
             
-            // Nickname
+            // Nickname generatsiya (agar yo'q bo'lsa)
             if (!user.nickname) {
                 const randomId = Math.floor(1000 + Math.random() * 9000);
                 user.nickname = "@Player_" + randomId;
             }
             document.getElementById('p-nick').value = user.nickname;
 
-            // Avatarda Google rasmni ko'rsatish
+            // Avatarda Google variantini ko'rsatish
             if (user.originalGooglePhoto) {
                 document.getElementById('google-avatar-container').style.display = 'block';
                 document.getElementById('google-avatar-img').src = user.originalGooglePhoto;
             }
         };
 
-        // --- 3. TOAST BILDIRISHNOMA (Alert o'rniga) ---
-        function showToast(msg, type) {
-            const box = document.getElementById('toast-box');
-            const toast = document.createElement('div');
-            toast.classList.add('toast');
-            toast.classList.add(type); // 'success' yoki 'error'
+        // --- 3. JONLI NICKNAME TEKSHIRISH ---
+        let typingTimer; 
+        const doneTypingInterval = 500; 
+        const nickStatus = document.getElementById('nick-status');
+        const saveButton = document.getElementById('saveBtn');
 
-            let icon = type === 'success' ? '✅' : '⚠️';
+        function handleNickInput(val) {
+            clearTimeout(typingTimer);
+            if (!val) {
+                nickStatus.innerHTML = "";
+                saveButton.disabled = false;
+                return;
+            }
+            nickStatus.style.color = "#ffa502";
+            nickStatus.innerHTML = "⏳ Tekshirilmoqda...";
+            saveButton.disabled = true;
+
+            typingTimer = setTimeout(() => {
+                checkNicknameLive(val);
+            }, doneTypingInterval);
+        }
+
+        async function checkNicknameLive(nick) {
+            const trimmedNick = nick.trim();
+            const nickRegex = /^@[a-zA-Z0-9_]{3,}$/;
             
-            toast.innerHTML = `
-                <i>${icon}</i>
-                <span>${msg}</span>
-            `;
+            if (!nickRegex.test(trimmedNick)) {
+                nickStatus.style.color = "#ff4b4b";
+                nickStatus.innerHTML = "❌ Noto'g'ri format! (@bilan, min 4 belgi)";
+                return;
+            }
 
-            box.appendChild(toast);
+            if (trimmedNick === user.nickname) {
+                nickStatus.style.color = "#00b894";
+                nickStatus.innerHTML = "✅ Bu sizning hozirgi nikingiz";
+                saveButton.disabled = false;
+                return;
+            }
 
-            // 3.5 sekunddan keyin o'chirish
-            setTimeout(() => {
-                toast.remove();
-            }, 3500);
-        }
+            try {
+                if (db) {
+                    const usersRef = db.collection('users');
+                    // Bazadan 'nickname' maydonini tekshiramiz
+                    const snapshot = await usersRef.where('nickname', '==', trimmedNick).get();
 
-        // --- 4. TAHRIRLASH ---
-        function enableEdit(id) {
-            const input = document.getElementById(id);
-            input.removeAttribute('readonly');
-            input.focus();
-            input.style.borderBottom = "1px solid #667eea";
-        }
-
-        // --- 5. AVATAR FUNKSIYALARI ---
-        function openAvatarModal() {
-            document.getElementById('avatarModal').style.display = 'flex';
-        }
-
-        function closeAvatarModal(e) {
-            if(e.target.id === 'avatarModal') {
-                document.getElementById('avatarModal').style.display = 'none';
+                    if (!snapshot.empty) {
+                        nickStatus.style.color = "#ff4b4b";
+                        nickStatus.innerHTML = "⚠️ Bu nik allaqachon band!";
+                        saveButton.disabled = true;
+                    } else {
+                        nickStatus.style.color = "#00b894";
+                        nickStatus.innerHTML = "✅ Bu nik bo'sh!";
+                        saveButton.disabled = false;
+                    }
+                }
+            } catch (error) {
+                console.error("Tekshirishda xatolik:", error);
+                // Agar permission denied bo'lsa, qizil yonadi
+                nickStatus.style.color = "#ff4b4b";
+                nickStatus.innerHTML = "Tekshirib bo'lmadi (Internet yoki Ruxsat yo'q)";
             }
         }
 
-        function selectAvatar(src) {
-            tempAvatar = src;
-            document.getElementById('p-img').src = src;
-            document.getElementById('avatarModal').style.display = 'none';
-        }
-
-        function selectGoogleAvatar() {
-            if (user.originalGooglePhoto) {
-                selectAvatar(user.originalGooglePhoto);
-            }
-        }
-
-        // --- 6. ASOSIY SAQLASH (Server tekshiruvi bilan) ---
+        // --- 4. SAQLASH FUNKSIYASI ---
         async function saveProfile() {
             const saveBtn = document.getElementById('saveBtn');
             const name = document.getElementById('p-name').value.trim();
@@ -459,37 +397,31 @@ async function checkNicknameLive(nick) {
                 return;
             }
 
-            // Nickname validatsiyasi
             const nickRegex = /^@[a-zA-Z0-9_]{3,}$/;
             if (!nickRegex.test(nick)) {
-                showToast("Nickname noto'g'ri! (@ bilan boshlanishi va min 4 belgi)", "error");
+                showToast("Nickname noto'g'ri!", "error");
                 return;
             }
 
-            // Tugmani bloklash (spam qilinmasligi uchun)
             saveBtn.disabled = true;
             saveBtn.innerHTML = "Tekshirilmoqda...";
 
             try {
-                // --- SERVER: UNIKAL NICKNAME TEKSHIRUVI ---
                 if (db) {
-                    // 1. Agar nickname o'zgargan bo'lsa, bazadan tekshiramiz
+                    // Saqlashdan oldin yana bir bor tekshiramiz (Double Check)
                     if (nick !== user.nickname) {
                         const usersRef = db.collection('users');
                         const snapshot = await usersRef.where('nickname', '==', nick).get();
-
                         if (!snapshot.empty) {
-                            showToast("Bu Nickname allaqachon band! Boshqasini tanlang.", "error");
+                            showToast("Bu Nickname allaqachon band!", "error");
                             saveBtn.disabled = false;
                             saveBtn.innerHTML = "SAQLASH";
-                            return; // Jarayonni to'xtatamiz
+                            return;
                         }
                     }
 
-                    // 2. Serverga (Firestore) yozish
-                    // user.uid mavjud deb faraz qilamiz (login payti kelgan ID)
-                    // Agar uid bo'lmasa, email orqali document yasaymiz
-                    const userId = user.uid || user.email; 
+                    // ID sifatida emailni ishlatamiz (yoki uid)
+                    const userId = user.email; 
                     
                     await db.collection('users').doc(userId).set({
                         name: name,
@@ -500,30 +432,56 @@ async function checkNicknameLive(nick) {
                         picture: tempAvatar,
                         lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                     }, { merge: true });
-                } else {
-                    console.log("Server ulanmagan, faqat lokal saqlandi.");
                 }
 
-                // --- LOCAL STORAGE YANGILASH ---
+                // LocalStorage yangilash
                 user.name = name;
                 user.nickname = nick;
                 user.phone = phone;
                 user.telegram = tg;
                 user.picture = tempAvatar;
-
                 localStorage.setItem('atom_user', JSON.stringify(user));
                 
-                // Muvaffaqiyatli xabar (Toast)
                 showToast("Profil muvaffaqiyatli saqlandi!", "success");
 
             } catch (error) {
                 console.error("Xatolik:", error);
-                showToast("Internetda xatolik yuz berdi!", "error");
+                showToast("Xatolik yuz berdi! (Internetni tekshiring)", "error");
             } finally {
                 saveBtn.disabled = false;
                 saveBtn.innerHTML = "SAQLASH";
             }
         }
+
+        // --- YORDAMCHI FUNKSIYALAR ---
+        function showToast(msg, type) {
+            const box = document.getElementById('toast-box');
+            const toast = document.createElement('div');
+            toast.classList.add('toast', type);
+            let icon = type === 'success' ? '✅' : '⚠️';
+            toast.innerHTML = `<i>${icon}</i><span>${msg}</span>`;
+            box.appendChild(toast);
+            setTimeout(() => toast.remove(), 3500);
+        }
+
+        function enableEdit(id) {
+            const input = document.getElementById(id);
+            input.removeAttribute('readonly');
+            input.focus();
+            input.style.borderBottom = "1px solid #667eea";
+        }
+
+        function openAvatarModal() { document.getElementById('avatarModal').style.display = 'flex'; }
+        function closeAvatarModal(e) { if(e.target.id === 'avatarModal') document.getElementById('avatarModal').style.display = 'none'; }
+        function selectAvatar(src) {
+            tempAvatar = src;
+            document.getElementById('p-img').src = src;
+            document.getElementById('avatarModal').style.display = 'none';
+        }
+        function selectGoogleAvatar() {
+            if (user.originalGooglePhoto) selectAvatar(user.originalGooglePhoto);
+        }
+
     </script>
 </body>
 </html>
