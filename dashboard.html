@@ -180,6 +180,7 @@
     </style>
 </head>
 <body>
+    <div id="glass-cursor"></div>
     <div class="container">
         
         <div class="user-card" onclick="window.location.href='profile.html'">
@@ -240,6 +241,26 @@
     </div>
 
     <script>
+        const cursor = document.getElementById('glass-cursor');
+
+// 1. Sichqoncha harakati
+document.addEventListener('mousemove', (e) => {
+    cursor.style.left = e.clientX + 'px';
+    cursor.style.top = e.clientY + 'px';
+});
+
+// 2. Bosganda (Click) animatsiyasi
+document.addEventListener('mousedown', () => cursor.classList.add('clicked'));
+document.addEventListener('mouseup', () => cursor.classList.remove('clicked'));
+
+// 3. Tugmalar va Linklar ustiga borganda kattalashishi
+// Barcha tugma va 'a' teglarini olamiz
+const interactables = document.querySelectorAll('button, a, .mic-icon, select');
+
+interactables.forEach(el => {
+    el.addEventListener('mouseenter', () => cursor.classList.add('hovered'));
+    el.addEventListener('mouseleave', () => cursor.classList.remove('hovered'));
+});
         // Default rasm
         const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
