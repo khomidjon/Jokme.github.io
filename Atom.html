@@ -3,11 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atom</title>
+    <title>Atom - Ultimate</title>
     <style>
+        /* 1. KURSORNI YASHIRISH VA ASOSIY STYLE */
+        * { cursor: none !important; margin: 0; padding: 0; box-sizing: border-box; }
         body { margin: 0; background: #000; overflow: hidden; font-family: 'Segoe UI', sans-serif; color: #fff; }
-        
-        /* Intro Screen */
+
+        /* 2. GLASS KURSOR */
+        #glass-cursor {
+            position: fixed; top: 0; left: 0; width: 30px; height: 30px; border-radius: 50%;
+            background: rgba(0, 210, 255, 0.1); backdrop-filter: blur(5px);
+            border: 1px solid rgba(0, 210, 255, 0.4); box-shadow: 0 0 10px rgba(0, 210, 255, 0.3);
+            pointer-events: none; z-index: 99999; transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s, background 0.2s;
+        }
+        #glass-cursor.hovered { width: 50px; height: 50px; background: rgba(0, 210, 255, 0.2); box-shadow: 0 0 20px #00d2ff; }
+        #glass-cursor.clicked { transform: translate(-50%, -50%) scale(0.8); background: rgba(0, 210, 255, 0.6); }
+
+        /* 3. PROFIL (Chap burchak) */
+        .profile-container {
+            position: fixed; top: 25px; left: 25px; z-index: 10001;
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);
+            padding: 8px 15px; border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: 0.3s;
+        }
+        .profile-container:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.05); }
+        .profile-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #00d2ff; }
+        .profile-name { font-weight: bold; font-size: 14px; color: #fff; text-transform: uppercase; }
+
+        /* ESKI KODLAR (Intro, UI) */
         #intro-screen {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: #000; z-index: 9999; display: flex;
@@ -21,12 +46,8 @@
         @keyframes slideInText { to { opacity: 1; transform: translateX(0); } }
         @keyframes glowBlue { 0% { filter: drop-shadow(0 0 5px #00d2ff); } 100% { filter: drop-shadow(0 0 20px #00d2ff); } }
 
-        /* UI Elements */
-        .glass-back-btn {
-            position: fixed; top: 25px; left: 25px; padding: 12px 25px;
-            text-decoration: none; color: white; z-index: 10001;
-            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 20px;
+        .glass-back-btn { /* Eski orqaga tugmasini yashiramiz chunki profil bor, lekin kodda qolsin */
+            display: none; 
         }
         
         .settings-panel {
@@ -45,7 +66,12 @@
 </head>
 <body>
 
-    <a href="dashboard.html" class="glass-back-btn">‹ Orqaga</a>
+    <div id="glass-cursor"></div>
+
+    <div class="profile-container" onclick="window.location.href='dashboard.html'">
+        <img id="p-img" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="profile-img">
+        <span id="p-name" class="profile-name">USER</span>
+    </div>
 
     <div class="settings-panel">
         <label>Atom: <span id="count-val">5000</span></label><br>
@@ -71,7 +97,8 @@
         // Global variables
         let count = 5000;
         let scene, camera, renderer, particles, geometry;
-        const shapes = { scatter: [], sphere: [], heart: [], torus: [] };
+        // Shapes ga yangi "special" array qo'shildi
+        const shapes = { scatter: [], sphere: [], heart: [], torus: [], special: [] };
         let currentColor = new THREE.Color(0x00d2ff);
 
         const videoElement = document.getElementById('input_video');
@@ -80,6 +107,30 @@
         const slider = document.getElementById('particle-count');
         const countDisplay = document.getElementById('count-val');
 
+        // --- YANGI: MIDDLE FINGER ANIMATION VARIABLARI ---
+        let isMiddleFingerMode = false;
+        let animationStep = 0; // 0: none, 1: text, 2: emoji
+
+        // --- YANGI: PROFILNI YUKLASH ---
+        const user = JSON.parse(localStorage.getItem('atom_user'));
+        if(user) {
+            document.getElementById('p-name').innerText = user.nickname || user.name;
+            if(user.picture) document.getElementById('p-img').src = user.picture;
+        }
+
+        // --- YANGI: KURSOR MANTIQI ---
+        const cursor = document.getElementById('glass-cursor');
+        document.addEventListener('mousemove', e => {
+            cursor.style.left = e.clientX + 'px'; cursor.style.top = e.clientY + 'px';
+        });
+        document.addEventListener('mousedown', () => cursor.classList.add('clicked'));
+        document.addEventListener('mouseup', () => cursor.classList.remove('clicked'));
+        document.querySelectorAll('input, .profile-container').forEach(el => {
+            el.addEventListener('mouseenter', () => cursor.classList.add('hovered'));
+            el.addEventListener('mouseleave', () => cursor.classList.remove('hovered'));
+        });
+
+
         // 1. Intro Logic
         setTimeout(() => {
             const intro = document.getElementById('intro-screen');
@@ -87,20 +138,20 @@
             setTimeout(() => intro.remove(), 1000);
         }, 5000);
 
-        // 2. Atom Generator (To'g'rilangan sikl bilan)
+        // 2. Atom Generator
         function createPointsData(newCount) {
-            shapes.scatter = []; shapes.sphere = []; shapes.heart = []; shapes.torus = [];
+            shapes.scatter = []; shapes.sphere = []; shapes.heart = []; shapes.torus = []; shapes.special = [];
     
             for (let i = 0; i < newCount; i++) {
-        // Scatter (tarqoq)
+                // Scatter
                 shapes.scatter.push((Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20);
         
-        // Sphere (sharik)
+                // Sphere
                 const phi = Math.acos(-1 + (2 * i) / newCount);
                 const theta = Math.sqrt(newCount * Math.PI) * phi;
-                        shapes.sphere.push(3.5 * Math.cos(theta) * Math.sin(phi), 3.5 * Math.sin(theta) * Math.sin(phi), 3.5 * Math.cos(phi));
+                shapes.sphere.push(3.5 * Math.cos(theta) * Math.sin(phi), 3.5 * Math.sin(theta) * Math.sin(phi), 3.5 * Math.cos(phi));
 
-        // Heart (yurak)
+                // Heart
                 const t = Math.random() * Math.PI * 2;
                 shapes.heart.push(
                     (16 * Math.pow(Math.sin(t), 3)) * 0.25, 
@@ -108,9 +159,61 @@
                     (Math.random() - 0.5)
                 );
 
-        // Torus (donut)
+                // Torus
                 const u = Math.random() * Math.PI * 2, v = Math.random() * Math.PI * 2;
                 shapes.torus.push((4 + 1.5 * Math.cos(v)) * Math.cos(u), (4 + 1.5 * Math.cos(v)) * Math.sin(u), 1.5 * Math.sin(v));
+                
+                // Special (Default empty or scatter)
+                shapes.special.push(0, 0, 0); 
+            }
+        }
+
+        // --- YANGI: MATNNI ZARRACHALARGA AYLANTIRISH ---
+        function generateTextParticles(text, isEmoji = false) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const w = 500, h = 200;
+            canvas.width = w; canvas.height = h;
+            
+            ctx.fillStyle = '#000'; ctx.fillRect(0,0,w,h);
+            ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            
+            if (isEmoji) {
+                ctx.font = '150px Arial'; // EMOJI UCHUN KATTA
+                ctx.fillText(text, w/2, h/2 + 20);
+            } else {
+                ctx.font = 'bold 60px Arial'; // MATN UCHUN
+                ctx.fillText(text, w/2, h/2);
+            }
+
+            const data = ctx.getImageData(0, 0, w, h).data;
+            const validPixels = [];
+            const step = isEmoji ? 3 : 4;
+
+            for(let y=0; y<h; y+=step) {
+                for(let x=0; x<w; x+=step) {
+                    if(data[(y*w+x)*4] > 128) {
+                        validPixels.push({
+                            x: (x - w/2) * 0.05,
+                            y: -(y - h/2) * 0.05
+                        });
+                    }
+                }
+            }
+
+            // Zarralarni joylash
+            for(let i=0; i<count; i++) {
+                const p = validPixels[i % validPixels.length];
+                if(p) {
+                    shapes.special[i*3] = p.x;
+                    shapes.special[i*3+1] = p.y;
+                    shapes.special[i*3+2] = (Math.random()-0.5) * 0.5;
+                } else {
+                     // Ortiqchasi orqaga
+                    shapes.special[i*3] = (Math.random()-0.5)*50;
+                    shapes.special[i*3+1] = (Math.random()-0.5)*50;
+                    shapes.special[i*3+2] = (Math.random()-0.5)*50;
+                }
             }
         }
 
@@ -166,25 +269,80 @@
             const posAttr = geometry.attributes.position;
             let target = shapes.scatter;
     
-            if (hands.length === 2) {
-                const d = Math.hypot(hands[0][9].x - hands[1][9].x, hands[0][9].y - hands[1][9].y);
-                const s = d * 12; 
-                particles.scale.lerp(new THREE.Vector3(s, s, s), 0.1);
+            // --- YANGI: MIDDLE FINGER DETECTION ---
+            let showMiddleFinger = false;
+            if (hands.length > 0) {
+                const h = hands[0];
+                // Y o'qi tepaga qarab kamayadi (0 tepada). 
+                // Tip < Pip = Barmoq tik. Tip > Pip = Barmoq bukilgan.
+                const indexFolded = h[8].y > h[6].y;
+                const middleExtended = h[12].y < h[10].y; // O'rta barmoq tik
+                const ringFolded = h[16].y > h[14].y;
+                const pinkyFolded = h[20].y > h[18].y;
+
+                if (indexFolded && middleExtended && ringFolded && pinkyFolded) {
+                    showMiddleFinger = true;
+                }
             }
 
-            hands.forEach(hand => {
-                const pinchDist = Math.hypot(hand[4].x - hand[8].x, hand[4].y - hand[8].y);
-                if (pinchDist < 0.05) {
-                    currentColor.setHSL(Math.random(), 0.9, 0.6);
+            // MANTIQ: Agar "Fuck" rejimi faol bo'lmasa va o'rta barmoq ko'rsatilsa
+            if (showMiddleFinger && !isMiddleFingerMode) {
+                isMiddleFingerMode = true;
+                
+                // 1. TEXT STAGE
+                generateTextParticles("FUCK YOU BITCH");
+                animationStep = 1;
+                currentColor.setHex(0xff0000); // Qizil rang
+
+                // 2. EMOJI STAGE (3 sek keyin)
+                setTimeout(() => {
+                    generateTextParticles("🖕", true); // Emoji
+                    animationStep = 2;
+                }, 3000);
+
+                // 3. RESET (yana 3 sek keyin)
+                setTimeout(() => {
+                    isMiddleFingerMode = false;
+                    animationStep = 0;
+                    currentColor.setHex(0x00d2ff); // Ko'k rang qaytadi
+                }, 6000);
+            }
+
+
+            // AGAR MAXSUS REJIMDA BO'LSA
+            if (isMiddleFingerMode) {
+                target = shapes.special;
+                // Emoji tebranish effekti
+                if (animationStep === 2) {
+                    particles.rotation.z = Math.sin(Date.now() * 0.01) * 0.2; // Qimirlash
+                } else {
+                    particles.rotation.z = 0;
                 }
-        
-                let f = 0;
-                [8, 12, 16, 20].forEach(idx => { if(hand[idx].y < hand[idx-2].y) f++; });
-        
-                if (f === 1) target = shapes.sphere;
-                else if (f === 2) target = shapes.heart;
-                else if (f >= 3) target = shapes.torus;
-            });
+            } 
+            // NORMAL REJIM
+            else {
+                particles.rotation.z = 0; // Aylanishni to'xtatish
+
+                if (hands.length === 2) {
+                    const d = Math.hypot(hands[0][9].x - hands[1][9].x, hands[0][9].y - hands[1][9].y);
+                    const s = d * 12; 
+                    particles.scale.lerp(new THREE.Vector3(s, s, s), 0.1);
+                }
+
+                hands.forEach(hand => {
+                    const pinchDist = Math.hypot(hand[4].x - hand[8].x, hand[4].y - hand[8].y);
+                    if (pinchDist < 0.05) {
+                        currentColor.setHSL(Math.random(), 0.9, 0.6);
+                    }
+            
+                    let f = 0;
+                    [8, 12, 16, 20].forEach(idx => { if(hand[idx].y < hand[idx-2].y) f++; });
+            
+                    if (f === 1) target = shapes.sphere;
+                    else if (f === 2) target = shapes.heart;
+                    else if (f >= 3) target = shapes.torus;
+                });
+            }
 
             for (let i = 0; i < posAttr.array.length; i++) {
                 if (target[i] !== undefined) {
@@ -193,8 +351,8 @@
             }
     
             posAttr.needsUpdate = true;
-            particles.material.color.lerp(currentColor, 0.1); // Rang silliq o'zgarishi uchun
-            particles.rotation.y += 0.005;
+            particles.material.color.lerp(currentColor, 0.1); 
+            if (!isMiddleFingerMode) particles.rotation.y += 0.005; // Normal aylanish
         }
 
         const handsTracker = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
@@ -216,9 +374,7 @@
             slider.oninput = function() {
                 count = parseInt(this.value);
                 countDisplay.textContent = count;
-        
-                createPointsData(count); 
-        
+                createPointsData(count);
                 geometry.setAttribute('position', new THREE.Float32BufferAttribute(shapes.scatter, 3));
             };
         }
