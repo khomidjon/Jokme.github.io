@@ -3,684 +3,507 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JARVIS - FLUID CORE</title>
+    <title>JARVIS - FLUID CORE (ULTIMATE)</title>
     <style>
-        /* ==========================================================================
-           1. ASOSIY DIZAYN VA GLOBAL SOZLAMALAR
-           ========================================================================== */
+        /* 1. GLOBAL SOZLAMALAR */
         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            cursor: none !important; /* Tizim kursorini butunlay yashirish */
-            user-select: none;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 0; box-sizing: border-box;
+            cursor: none !important; /* Tizim kursorini yashirish */
+            user-select: none; font-family: 'Segoe UI', sans-serif;
         }
-
         body {
-            background-color: #000;
-            overflow: hidden;
-            color: #fff;
-            height: 100vh;
-            width: 100vw;
+            background-color: #000; overflow: hidden; color: #fff;
+            height: 100vh; width: 100vw;
         }
 
-        /* Eski CSS Kursor olib tashlandi, endi u 3D Sahnada */
-
-        /* ==========================================================================
-           2. FOYDALANUVCHI PROFILI (CHAP BURCHAK)
-           ========================================================================== */
+        /* 2. UI: PROFIL (CHAP) */
         .profile-container {
-            position: fixed;
-            top: 30px;
-            left: 30px;
-            z-index: 10001;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 12px 25px;
-            background: rgba(10, 20, 30, 0.6);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(0, 210, 255, 0.2);
-            border-radius: 50px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            pointer-events: auto;
+            position: fixed; top: 30px; left: 30px; z-index: 100;
+            display: flex; align-items: center; gap: 15px;
+            background: rgba(10, 20, 30, 0.6); backdrop-filter: blur(10px);
+            padding: 10px 20px; border-radius: 50px;
+            border: 1px solid rgba(0, 210, 255, 0.3); pointer-events: auto;
         }
-
-        .profile-container:hover {
-            background: rgba(10, 20, 30, 0.9);
-            border-color: #00d2ff;
-            box-shadow: 0 0 25px rgba(0, 210, 255, 0.2);
-            transform: translateY(2px);
-        }
-
         .profile-img {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #00d2ff;
+            width: 50px; height: 50px; border-radius: 50%;
+            object-fit: cover; border: 2px solid #00d2ff;
             box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
         }
+        .profile-text h3 { font-size: 16px; font-weight: 800; letter-spacing: 1px; margin: 0; }
+        .profile-text p { font-size: 11px; color: #00d2ff; font-weight: bold; margin: 0; }
 
-        .profile-details {
-            display: flex;
-            flex-direction: column;
+        /* 3. UI: SOZLAMALAR (O'NG) */
+        .settings-panel {
+            position: fixed; top: 30px; right: 30px; z-index: 100;
+            background: rgba(10, 20, 30, 0.6); backdrop-filter: blur(10px);
+            padding: 15px; border-radius: 20px; border: 1px solid rgba(0, 210, 255, 0.3);
+            width: 250px; pointer-events: auto;
         }
+        .settings-row { margin-bottom: 15px; }
+        .settings-row label { display: block; font-size: 11px; color: #00d2ff; margin-bottom: 5px; font-weight: bold; }
+        input[type=range] { width: 100%; accent-color: #00d2ff; cursor: none; }
 
-        .profile-name {
-            font-size: 16px;
-            font-weight: 800;
-            letter-spacing: 1px;
-            color: #ffffff;
-            text-transform: uppercase;
-        }
-
-        .profile-role {
-            font-size: 11px;
-            color: #00d2ff;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-
-        /* ==========================================================================
-           3. STATUS VA AXBOROT EKRANI
-           ========================================================================== */
-        #status-display {
-            position: fixed;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
-            pointer-events: none;
-            z-index: 1000;
-        }
-
-        #mode-text {
-            font-size: 24px;
-            font-weight: 900;
-            color: #00d2ff;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            text-shadow: 0 0 20px rgba(0, 210, 255, 0.8);
-            margin-bottom: 10px;
-            opacity: 0.9;
-        }
-
-        #sub-text {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.7);
-            letter-spacing: 2px;
-            font-weight: 300;
-        }
-
-        /* ==========================================================================
-           4. UI KONTROL PANELI (O'NG BURCHAK)
-           ========================================================================== */
-        .controls-panel {
-            position: fixed;
-            top: 30px;
-            right: 30px;
-            z-index: 10001;
-            background: rgba(10, 20, 30, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(0, 210, 255, 0.2);
-            border-radius: 20px;
-            padding: 20px;
-            width: 280px;
-            transform: translateX(0);
-            transition: transform 0.3s ease;
-            pointer-events: auto;
-        }
-
-        .controls-panel h3 {
-            font-size: 14px;
-            color: #00d2ff;
-            border-bottom: 1px solid rgba(0, 210, 255, 0.3);
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .control-group {
-            margin-bottom: 15px;
-        }
-
-        .control-group label {
-            display: block;
-            font-size: 12px;
-            color: #aaa;
-            margin-bottom: 5px;
-        }
-
-        input[type=range] {
-            width: 100%;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-            appearance: none;
-            outline: none;
-        }
-
-        input[type=range]::-webkit-slider-thumb {
-            appearance: none;
-            width: 15px;
-            height: 15px;
-            background: #00d2ff;
-            border-radius: 50%;
-            cursor: none;
-            box-shadow: 0 0 10px #00d2ff;
-        }
-
-        /* ==========================================================================
-           5. KAMERA MONITORI (YASHIRIN/DEBUG)
-           ========================================================================== */
-        #camera-feed {
-            position: absolute;
-            bottom: 30px;
-            right: 30px;
-            width: 200px;
-            height: 150px;
-            border: 2px solid #00d2ff;
-            border-radius: 10px;
-            background: #000;
-            opacity: 0.8;
-            transform: scaleX(-1); /* Oyna effekti */
-            z-index: 999;
+        /* 4. CAMERA MONITOR (PASTKI O'NG) */
+        #camera-wrapper {
+            position: absolute; bottom: 30px; right: 30px;
+            width: 240px; height: 180px; z-index: 90;
+            border: 2px solid #00d2ff; border-radius: 15px;
+            overflow: hidden; background: #000;
             box-shadow: 0 0 20px rgba(0, 210, 255, 0.2);
         }
-
-        #input_video {
-            display: none; /* Asl video yashirin, biz canvasga chizamiz */
+        #output_canvas {
+            width: 100%; height: 100%; transform: scaleX(-1); /* Oyna effekti */
         }
+        #input_video { display: none; }
 
-        /* ==========================================================================
-           6. BOSHLASH EKRANI (INTRO)
-           ========================================================================== */
-        #overlay-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            z-index: 99999;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            cursor: none;
-            transition: opacity 1s ease;
+        /* 5. MARKAZIY STATUS */
+        #status-text {
+            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+            text-align: center; pointer-events: none; z-index: 90;
         }
-
-        .loader-ring {
-            width: 80px;
-            height: 80px;
-            border: 4px solid rgba(0, 210, 255, 0.3);
-            border-top: 4px solid #00d2ff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+        #status-main {
+            font-size: 24px; font-weight: 900; color: #00d2ff;
+            text-transform: uppercase; letter-spacing: 4px;
+            text-shadow: 0 0 20px rgba(0, 210, 255, 0.8);
         }
+        #status-sub { font-size: 12px; color: rgba(255,255,255,0.6); letter-spacing: 2px; }
 
+        /* 6. YUKLANISH EKRANI */
+        #loading-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 9999; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; transition: opacity 1s;
+        }
+        .loader {
+            width: 60px; height: 60px; border: 5px solid rgba(0, 210, 255, 0.2);
+            border-top: 5px solid #00d2ff; border-radius: 50%;
+            animation: spin 1s linear infinite; margin-bottom: 20px;
+        }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        .start-text {
-            font-size: 20px;
-            color: #fff;
-            letter-spacing: 5px;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
-
     </style>
 </head>
 <body>
 
-    <div id="overlay-screen" onclick="initializeSystem()">
-        <div class="loader-ring"></div>
-        <div class="start-text">TIZIMNI YUKLASH UCHUN BOSING</div>
+    <div id="loading-screen" onclick="startExperience()">
+        <div class="loader"></div>
+        <h3 style="letter-spacing: 3px;">TIZIMNI BOSHLASH UCHUN BOSING</h3>
     </div>
 
-    <div class="profile-container" onclick="window.location.href='dashboard.html'">
-        <img id="profile-img" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="profile-img">
-        <div class="profile-details">
-            <span id="profile-name" class="profile-name">USER</span>
-            <span class="profile-role">JARVIS ADMIN</span>
+    <div class="profile-container">
+        <img id="u-img" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="profile-img">
+        <div class="profile-text">
+            <h3 id="u-name">USER</h3>
+            <p>JARVIS ADMIN</p>
         </div>
     </div>
 
-    <div class="controls-panel">
-        <h3>TIZIM SOZLAMALARI</h3>
-        
-        <div class="control-group">
-            <label>ZARRACHALAR: <span id="particle-val">20000</span></label>
-            <input type="range" id="particle-slider" min="5000" max="50000" step="1000" value="20000">
+    <div class="settings-panel">
+        <div class="settings-row">
+            <label>ZARRALAR SONI: <span id="p-count-val">20000</span></label>
+            <input type="range" id="p-slider" min="5000" max="40000" step="1000" value="20000">
         </div>
-
-        <div class="control-group">
+        <div class="settings-row">
             <label>FLUID SHAKLI</label>
-            <input type="range" id="fluid-slider" min="0" max="1" step="0.1" value="0.5">
+            <input type="range" id="f-slider" min="0" max="2" step="0.1" value="1">
         </div>
     </div>
 
-    <div id="status-display">
-        <div id="mode-text">TIZIM FAOL</div>
-        <div id="sub-text">Suyuq Linza va Atomlar</div>
+    <div id="status-text">
+        <div id="status-main">TIZIM FAOL</div>
+        <div id="status-sub">Kutish rejimi</div>
     </div>
 
-    <video id="input_video" playsinline muted></video>
-    <canvas id="camera-feed"></canvas>
+    <div id="camera-wrapper">
+        <canvas id="output_canvas"></canvas>
+    </div>
+    
+    <video id="input_video" playsinline autoplay muted></video>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1632432244/camera_utils.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3.1620248257/drawing_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
 
     <script>
-        /**
-         * ==========================================================================
-         * JARVIS CORE ENGINE - ULTIMATE INTEGRATION
-         * (Particles + MediaPipe Hands + Three.js Fluid Glass Cursor)
-         * ==========================================================================
-         */
-
-        // --- GLOBAL O'ZGARUVCHILAR ---
+        // =================================================================
+        // 1. ASOSIY O'ZGARUVCHILAR
+        // =================================================================
+        let scene, camera, renderer, particles, geometry, fluidCursor;
         let particleCount = 20000;
-        let scene, camera, renderer, particles, geometry;
-        let positionsAttribute, colorsAttribute;
-        
-        // Fluid Glass Cursor uchun
-        let fluidLensMesh;
-        let mousePosition = new THREE.Vector2();
-        let targetCursorPos = new THREE.Vector3(0, 0, 10);
         let clock = new THREE.Clock();
-
-        // Animatsiya holatlari
-        let isMiddleFingerSequence = false;
-        let middleFingerStep = 0; // 0:None, 1:Text, 2:Hand
-        let isGalaxyMode = false;
-        let isSolarMode = false;
         
-        // Qo'l ma'lumotlari
-        let handRotX = 0, handRotY = 0, handRotZ = 0;
+        // Kursor o'zgaruvchilari
+        let mouse = new THREE.Vector2();
+        let targetPos = new THREE.Vector3(0, 0, 15);
+        
+        // Qo'l boshqaruvi
+        let handMode = "IDLE"; // IDLE, SOLAR, GALAXY, FUCK
+        let handRotation = { x: 0, y: 0, z: 0 };
+        
+        // Animatsiya sekvensiyasi
+        let isSequenceActive = false;
+        let sequenceStep = 0; // 0:None, 1:Text, 2:Hand
 
-        // Ma'lumotlar ombori (Target Positions)
-        const shapes = {
-            scatter: [],
-            sphere: [],
-            solarSystem: [],
-            galaxy: [],
-            middleFinger: [],
-            textMessage: []
-        };
-
-        // Ranglar ombori
-        const colors = {
-            default: [],
-            solar: [],
-            galaxy: [],
-            danger: []
-        };
+        // Shakllar va Ranglar ombori
+        const shapes = { scatter: [], sphere: [], solar: [], galaxy: [], middleFinger: [], text: [] };
+        const colors = { default: [], solar: [], galaxy: [], danger: [] };
 
         // DOM Elementlar
-        const videoEl = document.getElementById('input_video');
-        const canvasEl = document.getElementById('camera-feed');
-        const canvasCtx = canvasEl.getContext('2d');
-        const modeText = document.getElementById('mode-text');
-        const subText = document.getElementById('sub-text');
+        const videoElement = document.getElementById('input_video');
+        const canvasElement = document.getElementById('output_canvas');
+        const canvasCtx = canvasElement.getContext('2d');
+        const statusMain = document.getElementById('status-main');
+        const statusSub = document.getElementById('status-sub');
 
-        // --- 1. TIZIMNI BOSHLASH ---
-        function initializeSystem() {
-            speak("Welcome back, sir. Initializing Fluid Glass and Core systems.");
+        // =================================================================
+        // 2. TIZIMNI YUKLASH
+        // =================================================================
+        
+        // Profilni yuklash
+        try {
+            const u = JSON.parse(localStorage.getItem('atom_user'));
+            if(u) {
+                document.getElementById('u-name').innerText = u.nickname || u.name;
+                if(u.picture) document.getElementById('u-img').src = u.picture;
+            }
+        } catch(e){}
+
+        function startExperience() {
+            document.getElementById('loading-screen').style.opacity = '0';
+            setTimeout(() => document.getElementById('loading-screen').remove(), 1000);
             
-            const overlay = document.getElementById('overlay-screen');
-            overlay.style.opacity = '0';
-            setTimeout(() => overlay.remove(), 1000);
-
-            // Grafikani yoqish
             initThreeJS();
-            
-            // Kamerani yoqish
             startCamera();
         }
 
-        // --- 2. THREE.JS (GRAFIKA DVIGATELI) ---
+        // =================================================================
+        // 3. THREE.JS (GRAFIKA VA FIZIKA)
+        // =================================================================
         function initThreeJS() {
+            // Sahnani yaratish
             scene = new THREE.Scene();
             scene.fog = new THREE.FogExp2(0x000000, 0.02);
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.z = 20;
+            camera.position.z = 25;
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
             document.body.appendChild(renderer.domElement);
 
-            // 2.1 ZARRACHALARNI YARATISH
-            createParticleData(particleCount);
+            // 3.1 FLUID GLASS CURSOR (Suyuq Oyna)
+            // React komponentisiz, toza Three.js da suyuq linza yasaymiz
+            const cursorGeo = new THREE.IcosahedronGeometry(1.5, 6);
+            const cursorMat = new THREE.MeshPhysicalMaterial({
+                color: 0xffffff,
+                metalness: 0.1,
+                roughness: 0,
+                transmission: 1, // Oynasimonlik
+                thickness: 2,
+                ior: 1.5, // Yorug'lik sindirish
+                envMapIntensity: 1,
+                clearcoat: 1,
+                transparent: true,
+                opacity: 1
+            });
+            fluidCursor = new THREE.Mesh(cursorGeo, cursorMat);
+            scene.add(fluidCursor);
 
+            // Yorug'lik (Glass kursor ko'rinishi uchun kerak)
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+            const pLight1 = new THREE.PointLight(0x00d2ff, 2, 50);
+            pLight1.position.set(10, 10, 10);
+            scene.add(pLight1);
+            const pLight2 = new THREE.PointLight(0xff00ff, 2, 50);
+            pLight2.position.set(-10, -10, 10);
+            scene.add(pLight2);
+
+            // 3.2 ZARRACHALAR TIZIMI
+            createParticleData(particleCount);
+            
             geometry = new THREE.BufferGeometry();
             geometry.setAttribute('position', new THREE.Float32BufferAttribute(shapes.scatter, 3));
             geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors.default, 3));
 
-            positionsAttribute = geometry.attributes.position;
-            colorsAttribute = geometry.attributes.color;
-
-            const particleMaterial = new THREE.PointsMaterial({
-                size: 0.1,
-                vertexColors: true,
-                transparent: true,
-                opacity: 0.9,
-                blending: THREE.AdditiveBlending,
-                depthWrite: false
+            const particlesMat = new THREE.PointsMaterial({
+                size: 0.12, vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending
             });
 
-            particles = new THREE.Points(geometry, particleMaterial);
+            particles = new THREE.Points(geometry, particlesMat);
             scene.add(particles);
-
-            // 2.2 FLUID GLASS CURSOR (YANGI!)
-            createFluidGlass();
-
-            // 2.3 YORITGICHLAR (Glass uchun kerak)
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-            scene.add(ambientLight);
-            
-            const pointLight = new THREE.PointLight(0x00d2ff, 2, 50);
-            pointLight.position.set(10, 10, 10);
-            scene.add(pointLight);
 
             animate();
         }
 
-        // --- 3. FLUID GLASS YARATISH (React kodidagi parametrlarga asoslangan) ---
-        function createFluidGlass() {
-            // Geometriya: Sphere (Icosahedron ko'proq qirrali bo'lsa silliq chiqadi)
-            const geometry = new THREE.IcosahedronGeometry(1.2, 10); // Scale: 0.25 (taxminiy o'lcham)
-
-            // Material: MeshPhysicalMaterial (Glass effektini beradi)
-            // React kodidagi: ior: 1.15, transmission: 1, thickness: 5
-            const material = new THREE.MeshPhysicalMaterial({
-                color: 0xffffff,
-                metalness: 0,
-                roughness: 0, // roughness: 0
-                transmission: 1, // transmission: 1 (oyna)
-                thickness: 2.5, // thickness: 2 - 5
-                ior: 1.15, // ior: 1.15
-                envMapIntensity: 1,
-                clearcoat: 1,
-                clearcoatRoughness: 0,
-                specularIntensity: 1,
-                chromaticAberration: 0.05, // chromaticAberration: 0.05
-                anisotropy: 0.1
-            });
-
-            fluidLensMesh = new THREE.Mesh(geometry, material);
-            scene.add(fluidLensMesh);
-        }
-
-        // --- 4. SICHQONCHA HARAKATI (3D PROYEKTSIYA) ---
-        document.addEventListener('mousemove', (event) => {
-            // Sichqoncha koordinatalarini -1 dan 1 gacha (NDC) ga o'tkazish
-            mousePosition.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mousePosition.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-            // 3D dunyodagi pozitsiyani topish
-            const vector = new THREE.Vector3(mousePosition.x, mousePosition.y, 0.5);
-            vector.unproject(camera);
-            const dir = vector.sub(camera.position).normalize();
-            const distance = -camera.position.z / dir.z + 15; // Z=5 da turishi uchun
-            const pos = camera.position.clone().add(dir.multiplyScalar(distance));
-            
-            targetCursorPos.copy(pos);
-        });
-
-        function updateFluidGlass(time) {
-            if (!fluidLensMesh) return;
-
-            // Pozitsiyani silliq o'zgartirish (Lerp)
-            fluidLensMesh.position.lerp(targetCursorPos, 0.1);
-
-            // "Fluid" effekti: Shaklni biroz o'zgartirish
-            // Bu React kodidagi "drei" komponentlari qiladigan ishni simulyatsiya qiladi
-            const scaleBase = 1.2;
-            const wobble = Math.sin(time * 3) * 0.05;
-            fluidLensMesh.scale.set(scaleBase + wobble, scaleBase - wobble, scaleBase + wobble);
-            
-            // Doimiy aylanish
-            fluidLensMesh.rotation.x += 0.01;
-            fluidLensMesh.rotation.y += 0.01;
-        }
-
-        // --- 5. RENDER LOOP ---
-        function animate() {
-            requestAnimationFrame(animate);
-            
-            const time = clock.getElapsedTime();
-            
-            // Glassni yangilash
-            updateFluidGlass(time);
-
-            // Zarrachalarni render qilish (AI ma'lumotlarisiz ham aylanib turadi)
-            if (!isModeActive && !isMiddleFingerSequence) {
-                particles.rotation.y += 0.001; 
-            }
-
-            renderer.render(scene, camera);
-        }
-
-        // --- 6. ATOM SHAKLLARI MANTIQI ---
+        // --- ZARRACHA MATEMATIKASI ---
         function createParticleData(cnt) {
-            for(let key in shapes) shapes[key] = [];
-            for(let key in colors) colors[key] = [];
+            // Tozalash
+            for(let k in shapes) shapes[k] = [];
+            for(let k in colors) colors[k] = [];
 
             for (let i = 0; i < cnt; i++) {
-                // Default
-                colors.default.push(0, 0.8, 1);
-                colors.danger.push(1, 0, 0);
+                // Default Rang
+                colors.default.push(0, 0.8, 1); // Neon Blue
+                colors.danger.push(1, 0, 0);    // Red
 
-                // Scatter
-                shapes.scatter.push((Math.random()-0.5)*50, (Math.random()-0.5)*50, (Math.random()-0.5)*50);
+                // 1. Scatter
+                shapes.scatter.push((Math.random()-0.5)*60, (Math.random()-0.5)*60, (Math.random()-0.5)*60);
 
-                // Sphere
+                // 2. Sphere (Shar)
                 const phi = Math.acos(-1 + (2 * i) / cnt);
                 const theta = Math.sqrt(cnt * Math.PI) * phi;
                 shapes.sphere.push(
-                    5 * Math.cos(theta) * Math.sin(phi),
-                    5 * Math.sin(theta) * Math.sin(phi),
-                    5 * Math.cos(phi)
+                    6 * Math.cos(theta) * Math.sin(phi),
+                    6 * Math.sin(theta) * Math.sin(phi),
+                    6 * Math.cos(phi)
                 );
 
-                // Solar System
+                // 3. Solar System (Quyosh Tizimi)
                 let sx, sy, sz, sr, sg, sb;
-                if (i < cnt * 0.1) {
-                    const sPhi = Math.acos(-1 + (2 * i) / (cnt * 0.1));
-                    const sTheta = Math.sqrt((cnt * 0.1) * Math.PI) * sPhi;
-                    sx = 2 * Math.cos(sTheta) * Math.sin(sPhi); sy = 2 * Math.sin(sTheta) * Math.sin(sPhi); sz = 2 * Math.cos(sPhi);
+                if(i < cnt * 0.15) { // Quyosh
+                    const sRad = 2.5;
+                    sx = sRad * Math.cos(theta) * Math.sin(phi);
+                    sy = sRad * Math.sin(theta) * Math.sin(phi);
+                    sz = sRad * Math.cos(phi);
                     sr=1; sg=0.8; sb=0;
-                } else if (i < cnt * 0.25) {
-                    const eIdx = i - (cnt * 0.1); const eCnt = cnt * 0.15;
-                    const ePhi = Math.acos(-1 + (2 * eIdx) / eCnt); const eTheta = Math.sqrt(eCnt * Math.PI) * ePhi;
-                    sx = 1 * Math.cos(eTheta) * Math.sin(ePhi) + 6; sy = 1 * Math.sin(eTheta) * Math.sin(ePhi); sz = 1 * Math.cos(ePhi);
+                } else if(i < cnt * 0.3) { // Yer
+                    const eRad = 1.2;
+                    // Orbitada suramiz (x+8)
+                    sx = eRad * Math.cos(theta) * Math.sin(phi) + 8;
+                    sy = eRad * Math.sin(theta) * Math.sin(phi);
+                    sz = eRad * Math.cos(phi);
                     sr=0; sg=0.4; sb=1;
-                } else if (i < cnt * 0.35) {
-                    const mIdx = i - (cnt * 0.25); const mCnt = cnt * 0.1;
-                    const mPhi = Math.acos(-1 + (2 * mIdx) / mCnt); const mTheta = Math.sqrt(mCnt * Math.PI) * mPhi;
-                    sx = 0.7 * Math.cos(mTheta) * Math.sin(mPhi) - 8; sy = 0.7 * Math.sin(mTheta) * Math.sin(mPhi); sz = 0.7 * Math.cos(mPhi);
-                    sr=1; sg=0.2; sb=0;
-                } else {
-                    const dist = 10 + Math.random() * 10; const ang = Math.random() * Math.PI * 2;
-                    sx = dist * Math.cos(ang); sz = dist * Math.sin(ang); sy = (Math.random()-0.5) * 0.5;
+                } else { // Yulduzlar
+                    const dist = 12 + Math.random() * 15;
+                    const ang = Math.random() * Math.PI * 2;
+                    sx = dist * Math.cos(ang); sz = dist * Math.sin(ang); sy = (Math.random()-0.5);
                     sr=0.7; sg=0.7; sb=0.7;
                 }
-                shapes.solarSystem.push(sx, sy, sz); colors.solar.push(sr, sg, sb);
+                shapes.solar.push(sx, sy, sz); colors.solar.push(sr, sg, sb);
 
-                // Galaxy
-                const arm = i % 3; const r = Math.random() * 15;
-                const spin = r * 0.8 + (arm * (Math.PI * 2 / 3)); const spread = (Math.random()-0.5)*2;
-                shapes.galaxy.push((r * Math.cos(spin)) + spread, (Math.random()-0.5) * (15-r) * 0.2, (r * Math.sin(spin)) + spread);
-                if(r<4) colors.galaxy.push(1, 0.9, 0.6); else colors.galaxy.push(0.5, 0, 1);
+                // 4. Galaxy (Galaktika)
+                const arm = i % 3;
+                const r = Math.random() * 20;
+                const spin = r * 0.5 + (arm * (Math.PI * 2 / 3));
+                const spread = (Math.random()-0.5)*2;
+                shapes.galaxy.push(
+                    (r * Math.cos(spin)) + spread,
+                    (Math.random()-0.5) * (20-r) * 0.2,
+                    (r * Math.sin(spin)) + spread
+                );
+                if(r<5) colors.galaxy.push(1, 0.9, 0.6); else colors.galaxy.push(0.5, 0, 1);
 
-                // Middle Finger
+                // 5. Middle Finger (3D Model)
                 let mx, my, mz;
-                if (i < cnt * 0.4) {
-                    mx = (Math.random()-0.5) * 4; my = (Math.random()-0.5) * 4 - 1.5; mz = (Math.random()-0.5) * 1.5;
-                } else if (i < cnt * 0.6) {
-                    const h = Math.random() * 6; const rad = 0.7; const ang = Math.random() * Math.PI * 2;
-                    mx = rad * Math.cos(ang); my = h + 0.5; mz = rad * Math.sin(ang);
-                } else {
-                    const f = Math.floor(Math.random() * 4);
-                    let xo = 0; if(f==0) xo = -2; if(f==1) xo = -1; if(f==2) xo = 1.2; if(f==3) xo = 2.4;
-                    mx = xo + (Math.random()-0.5)*0.8; my = (Math.random()-0.5)*1.5 - 1; mz = 1.5 + (Math.random()-0.5);
+                if(i < cnt*0.4) { // Kaft
+                    mx=(Math.random()-0.5)*4; my=(Math.random()-0.5)*4 - 2; mz=(Math.random()-0.5);
+                } else if(i < cnt*0.65) { // O'rta barmoq (Tik)
+                    const h = Math.random()*7; const rad=0.8; const ang=Math.random()*Math.PI*2;
+                    mx=rad*Math.cos(ang); my=h; mz=rad*Math.sin(ang);
+                } else { // Bukilganlar
+                    mx=(Math.random()-0.5)*5; my=(Math.random()-0.5)*2 - 3; mz=(Math.random()-0.5)+1.5;
                 }
                 shapes.middleFinger.push(mx, my, mz);
-                shapes.textMessage.push(0,0,0);
+                
+                // Text Placeholder
+                shapes.text.push(0,0,0);
             }
         }
 
+        // Matnni zarrachalarga o'girish
         function generateText(text) {
             const c = document.createElement('canvas'); const ctx = c.getContext('2d');
             c.width = 600; c.height = 200;
             ctx.fillStyle = '#000'; ctx.fillRect(0,0,600,200);
-            ctx.fillStyle = '#fff'; ctx.font = 'bold 100px Arial';
+            ctx.fillStyle = '#fff'; ctx.font = '900 100px Arial';
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             ctx.fillText(text, 300, 100);
             const data = ctx.getImageData(0,0,600,200).data;
             const pixels = [];
-            for(let y=0; y<200; y+=3) for(let x=0; x<600; x+=3) if(data[(y*600+x)*4] > 128) pixels.push({x: (x-300)*0.05, y: -(y-100)*0.05});
+            for(let y=0; y<200; y+=4) for(let x=0; x<600; x+=4) if(data[(y*600+x)*4]>128) pixels.push({x:(x-300)*0.06, y:-(y-100)*0.06});
             
             for(let i=0; i<particleCount; i++) {
                 const p = pixels[i%pixels.length];
-                if(p) { shapes.textMessage[i*3] = p.x; shapes.textMessage[i*3+1] = p.y; shapes.textMessage[i*3+2] = 0; }
-                else { shapes.textMessage[i*3] = (Math.random()-0.5)*60; shapes.textMessage[i*3+1] = (Math.random()-0.5)*60; shapes.textMessage[i*3+2] = -50; }
+                if(p) { shapes.text[i*3]=p.x; shapes.text[i*3+1]=p.y; shapes.text[i*3+2]=0; }
+                else { shapes.text[i*3]=(Math.random()-0.5)*60; shapes.text[i*3+1]=(Math.random()-0.5)*60; shapes.text[i*3+2]=-50; }
             }
         }
 
-        // --- 7. KAMERA VA LOGIKA ---
-        function startCamera() {
-            const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/${file}`});
-            hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
-            hands.onResults(onResults);
+        // --- 4. RENDER LOOP ---
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = clock.getElapsedTime();
 
-            const camera = new Camera(videoEl, {
-                onFrame: async () => { await hands.send({image: videoEl}); },
-                width: 640, height: 480
-            });
+            // Kursor fizikasi (Suyuqlik effekti)
+            if(fluidCursor) {
+                fluidCursor.position.lerp(targetPos, 0.1);
+                // Fluid shakl o'zgarishi
+                const wobble = Math.sin(time * 3) * 0.1;
+                fluidCursor.scale.set(1+wobble, 1-wobble, 1+wobble);
+                fluidCursor.rotation.x += 0.02; fluidCursor.rotation.y += 0.02;
+            }
+
+            // Zarrachalar fizikasi
+            const posAttr = geometry.attributes.position;
+            const colAttr = geometry.attributes.color;
             
-            camera.start().catch(err => {
-                modeText.innerText = "KAMERA XATOSI";
-                console.error(err);
-            });
+            let targetPosArray = shapes.sphere;
+            let targetColArray = colors.default;
+
+            // Rejimni aniqlash
+            if(isSequenceActive) {
+                targetColArray = colors.danger;
+                if(sequenceStep === 1) targetPosArray = shapes.text;
+                else targetPosArray = shapes.middleFinger;
+            } else {
+                if(handMode === "SOLAR") { targetPosArray = shapes.solar; targetColArray = colors.solar; }
+                else if(handMode === "GALAXY") { targetPosArray = shapes.galaxy; targetColArray = colors.galaxy; }
+                else if(handMode === "IDLE") { targetPosArray = shapes.sphere; }
+            }
+
+            // LERP (Harakat)
+            for(let i=0; i<particleCount; i++) {
+                posAttr.array[i*3] += (targetPosArray[i*3] - posAttr.array[i*3]) * 0.1;
+                posAttr.array[i*3+1] += (targetPosArray[i*3+1] - posAttr.array[i*3+1]) * 0.1;
+                posAttr.array[i*3+2] += (targetPosArray[i*3+2] - posAttr.array[i*3+2]) * 0.1;
+                
+                colAttr.array[i*3] += (targetColArray[i*3] - colAttr.array[i*3]) * 0.05;
+                colAttr.array[i*3+1] += (targetColArray[i*3+1] - colAttr.array[i*3+1]) * 0.05;
+                colAttr.array[i*3+2] += (targetColArray[i*3+2] - colAttr.array[i*3+2]) * 0.05;
+            }
+
+            // Rotatsiya Sync
+            if(handMode !== "IDLE" && !isSequenceActive) {
+                particles.rotation.x += (handRotation.x - particles.rotation.x) * 0.1;
+                particles.rotation.z += (handRotation.z - particles.rotation.z) * 0.1;
+                if(handMode === "GALAXY") particles.rotation.y += 0.005; // Galaktika o'zi aylanadi
+            } else if (isSequenceActive && sequenceStep === 2) {
+                particles.rotation.z = Math.sin(time * 10) * 0.2; // Silkinish
+            } else {
+                particles.rotation.y += 0.002; // Idle aylanish
+            }
+
+            posAttr.needsUpdate = true;
+            colAttr.needsUpdate = true;
+            renderer.render(scene, camera);
         }
 
-        function onResults(results) {
+        // --- 5. KAMERA VA MEDIAPIPE ---
+        function startCamera() {
+            const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+            hands.setOptions({maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6});
+            
+            hands.onResults(onHandResults);
+
+            const cam = new Camera(videoElement, {
+                onFrame: async () => { await hands.send({image: videoElement}); },
+                width: 640, height: 480
+            });
+            cam.start();
+        }
+
+        function onHandResults(results) {
             canvasCtx.save();
-            canvasCtx.clearRect(0, 0, canvasEl.width, canvasEl.height);
-            canvasCtx.drawImage(results.image, 0, 0, canvasEl.width, canvasEl.height);
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+            
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                for (const l of results.multiHandLandmarks) drawConnectors(canvasCtx, l, HAND_CONNECTIONS, {color: '#00d2ff', lineWidth: 2});
-                processHandData(results.multiHandLandmarks[0]);
+                // Chizish (Debug oynasida)
+                for (const landmarks of results.multiHandLandmarks) {
+                    drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: '#00d2ff', lineWidth: 2});
+                }
+                
+                // Mantiq
+                const h = results.multiHandLandmarks[0];
+                analyzeGesture(h);
             } else {
-                processHandData(null);
+                if(!isSequenceActive) {
+                    handMode = "IDLE";
+                    statusMain.innerText = "TIZIM FAOL";
+                    statusSub.innerText = "Buyruq kutilmoqda...";
+                }
             }
             canvasCtx.restore();
         }
 
-        function processHandData(hand) {
-            let target = shapes.sphere;
-            let targetColor = colors.default;
+        function analyzeGesture(hand) {
+            // Rotatsiya hisoblash
+            const dx = hand[9].x - hand[0].x;
+            const dy = hand[9].y - hand[0].y;
+            handRotation.z = -Math.atan2(dx, dy) + Math.PI;
+            handRotation.x = (hand[9].z) * 3;
 
-            if (hand) {
-                const dx = hand[9].x - hand[0].x; const dy = hand[9].y - hand[0].y;
-                handRotZ = -Math.atan2(dx, dy) + Math.PI;
-                handRotX = (hand[9].z) * 3;
+            // Barmoqlarni sanash
+            let fingers = 0;
+            if(hand[4].x < hand[3].x) fingers++; // Bosh barmoq
+            const tips=[8,12,16,20], pips=[6,10,14,18];
+            const states = [false, false, false, false];
+            
+            for(let i=0; i<4; i++) {
+                if(hand[tips[i]].y < hand[pips[i]].y) { fingers++; states[i]=true; }
+            }
 
-                let fingers = 0;
-                if (hand[4].x < hand[3].x) fingers++;
-                const tips=[8,12,16,20], pips=[6,10,14,18], states=[false,false,false,false];
-                for(let i=0; i<4; i++) { if(hand[tips[i]].y < hand[pips[i]].y) { fingers++; states[i]=true; } }
+            // Jestlarni aniqlash
+            const isMiddle = (!states[0] && states[1] && !states[2] && !states[3]);
 
-                const isMiddle = (!states[0] && states[1] && !states[2] && !states[3]);
+            if(isSequenceActive) return; // Agar animatsiya ketayotgan bo'lsa, aralashma
 
-                if (isMiddleFingerSequence) { /* Animatsiya ketyapti */ }
-                else if (isMiddle) { startMiddleFingerAnim(); }
-                else if (fingers === 4) {
-                    target = shapes.solarSystem; targetColor = colors.solar;
-                    isModeActive = true; modeText.innerText = "QUYOSH TIZIMI"; subText.innerText = "Real vaqt simulyatsiyasi";
-                } else if (fingers === 5) {
-                    target = shapes.galaxy; targetColor = colors.galaxy;
-                    isModeActive = true; modeText.innerText = "GALAKTIKA"; subText.innerText = "Spiral tuzilma";
-                } else {
-                    isModeActive = false; modeText.innerText = "ATOM REJIMI"; subText.innerText = "Qo'l bilan boshqaring";
-                }
+            if(isMiddle) {
+                startFuckSequence();
+            } else if (fingers === 4) {
+                handMode = "SOLAR";
+                statusMain.innerText = "QUYOSH TIZIMI";
+                statusSub.innerText = "Real vaqt simulyatsiyasi";
+            } else if (fingers === 5) {
+                handMode = "GALAXY";
+                statusMain.innerText = "GALAKTIKA";
+                statusSub.innerText = "Koinot rejimi";
             } else {
-                isModeActive = false; modeText.innerText = "KUTISH REJIMI"; subText.innerText = "Qo'lingizni ko'rsating";
+                handMode = "IDLE";
+                statusMain.innerText = "ATOM REJIMI";
+                statusSub.innerText = "Kuzatilmoqda...";
             }
-
-            if (isMiddleFingerSequence) {
-                targetColor = colors.danger;
-                if (middleFingerStep === 1) { target = shapes.textMessage; modeText.innerText = "DIQQAT!"; subText.innerText = "Xabar aniqlandi"; }
-                else if (middleFingerStep === 2) { 
-                    target = shapes.middleFinger3D; modeText.innerText = "FUCK YOU!"; subText.innerText = "Maxsus ishora";
-                    particles.rotation.z = Math.sin(Date.now()*0.02)*0.3;
-                }
-            }
-
-            for (let i = 0; i < particleCount; i++) {
-                positionsAttribute.array[i*3] += (target[i*3] - positionsAttribute.array[i*3]) * 0.15;
-                positionsAttribute.array[i*3+1] += (target[i*3+1] - positionsAttribute.array[i*3+1]) * 0.15;
-                positionsAttribute.array[i*3+2] += (target[i*3+2] - positionsAttribute.array[i*3+2]) * 0.15;
-                
-                colorsAttribute.array[i*3] += (targetColor[i*3] - colorsAttribute.array[i*3]) * 0.05;
-                colorsAttribute.array[i*3+1] += (targetColor[i*3+1] - colorsAttribute.array[i*3+1]) * 0.05;
-                colorsAttribute.array[i*3+2] += (targetColor[i*3+2] - colorsAttribute.array[i*3+2]) * 0.05;
-            }
-
-            if (hand && !isMiddleFingerSequence) {
-                particles.rotation.x += (handRotX - particles.rotation.x) * 0.1;
-                particles.rotation.z += (handRotZ - particles.rotation.z) * 0.1;
-                if (isModeActive) particles.rotation.y += 0.005;
-            }
-
-            positionsAttribute.needsUpdate = true;
-            colorsAttribute.needsUpdate = true;
         }
 
-        function startMiddleFingerAnim() {
-            if (isMiddleFingerSequence) return;
-            isMiddleFingerSequence = true;
+        function startFuckSequence() {
+            if(isSequenceActive) return;
+            isSequenceActive = true;
             generateText("FUCK YOU BITCH");
-            middleFingerStep = 1; speak("Detected offensive gesture.");
-            setTimeout(() => { middleFingerStep = 2; }, 3000);
-            setTimeout(() => { isMiddleFingerSequence = false; middleFingerStep = 0; particles.rotation.set(0,0,0); }, 6000);
+            sequenceStep = 1;
+            statusMain.innerText = "DIQQAT!";
+            statusSub.innerText = "Haqorat aniqlandi";
+
+            setTimeout(() => { sequenceStep = 2; }, 3000); // 3 sekdan keyin barmoq
+            setTimeout(() => { 
+                isSequenceActive = false; 
+                sequenceStep = 0; 
+                particles.rotation.set(0,0,0);
+            }, 6000); // Reset
         }
 
-        function speak(text) {
-            if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.rate = 1.1; utterance.pitch = 0.8; utterance.lang = 'en-US';
-                window.speechSynthesis.speak(utterance);
-            }
-        }
+        // --- KURSOR HARAKATI (SICHQONCHA) ---
+        document.addEventListener('mousemove', (e) => {
+            // Ekran koordinatalarini 3D dunyo koordinatalariga o'tkazish
+            const x = (e.clientX / window.innerWidth) * 2 - 1;
+            const y = -(e.clientY / window.innerHeight) * 2 + 1;
+            
+            // Proyeksiyalash
+            const vec = new THREE.Vector3(x, y, 0.5);
+            vec.unproject(camera);
+            const dir = vec.sub(camera.position).normalize();
+            const distance = -camera.position.z / dir.z + 20; // Kursor chuqurligi
+            const pos = camera.position.clone().add(dir.multiplyScalar(distance));
+            
+            targetPos.copy(pos);
+        });
 
-        window.onload = function() {
-            try {
-                const userStr = localStorage.getItem('atom_user');
-                if (userStr) {
-                    const user = JSON.parse(userStr);
-                    document.getElementById('profile-name').innerText = user.nickname || user.name;
-                    if(user.picture) document.getElementById('profile-img').src = user.picture;
-                }
-            } catch(e) {}
-        };
-
-        document.getElementById('particle-slider').oninput = function() {
+        // Slider Event
+        document.getElementById('p-slider').oninput = function() {
             particleCount = parseInt(this.value);
-            document.getElementById('particle-val').innerText = particleCount;
+            document.getElementById('p-count-val').innerText = particleCount;
             scene.remove(particles);
             createParticleData(particleCount);
             
@@ -688,10 +511,7 @@
             geometry.setAttribute('position', new THREE.Float32BufferAttribute(shapes.scatter, 3));
             geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors.default, 3));
             
-            positionsAttribute = geometry.attributes.position;
-            colorsAttribute = geometry.attributes.color;
-            
-            const mat = new THREE.PointsMaterial({ size: 0.1, vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
+            const mat = new THREE.PointsMaterial({ size: 0.12, vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
             particles = new THREE.Points(geometry, mat);
             scene.add(particles);
         };
@@ -701,6 +521,7 @@
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
+
     </script>
 </body>
 </html>
