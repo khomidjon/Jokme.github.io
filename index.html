@@ -3,188 +3,322 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JARVIS - Kirish</title>
+    <title>Jarvis - Auth</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <style>
-        /* SIZNING ESKI DIZAYNINGIZ (O'ZGARISHSIZ) */
+        /* SIZNING DIZAYNINGIZ (O'ZGARISHSIZ QOLDI) */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0f0c29;
-            background: linear-gradient(to right, #24243e, #302b63, #0f0c29);
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            background: #000; overflow: hidden; position: relative; color: white;
         }
 
-        .container {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
-            width: 320px;
-            text-align: center;
+        /* Animated Background */
+        .bg-animation { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+        .bg-gradient {
+            position: absolute; width: 100%; height: 100%;
+            background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
+            animation: gradientShift 15s ease infinite;
+        }
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
         }
 
-        h2 { margin-bottom: 30px; letter-spacing: 2px; }
+        .particles { position: absolute; width: 100%; height: 100%; }
+        .particle {
+            position: absolute; background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%; animation: float 20s infinite;
+        }
+        .particle:nth-child(1) { width: 80px; height: 80px; left: 10%; animation-delay: 0s; }
+        .particle:nth-child(2) { width: 60px; height: 60px; left: 30%; animation-delay: 2s; }
+        .particle:nth-child(3) { width: 100px; height: 100px; left: 50%; animation-delay: 4s; }
 
-        input {
-            width: 100%;
-            padding: 12px 0;
-            margin-bottom: 20px;
-            background: transparent;
-            border: none;
-            border-bottom: 2px solid #fff;
-            color: #fff;
-            font-size: 16px;
-            outline: none;
-            transition: 0.3s;
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
+            50% { transform: translateY(-100vh) rotate(360deg); opacity: 0.6; }
         }
 
-        input:focus { border-bottom-color: #00d2ff; }
-        
-        ::placeholder { color: rgba(255,255,255,0.6); }
+        /* Main Container */
+        .container { position: relative; z-index: 10; max-width: 450px; width: 90%; padding: 20px; }
 
-        button {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            background: linear-gradient(45deg, #00d2ff, #3a7bd5);
-            color: white;
-            font-size: 16px;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: 0.3s;
-            margin-top: 10px;
-            font-weight: bold;
+        .hero { text-align: center; margin-bottom: 40px; }
+        .hero h1 {
+            font-size: 42px; font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 10px; text-shadow: 0 0 30px rgba(102, 126, 234, 0.3);
         }
+        .hero p { color: rgba(255, 255, 255, 0.7); font-size: 16px; font-weight: 300; }
 
-        button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 210, 255, 0.4);
-        }
-
-        .toggle-text {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #ccc;
-            cursor: pointer;
+        .login-box {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px; padding: 40px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            transition: all 0.3s ease;
         }
         
-        .toggle-text span { color: #00d2ff; font-weight: bold; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 30px; }
+        .tab {
+            flex: 1; padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px; color: rgba(255, 255, 255, 0.5);
+            cursor: pointer; transition: all 0.3s ease;
+            font-weight: 500; text-align: center;
+        }
+        .tab.active {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: rgba(102, 126, 234, 0.5);
+            color: #fff; box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; color: rgba(255, 255, 255, 0.8); font-size: 14px; margin-bottom: 8px; }
+        .input-group input {
+            width: 100%; padding: 14px; background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
+            color: #fff; font-size: 15px; outline: none; transition: 0.3s;
+        }
+        .input-group input:focus { border-color: #667eea; background: rgba(255, 255, 255, 0.08); }
+        
+        .btn {
+            width: 100%; padding: 14px; margin-top: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none; border-radius: 12px; color: #fff;
+            font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+        
+        .form-content { display: none; animation: fadeIn 0.5s; }
+        .form-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .info-message {
+            margin-top: 15px; text-align: center; font-size: 13px; color: #00d2ff; display: none;
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h2 id="title">Xush kelibsiz</h2>
-        
-        <input type="email" id="email" placeholder="Email (masalan: ali@mail.ru)" required>
-        <input type="password" id="password" placeholder="Parol (o'ylab toping)" required>
-        
-        <button id="mainBtn" onclick="handleAuth()">Kirish</button>
-        
-        <p class="toggle-text" onclick="toggleMode()">
-            Hali hisobingiz yo'qmi? <span id="toggleLink">Ro'yxatdan o'tish</span>
-        </p>
-        <p id="status" style="margin-top:15px; font-size:14px; color:#ff4d4d;"></p>
+    <div class="bg-animation">
+        <div class="bg-gradient"></div>
+        <div class="particles">
+            <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        </div>
     </div>
 
-    <script type="module">
-        // FIREBASE KODLARI
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    <div class="container">
+        <div class="hero">
+            <h1>XUSH KELIBSIZ!</h1>
+            <p>JARVIS AI tizimiga kiring</p>
+        </div>
 
-        // 🔥 SHU YERGA O'ZINGIZNING FIREBASE CONFIGINGIZNI QO'YING
+        <div class="login-box">
+            <div class="tabs">
+                <div class="tab active" id="tab-login" onclick="switchTab('login')">Kirish</div>
+                <div class="tab" id="tab-register" onclick="switchTab('register')">Ro'yxatdan o'tish</div>
+            </div>
+
+            <div id="login-form" class="form-content active">
+                <div class="input-group">
+                    <label>Email</label>
+                    <input type="email" id="login-email" placeholder="Emailingiz">
+                </div>
+                <div class="input-group">
+                    <label>Parol</label>
+                    <input type="password" id="login-password" placeholder="Parolingiz">
+                </div>
+                <button class="btn" id="login-btn" onclick="loginUser()">Tizimga kirish</button>
+            </div>
+
+            <div id="register-form" class="form-content">
+                <div class="input-group">
+                    <label>Foydalanuvchi nomi</label>
+                    <input type="text" id="reg-username" placeholder="Ismingiz">
+                </div>
+                <div class="input-group">
+                    <label>Email</label>
+                    <input type="email" id="reg-email" placeholder="Emailingiz">
+                </div>
+                <div class="input-group">
+                    <label>Parol (6+ belgi)</label>
+                    <input type="password" id="reg-password" placeholder="Parol o'ylab toping">
+                </div>
+                <button class="btn" id="reg-btn" onclick="registerUser()">Ro'yxatdan o'tish</button>
+                <p id="reg-message" class="info-message"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ---------------------------------------------------------
+        // 1. FIREBASE SOZLAMALARI (O'ZINGIZNIKINI QO'YING!)
+        // ---------------------------------------------------------
         const firebaseConfig = {
-            apiKey: "SIZNING_API_KEYINGIZ",
+            apiKey: "AIzaSyAg_n9-MsYSI41l_BqHWHuXrkE7I0fRfmo", // Bu yerda o'zingizning to'g'ri API Kalitingiz bo'lishi shart
             authDomain: "my-universe-a5416.firebaseapp.com",
             projectId: "my-universe-a5416",
             storageBucket: "my-universe-a5416.appspot.com",
-            messagingSenderId: "191427503837",
-            appId: "1:191427503837:web:2f82245c1106093510e163"
+            messagingSenderId: "960863192078",
+            appId: "1:960863192078:web:b47ef80668ccbeea9d285f"
         };
+        
+        // Firebaseni ishga tushirish
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
+        // ---------------------------------------------------------
+        // 2. TABLARNI ALMASHTIRISH
+        // ---------------------------------------------------------
+        function switchTab(tab) {
+            document.getElementById('login-form').classList.toggle('active', tab === 'login');
+            document.getElementById('register-form').classList.toggle('active', tab === 'register');
+            document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+            document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+        }
 
-        let isLoginMode = true; // Boshida "Kirish" rejimida bo'ladi
+        // ---------------------------------------------------------
+        // 3. REGISTRATSIYA (EMAILGA SILKA YUBORISH)
+        // ---------------------------------------------------------
+        function registerUser() {
+            const username = document.getElementById('reg-username').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+            const regBtn = document.getElementById('reg-btn');
+            const messageBox = document.getElementById('reg-message');
 
-        // Foydalanuvchi allaqachon kirgan bo'lsa, JARVIS ga o'tkazish
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                window.location.href = "jarvis.html";
-            }
-        });
-
-        window.handleAuth = async function() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const status = document.getElementById('status');
-
-            if (!email || !password) {
-                status.style.color = "yellow";
-                status.innerText = "Iltimos, email va parolni kiriting!";
+            if (!username || !email || !password) {
+                alert("Iltimos, barcha maydonlarni to'ldiring!");
                 return;
             }
 
-            status.style.color = "#00d2ff";
-            status.innerText = "Bajarilmoqda...";
+            regBtn.innerText = "Yuborilmoqda...";
+            regBtn.disabled = true;
 
-            try {
-                if (isLoginMode) {
-                    // KIRISH (LOGIN)
-                    await signInWithEmailAndPassword(auth, email, password);
-                    status.innerText = "Muvaffaqiyatli! Kirilmoqda...";
-                } else {
-                    // RO'YXATDAN O'TISH (REGISTER)
-                    await createUserWithEmailAndPassword(auth, email, password);
-                    status.innerText = "Hisob yaratildi! Kirilmoqda...";
-                }
-            } catch (error) {
-                status.style.color = "#ff4d4d";
-                // Xatolarni chiroyli qilib ko'rsatish
-                if (error.code === 'auth/email-already-in-use') {
-                    status.innerText = "Bu email band. Tizimga kiring.";
-                } else if (error.code === 'auth/wrong-password') {
-                    status.innerText = "Parol xato!";
-                } else if (error.code === 'auth/user-not-found') {
-                    status.innerText = "Bunday foydalanuvchi topilmadi.";
-                } else if (error.code === 'auth/invalid-email') {
-                    status.innerText = "Email xato yozildi.";
-                } else if (error.code === 'auth/weak-password') {
-                    status.innerText = "Parol juda oddiy (kamida 6 ta belgi).";
-                } else {
-                    status.innerText = "Xatolik: " + error.message;
-                }
-            }
+            // 1. Foydalanuvchi yaratish
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+
+                    // 2. Profilga ismni qo'shish
+                    user.updateProfile({
+                        displayName: username
+                    }).then(() => {
+                        // 3. Emailga tasdiqlash xati (SILKA) yuborish
+                        user.sendEmailVerification().then(() => {
+                            
+                            // 4. Bazaga saqlash
+                            db.collection("users").doc(user.uid).set({
+                                username: username,
+                                email: email,
+                                uid: user.uid,
+                                createdAt: new Date().toISOString()
+                            });
+
+                            // Xabar chiqarish
+                            regBtn.style.display = 'none';
+                            messageBox.style.display = 'block';
+                            messageBox.innerHTML = `
+                                ✅ <b>Muvaffaqiyatli!</b><br>
+                                Biz <b>${email}</b> manziliga tasdiqlash havolasini yubordik.<br>
+                                Emailingizga kiring va silkani bosing.<br>
+                                Keyin "Kirish" bo'limidan kiring.
+                            `;
+                            
+                            alert("Emailingizga tasdiqlash xati yuborildi! Iltimos, tekshiring.");
+                            
+                            // 5 soniyadan keyin Login oynasiga o'tkazish
+                            setTimeout(() => {
+                                switchTab('login');
+                                regBtn.innerText = "Ro'yxatdan o'tish";
+                                regBtn.disabled = false;
+                                regBtn.style.display = 'block';
+                                messageBox.style.display = 'none';
+                            }, 6000);
+
+                        });
+                    });
+                })
+                .catch((error) => {
+                    console.error(error);
+                    regBtn.innerText = "Ro'yxatdan o'tish";
+                    regBtn.disabled = false;
+                    
+                    if (error.code === 'auth/email-already-in-use') {
+                        alert("Bu email allaqachon ro'yxatdan o'tgan. Kirish qismini sinab ko'ring.");
+                    } else if (error.code === 'auth/weak-password') {
+                        alert("Parol juda oddiy (kamida 6 ta belgi bo'lishi kerak).");
+                    } else if (error.code === 'auth/invalid-email') {
+                        alert("Email xato yozildi.");
+                    } else {
+                        alert("Xatolik: " + error.message);
+                    }
+                });
         }
 
-        // Rejimni o'zgartirish (Kirish <-> Ro'yxatdan o'tish)
-        window.toggleMode = function() {
-            isLoginMode = !isLoginMode;
-            const title = document.getElementById('title');
-            const btn = document.getElementById('mainBtn');
-            const link = document.getElementById('toggleLink');
-            const status = document.getElementById('status');
+        // ---------------------------------------------------------
+        // 4. LOGIN (EMAIL TASDIQLANGANINI TEKSHIRISH)
+        // ---------------------------------------------------------
+        function loginUser() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const loginBtn = document.getElementById('login-btn');
+
+            if (!email || !password) {
+                alert("Email va parolni kiriting!");
+                return;
+            }
+
+            loginBtn.innerText = "Kirilmoqda...";
             
-            status.innerText = ""; // Xatolikni tozalash
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
 
-            if (isLoginMode) {
-                title.innerText = "Xush kelibsiz";
-                btn.innerText = "Kirish";
-                link.innerText = "Ro'yxatdan o'tish";
-            } else {
-                title.innerText = "Yangi hisob";
-                btn.innerText = "Ro'yxatdan o'tish";
-                link.innerText = "Kirish";
-            }
+                    // MUHIM: Email tasdiqlanganmi?
+                    if (user.emailVerified) {
+                        // Tasdiqlangan bo'lsa -> Dashboardga o'tish
+                        localStorage.setItem('atom_user', JSON.stringify({
+                            name: user.displayName || "Foydalanuvchi",
+                            email: user.email,
+                            uid: user.uid
+                        }));
+                        window.location.href = 'dashboard.html';
+                    } else {
+                        // Tasdiqlanmagan bo'lsa
+                        alert("Sizning emailingiz hali tasdiqlanmagan! Iltimos, emailingizga kelgan xatni tekshiring va silkani bosing.");
+                        loginBtn.innerText = "Tizimga kirish";
+                        auth.signOut(); // Kirgizmaymiz
+                    }
+                })
+                .catch((error) => {
+                    loginBtn.innerText = "Tizimga kirish";
+                    if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                        alert("Email yoki parol noto'g'ri!");
+                    } else {
+                        alert("Xatolik: " + error.message);
+                    }
+                });
         }
+
+        // Agar foydalanuvchi allaqachon kirgan bo'lsa (va tasdiqlangan bo'lsa)
+        auth.onAuthStateChanged((user) => {
+            if (user && user.emailVerified) {
+                // window.location.href = 'dashboard.html'; // Avtomatik o'tkazishni xohlasangiz komentdan oling
+            }
+        });
+
     </script>
 </body>
 </html>
