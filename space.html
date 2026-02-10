@@ -2,59 +2,69 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <title>JARVIS - REAL COSMOS HD</title>
+    <title>JARVIS - DEEP SPACE</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Courier New', Courier, monospace; }
         
-        /* UI ELEMENTLARI */
+        /* BOSHQARUV PANELİ (HUD) */
         #hud {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; /* UI orqali bosishga ruxsat */
+            pointer-events: none; user-select: none;
         }
-
-        #top-right {
+        #info-box {
             position: absolute; top: 20px; right: 20px;
-            text-align: right; color: #00d2ff; text-shadow: 0 0 10px #00d2ff;
+            text-align: right; color: #00ffea; text-shadow: 0 0 5px #00ffea;
+            background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px;
         }
-
-        #date-display { font-size: 24px; font-weight: bold; }
-        #speed-display { font-size: 16px; color: yellow; margin-top: 5px; }
-
-        #center-info {
-            position: absolute; top: 80%; left: 50%; transform: translateX(-50%);
+        #center-target {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 20px; height: 20px; border: 1px solid rgba(0, 255, 234, 0.3); border-radius: 50%;
+        }
+        #planet-label {
+            position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%);
             text-align: center; color: white; opacity: 0; transition: opacity 0.5s;
         }
-        #target-name { font-size: 30px; letter-spacing: 5px; font-weight: bold; text-shadow: 0 0 20px white; }
-        #target-dist { font-size: 18px; color: cyan; margin-top: 5px; }
+        #planet-name { font-size: 40px; font-weight: bold; letter-spacing: 5px; text-shadow: 0 0 20px white; }
+        #planet-dist { font-size: 18px; color: cyan; }
 
-        #instructions {
+        /* KIRISH EKRANI */
+        #menu {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            background: rgba(0,0,0,0.8); color: white; pointer-events: auto; z-index: 999;
+            background: rgba(0,0,0,0.85); color: white; z-index: 1000; cursor: pointer;
         }
+        .key { color: #000; background: #00ffea; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
         
-        .key { color: #000; background: #00d2ff; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
+        /* XATOLIK EKRANI */
+        #error-log {
+            position: absolute; top: 0; left: 0; width: 100%; padding: 20px;
+            color: red; font-family: monospace; pointer-events: none; z-index: 2000; display: none;
+        }
     </style>
 </head>
 <body>
 
-    <div id="instructions">
-        <h1 style="color: #00d2ff; text-shadow: 0 0 20px #00d2ff;">JARVIS REAL COSMOS</h1>
-        <p>Boshlash uchun ekranga bosing</p>
-        <p><span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> - Harakat</p>
+    <div id="error-log"></div>
+
+    <div id="menu">
+        <h1 style="color: #00ffea; text-shadow: 0 0 30px #00ffea; font-size: 50px;">JARVIS SPACE ENGINE</h1>
+        <p style="font-size: 20px;">SIMULYATSIYANI BOSHLASH UCHUN BOSING</p>
+        <br>
+        <p><span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> - Dvigatel</p>
         <p><span class="key">SPACE</span> - Tepaga | <span class="key">CTRL</span> - Pastga</p>
-        <p><span class="key">SCROLL</span> - Vaqtni tezlashtirish</p>
-        <p>Yerni borib ko'ring (Tungi chiroqlar mavjud!)</p>
+        <p><span class="key">SHIFT</span> - GIPER-TEZLIK (20x)</p>
+        <p><span class="key">G'ILDIRAK</span> - Vaqtni boshqarish</p>
     </div>
 
     <div id="hud">
-        <div id="top-right">
-            <div id="date-display">LOADING...</div>
-            <div id="speed-display">Tezlik: 1x (Real vaqt)</div>
+        <div id="center-target"></div>
+        <div id="info-box">
+            <div id="time-display">VAQT: Real</div>
+            <div id="speed-display">Tezlik: 0 km/s</div>
         </div>
-        <div id="center-info">
-            <div id="target-name">YER</div>
-            <div id="target-dist">Masofa: 0 km</div>
+        <div id="planet-label">
+            <div id="planet-name">YER</div>
+            <div id="planet-dist">Masofa: 0 km</div>
         </div>
     </div>
 
@@ -71,192 +81,177 @@
         import * as THREE from 'three';
         import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
-        // ------------------------------------------------------------------
-        // GLOBAL O'ZGARUVCHILAR
-        // ------------------------------------------------------------------
+        // --- XATOLARNI USHLASH ---
+        window.onerror = function(message, source, lineno, colno, error) {
+            const el = document.getElementById('error-log');
+            el.style.display = 'block';
+            el.innerHTML += `XATO: ${message} <br> (Agar bu yozuv chiqsa, faylni oddiy ochgansiz. Iltimos, VS Code Live Server ishlating yoki konsolni ko'ring)<br>`;
+        };
+
         let camera, scene, renderer, controls;
         let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false, moveUp = false, moveDown = false;
-        let speedMultiplier = 1; // Uchish tezligi
-        let timeSpeed = 1; // Vaqt tezligi
-        let simulationDate = new Date(); // Hozirgi vaqt
+        let speedMultiplier = 1;
+        let timeScale = 1;
         
         const planets = [];
         const textureLoader = new THREE.TextureLoader();
-        let centerInfo = document.getElementById('center-info');
+        let labelDiv = document.getElementById('planet-label');
 
-        // ------------------------------------------------------------------
-        // BOSHLANISHI (INIT)
-        // ------------------------------------------------------------------
+        init();
+        animate();
+
         function init() {
-            scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x000000, 0.00005); // Juda uzoqni ko'rsatmaslik uchun
+            try {
+                // 1. SAHNA
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x000000); // Qop-qora koinot
+                scene.fog = new THREE.FogExp2(0x000000, 0.00002);
 
-            // KAMERA
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100000);
-            camera.position.set(0, 50, 400);
+                // 2. KAMERA
+                camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000000);
+                camera.position.set(0, 0, 400); // Boshlanish nuqtasi
 
-            // RENDERER
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.shadowMap.enabled = true; // Soyalar yoqildi
-            document.body.appendChild(renderer.domElement);
+                // 3. RENDERER
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                document.body.appendChild(renderer.domElement);
 
-            // CONTROLS
-            controls = new PointerLockControls(camera, document.body);
-            const instructions = document.getElementById('instructions');
-            instructions.addEventListener('click', () => controls.lock());
-            controls.addEventListener('lock', () => instructions.style.display = 'none');
-            controls.addEventListener('unlock', () => instructions.style.display = 'flex');
+                // 4. NAZORAT (BOSHQARUV)
+                controls = new PointerLockControls(camera, document.body);
+                const menu = document.getElementById('menu');
 
-            // KLAVIATURA
-            document.addEventListener('keydown', (e) => onKey(e, true));
-            document.addEventListener('keyup', (e) => onKey(e, false));
-            
-            // VAQTNI BOSHQARISH (MOUCE WHEEL)
-            document.addEventListener('wheel', (event) => {
-                if(event.deltaY < 0) {
-                    timeSpeed *= 1.5; // Tezlashtirish
-                } else {
-                    timeSpeed /= 1.5; // Sekinlashtirish
-                    if(timeSpeed < 1) timeSpeed = 1;
-                }
-                updateTimeDisplay();
-            });
+                // CLICK MUAMMOSI YECHIMI:
+                menu.addEventListener('click', () => {
+                    controls.lock();
+                });
 
-            // YORUG'LIK (QUYOSH)
-            const sunLight = new THREE.PointLight(0xffffff, 2, 10000);
-            scene.add(sunLight);
-            const ambientLight = new THREE.AmbientLight(0x111111); // Juda xira fon
-            scene.add(ambientLight);
+                controls.addEventListener('lock', () => { menu.style.display = 'none'; });
+                controls.addEventListener('unlock', () => { menu.style.display = 'flex'; });
 
-            // --------------------------------------------------------------
-            // KOINOT YARATISH
-            // --------------------------------------------------------------
-            createUniverseBoundary(); // Yulduzli cheksizlik
-            createSun();
-            createPlanets();
+                // 5. KLAVIATURA
+                document.addEventListener('keydown', onKeyDown);
+                document.addEventListener('keyup', onKeyUp);
+                document.addEventListener('wheel', onScroll);
 
-            window.addEventListener('resize', onWindowResize);
-            animate();
+                // 6. YORUG'LIK
+                // Quyosh nuri (Asosiy)
+                const sunLight = new THREE.PointLight(0xffffff, 2, 20000);
+                sunLight.position.set(0, 0, 0);
+                sunLight.castShadow = true;
+                sunLight.shadow.mapSize.width = 2048;
+                sunLight.shadow.mapSize.height = 2048;
+                scene.add(sunLight);
+                
+                // Tun tomonini ozgina yoritish (juda qorong'u bo'lmasligi uchun)
+                scene.add(new THREE.AmbientLight(0x050505)); 
+
+                // 7. OBEKTLAR
+                createStars();
+                createSun();
+                createSolarSystem();
+
+                window.addEventListener('resize', onWindowResize);
+            } catch (e) {
+                document.getElementById('error-log').innerText = "INIT XATOSI: " + e.message;
+                document.getElementById('error-log').style.display = 'block';
+            }
         }
 
-        // ------------------------------------------------------------------
-        // OBEKTLARNI YARATISH
-        // ------------------------------------------------------------------
-        
-        // 1. CHEGARA (YULDUZLI OSPOV)
-        function createUniverseBoundary() {
-            const geometry = new THREE.SphereGeometry(20000, 64, 64);
-            // Yulduzli tekstura (Ichki tomoni ko'rinadi)
-            const texture = textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg'); // Vaqtincha yulduz o'rniga qora fon ishlatamiz, yoki zarrachalar
-            // Aslida zarrachalar chiroyliroq, keling zarracha qilamiz
-            
+        function createStars() {
             const starGeo = new THREE.BufferGeometry();
-            const count = 50000; // 50 ming yulduz
+            const count = 20000;
             const positions = new Float32Array(count * 3);
             for(let i=0; i<count*3; i++) {
-                positions[i] = (Math.random() - 0.5) * 40000;
+                positions[i] = (Math.random() - 0.5) * 50000;
             }
             starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            const starMat = new THREE.PointsMaterial({color: 0xffffff, size: 0.9, transparent: true});
+            const starMat = new THREE.PointsMaterial({color: 0xffffff, size: 0.7, sizeAttenuation: false}); // Yulduzlar uzoqlashsa ham ko'rinadi
             const stars = new THREE.Points(starGeo, starMat);
             scene.add(stars);
         }
 
-        // 2. QUYOSH (OLOVLI)
         function createSun() {
-            const geometry = new THREE.SphereGeometry(50, 64, 64);
+            // Olovli Quyosh
+            const geometry = new THREE.SphereGeometry(60, 64, 64);
             const material = new THREE.MeshBasicMaterial({ 
-                map: textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/lava/lavatile.jpg'),
-                color: 0xffaa00 
+                color: 0xffaa00,
+                map: loadTex('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/lava/lavatile.jpg')
             });
             const sun = new THREE.Mesh(geometry, material);
             
-            // Nur (Glow effect)
-            const spriteMaterial = new THREE.SpriteMaterial({ 
-                map: textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/sprites/glow.png'), 
+            // Glow (Nur effekti)
+            const spriteMat = new THREE.SpriteMaterial({ 
+                map: loadTex('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/sprites/glow.png'), 
                 color: 0xffaa00, 
                 transparent: true, 
                 blending: THREE.AdditiveBlending 
             });
-            const sprite = new THREE.Sprite(spriteMaterial);
-            sprite.scale.set(250, 250, 1.0);
+            const sprite = new THREE.Sprite(spriteMat);
+            sprite.scale.set(300, 300, 1);
             sun.add(sprite);
 
             scene.add(sun);
         }
 
-        // 3. YER VA SAYYORALAR
-        function createPlanets() {
-            // YER (Maxsus, chunki u HD bo'lishi kerak)
+        function createSolarSystem() {
+            // YER (Maxsus HD)
             createEarth();
 
-            // QOLGAN SAYYORALAR (Standart)
-            const otherPlanets = [
-                { name: "Merkuriy", texture: 'moon_1024.jpg', size: 4, dist: 80, speed: 0.04 },
-                { name: "Venera", texture: 'mars_1k.jpg', size: 8, dist: 120, speed: 0.02 }, // Venera teksturasi o'rniga Marsniki vaqtincha (rangini o'zgartiramiz)
-                { name: "Mars", texture: 'mars_1k.jpg', size: 6, dist: 250, speed: 0.015 },
-                { name: "Yupiter", texture: 'jupiter_2k.jpg', size: 25, dist: 400, speed: 0.008 },
-                { name: "Saturn", texture: 'saturn_2k.jpg', size: 20, dist: 600, speed: 0.006, ring: true }
+            // Boshqa sayyoralar
+            const data = [
+                { name: "Merkuriy", size: 4, dist: 100, speed: 0.04, color: 0xaaaaaa },
+                { name: "Venera", size: 9, dist: 150, speed: 0.03, color: 0xe6b800 },
+                { name: "Mars", size: 5, dist: 300, speed: 0.018, color: 0xff3300 },
+                { name: "Yupiter", size: 30, dist: 500, speed: 0.008, color: 0xd9b38c },
+                { name: "Saturn", size: 25, dist: 750, speed: 0.006, color: 0xf4d19f, ring: true },
+                { name: "Uran", size: 12, dist: 950, speed: 0.004, color: 0x66ccff },
+                { name: "Neptun", size: 12, dist: 1100, speed: 0.003, color: 0x3333ff }
             ];
 
-            otherPlanets.forEach(data => {
-                // Oddiy tekstura yuklash
-                // Eslatma: GitHubdan to'g'ridan-to'g'ri tekstura olishda URL aniq bo'lishi kerak. 
-                // Ishonchli bo'lishi uchun standart ranglardan foydalanamiz, agar rasm yuklanmasa.
-                
-                const geo = new THREE.SphereGeometry(data.size, 64, 64);
+            data.forEach(p => {
+                const geo = new THREE.SphereGeometry(p.size, 64, 64);
                 const mat = new THREE.MeshStandardMaterial({ 
-                    color: Math.random() * 0xffffff, // Agar tekstura yuklanmasa rang
-                    roughness: 0.8 
+                    color: p.color,
+                    roughness: 0.8
                 });
-                
-                // Tekstura yuklashga urinish
-                const texUrl = `https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/${data.texture}`;
-                textureLoader.load(texUrl, (tex) => { mat.map = tex; mat.needsUpdate = true; mat.color.setHex(0xffffff); });
-
                 const mesh = new THREE.Mesh(geo, mat);
-                const obj = { mesh: mesh, dist: data.dist, speed: data.speed, angle: Math.random() * 6, name: data.name };
-                planets.push(obj);
-                scene.add(mesh);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
 
                 // Saturn halqasi
-                if(data.ring) {
-                    const ringGeo = new THREE.RingGeometry(data.size + 5, data.size + 15, 64);
-                    const ringMat = new THREE.MeshBasicMaterial({ color: 0xcfb593, side: THREE.DoubleSide, transparent: true, opacity: 0.6 });
+                if(p.ring) {
+                    const ringGeo = new THREE.RingGeometry(p.size + 5, p.size + 15, 64);
+                    const ringMat = new THREE.MeshBasicMaterial({ color: 0xcfb593, side: THREE.DoubleSide, transparent: true, opacity: 0.7 });
                     const ring = new THREE.Mesh(ringGeo, ringMat);
                     ring.rotation.x = Math.PI / 2;
                     mesh.add(ring);
                 }
+
+                planets.push({ mesh: mesh, dist: p.dist, speed: p.speed, angle: Math.random() * 10, name: p.name });
+                scene.add(mesh);
             });
         }
 
-        // YER UCHUN ALOHIDA FUNKSIYA (HD REALIZM)
         function createEarth() {
-            const earthGroup = new THREE.Group();
-            const earthDist = 180;
-            
-            // A) YER SHARI (Kunduzi)
-            const geometry = new THREE.SphereGeometry(10, 64, 64);
-            const material = new THREE.MeshPhongMaterial({
-                map: textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg'),
-                specularMap: textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_specular_2048.jpg'),
-                specular: new THREE.Color(0x333333),
-                shininess: 15
+            // 1. Yer Shari
+            const earthGeo = new THREE.SphereGeometry(10, 64, 64);
+            const earthMat = new THREE.MeshPhongMaterial({
+                map: loadTex('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg'),
+                specularMap: loadTex('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_specular_2048.jpg'),
+                specular: new THREE.Color('grey'),
+                shininess: 10
             });
-            const earth = new THREE.Mesh(geometry, material);
-            earthGroup.add(earth);
+            const earth = new THREE.Mesh(earthGeo, earthMat);
+            earth.castShadow = true;
+            earth.receiveShadow = true;
 
-            // B) TUNGGI CHIROQLAR (Bu hiyla: Qora sharni ustiga qoplab, faqat tun tomonini ko'rsatamiz deya olmaymiz, 
-            // shuning uchun Emissive map ishlatamiz. PhongMaterial Emissive mapi soyada yonadi)
-            // Afsuski, oddiy Three.js materialida kun va tunni ajratish qiyin. 
-            // LEKIN: Biz atmosferani qo'shsak, u juda realistik ko'rinadi.
-
-            // C) BULUTLAR (Yerdan sal kattaroq shar)
+            // 2. Bulutlar
             const cloudGeo = new THREE.SphereGeometry(10.2, 64, 64);
             const cloudMat = new THREE.MeshPhongMaterial({
-                map: textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_clouds_1024.png'),
+                map: loadTex('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_clouds_1024.png'),
                 side: THREE.DoubleSide,
                 opacity: 0.8,
                 transparent: true,
@@ -265,46 +260,48 @@
             const clouds = new THREE.Mesh(cloudGeo, cloudMat);
             earth.add(clouds);
 
-            // D) OY (Sun'iy yo'ldosh)
-            const moonGeo = new THREE.SphereGeometry(2.7, 32, 32);
-            const moonMat = new THREE.MeshStandardMaterial({
-                map: textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/moon_1024.jpg')
-            });
-            const moon = new THREE.Mesh(moonGeo, moonMat);
-            moon.position.set(30, 0, 0); // Yerdan uzoqligi
-            earthGroup.add(moon);
+            // 3. Tungi chiroqlar (Oddiy usul: Emissive ishlatamiz)
+            // Afsuski, murakkab shaderlarsiz tunni ajratish qiyin, lekin bulutlar realizm beradi.
 
-            scene.add(earthGroup);
-            
-            // Ro'yxatga qo'shamiz (aylantirish uchun)
-            planets.push({ 
-                mesh: earthGroup, 
-                dist: earthDist, 
-                speed: 0.02, 
-                angle: 0, 
-                name: "YER",
-                clouds: clouds, // Bulutlarni alohida aylantirish uchun
-                moon: moon
-            });
+            planets.push({ mesh: earth, dist: 200, speed: 0.02, angle: 0, name: "YER", rotateSelf: true, clouds: clouds });
+            scene.add(earth);
         }
 
-        // ------------------------------------------------------------------
-        // BOSHQARUV LOGIKASI
-        // ------------------------------------------------------------------
-        function onKey(event, isDown) {
+        // Xavfsiz tekstura yuklovchi
+        function loadTex(url) {
+            const tex = textureLoader.load(url);
+            tex.colorSpace = THREE.SRGBColorSpace;
+            return tex;
+        }
+
+        function onKeyDown(event) {
             switch (event.code) {
-                case 'KeyW': moveForward = isDown; break;
-                case 'KeyA': moveLeft = isDown; break;
-                case 'KeyS': moveBackward = isDown; break;
-                case 'KeyD': moveRight = isDown; break;
-                case 'Space': moveUp = isDown; break;    // PROBEL TEPAGA
-                case 'ControlLeft': moveDown = isDown; break; // CTRL PASTGA
-                case 'ShiftLeft': speedMultiplier = isDown ? 20 : 1; break; // SHIFT TEZLIK
+                case 'KeyW': moveForward = true; break;
+                case 'KeyA': moveLeft = true; break;
+                case 'KeyS': moveBackward = true; break;
+                case 'KeyD': moveRight = true; break;
+                case 'Space': moveUp = true; break;
+                case 'ControlLeft': moveDown = true; break;
+                case 'ShiftLeft': speedMultiplier = 20; break;
             }
         }
 
-        function updateTimeDisplay() {
-            document.getElementById('speed-display').innerText = `Vaqt tezligi: ${Math.round(timeSpeed)}x`;
+        function onKeyUp(event) {
+            switch (event.code) {
+                case 'KeyW': moveForward = false; break;
+                case 'KeyA': moveLeft = false; break;
+                case 'KeyS': moveBackward = false; break;
+                case 'KeyD': moveRight = false; break;
+                case 'Space': moveUp = false; break;
+                case 'ControlLeft': moveDown = false; break;
+                case 'ShiftLeft': speedMultiplier = 1; break;
+            }
+        }
+
+        function onScroll(event) {
+            if(event.deltaY < 0) timeScale *= 1.2;
+            else timeScale /= 1.2;
+            document.getElementById('time-display').innerText = `VAQT: ${timeScale.toFixed(1)}x`;
         }
 
         function onWindowResize() {
@@ -313,73 +310,47 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        // ------------------------------------------------------------------
-        // ANIMATSIYA (YURAK)
-        // ------------------------------------------------------------------
         function animate() {
             requestAnimationFrame(animate);
 
-            // 1. Vaqtni yangilash
-            simulationDate.setSeconds(simulationDate.getSeconds() + (60 * timeSpeed * 0.01)); // Vaqt o'tishi
-            document.getElementById('date-display').innerText = simulationDate.toLocaleString('uz-UZ');
-
-            // 2. Sayyoralar harakati
+            // Sayyoralar harakati
             planets.forEach(p => {
-                p.angle += p.speed * 0.1 * timeSpeed; // Vaqt tezligiga bog'liq
+                p.angle += p.speed * 0.1 * timeScale;
                 p.mesh.position.x = Math.cos(p.angle) * p.dist;
                 p.mesh.position.z = Math.sin(p.angle) * p.dist;
                 
-                // O'z o'qi atrofida aylanish
-                if(p.mesh.type === "Group") {
-                    // Yer uchun maxsus
-                    p.mesh.children[0].rotation.y += 0.01 * timeSpeed; // Yer aylanishi
-                    if(p.clouds) p.clouds.rotation.y += 0.012 * timeSpeed; // Bulutlar tezroq
-                    if(p.moon) { // Oy Yer atrofida
-                        p.moon.position.x = Math.cos(p.angle * 5) * 30;
-                        p.moon.position.z = Math.sin(p.angle * 5) * 30;
-                    }
-                } else {
-                    p.mesh.rotation.y += 0.01 * timeSpeed;
-                }
+                // O'z o'qi atrofida
+                p.mesh.rotation.y += 0.005 * timeScale;
+                if(p.clouds) p.clouds.rotation.y += 0.007 * timeScale;
             });
 
-            // 3. Masofani o'lchash (UI)
-            let closestPlanet = null;
-            let minDist = Infinity;
+            // Uchish (Fly Controls)
+            if (controls.isLocked) {
+                const delta = 0.5 * speedMultiplier;
 
-            planets.forEach(p => {
-                const dist = camera.position.distanceTo(p.mesh.position);
-                if(dist < minDist) {
-                    minDist = dist;
-                    closestPlanet = p;
-                }
-            });
-
-            if (closestPlanet && minDist < 100) { // Agar 100 birlikdan yaqin bo'lsa
-                centerInfo.style.opacity = 1;
-                document.getElementById('target-name').innerText = closestPlanet.name;
-                // Masofani km ga o'giramiz (taxminiy masshtab: 1 birlik = 1000 km)
-                document.getElementById('target-dist').innerText = `Masofa: ${Math.round(minDist * 1000)} km`;
-            } else {
-                centerInfo.style.opacity = 0;
+                if (moveForward) controls.moveForward(delta);
+                if (moveBackward) controls.moveForward(-delta);
+                if (moveRight) controls.moveRight(delta);
+                if (moveLeft) controls.moveRight(-delta);
+                if (moveUp) camera.position.y += delta;
+                if (moveDown) camera.position.y -= delta;
             }
 
-            // 4. Harakat (Uchish)
-            if (controls.isLocked) {
-                const delta = 0.1;
-                const actualSpeed = 2.0 * speedMultiplier;
+            // UI: Masofa o'lchash
+            let nearest = null;
+            let minDist = Infinity;
+            planets.forEach(p => {
+                const d = camera.position.distanceTo(p.mesh.position);
+                if(d < minDist) { minDist = d; nearest = p; }
+            });
 
-                // Oldinga/Orqaga
-                if (moveForward) controls.moveForward(actualSpeed);
-                if (moveBackward) controls.moveForward(-actualSpeed);
-
-                // Chapga/O'ngga
-                if (moveRight) controls.moveRight(actualSpeed);
-                if (moveLeft) controls.moveRight(-actualSpeed);
-
-                // Tepaga/Pastga (Space/Ctrl)
-                if (moveUp) camera.position.y += actualSpeed;
-                if (moveDown) camera.position.y -= actualSpeed;
+            if(nearest && minDist < 200) {
+                labelDiv.style.opacity = 1;
+                document.getElementById('planet-name').innerText = nearest.name;
+                // Haqiqiyroq masofa (1 unit = 1000km deb olamiz)
+                document.getElementById('planet-dist').innerText = `Masofa: ${Math.floor(minDist * 1000)} km`;
+            } else {
+                labelDiv.style.opacity = 0;
             }
 
             renderer.render(scene, camera);
