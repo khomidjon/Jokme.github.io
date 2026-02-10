@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>JARVIS - Solar System</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: sans-serif; }
+        #instructions {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: white; text-align: center; background: rgba(0,0,0,0.5); padding: 20px;
+            border: 1px solid cyan; border-radius: 10px; cursor: pointer;
+        }
+        .label {
+            color: #fff;
+            font-family: sans-serif;
+            padding: 2px;
+            background: rgba(0, 0, 0, 0.6);
+            font-size: 12px;
+            border-radius: 4px;
+            pointer-events: none; /* Sichqoncha xalaqit bermasligi uchun */
+        }
+    </style>
+</head>
+<body>
+
+    <div id="instructions">
+        <h1>KOSMOSGA KIRISH</h1>
+        <p>Boshlash uchun sichqonchani bosing</p>
+        <p>Boshqaruv: W, A, S, D - Uchish</p>
+        <p>SPACE - Tepaga, CTRL - Pastga</p>
+        <p>SHIFT - Tezlashish</p>
+        <p>Sichqoncha - Qarash (CS:GO Style)</p>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+        // 1. O'ZGARUVCHILAR
+        let camera, scene, renderer, labelRenderer, controls;
+        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false, moveUp = false, moveDown = false;
+        let speedMultiplier = 1;
+        const planets = [];
+        let prevTime = performance.now();
+        const velocity = new THREE.Vector3();
+        const direction = new THREE.Vector3();
+
+        // Sayyoralar ma'lumotlari (Rang, Hajm, Masofa, Tezlik)
+        // Masofalar va hajmlar masshtablashtirilgan (haqiqiy o'lcham ekranga sig'maydi)
+        const planetData = [
+            { name: "Merkuriy", color: 0xA5A5A5, size: 2, distance: 40, speed: 0.04 },
+            { name: "Venera", color: 0xFFC649, size: 3, distance: 60, speed: 0.03 },
+            { name: "Yer", color: 0x2233FF, size: 3.2, distance: 90, speed: 0.02 },
+            { name: "Mars", color: 0xFF3300, size: 2.5, distance: 120, speed: 0.018 },
+            { name: "Yupiter", color: 0xE0AE6F, size: 10, distance: 200, speed: 0.01 },
+            { name: "Saturn", color: 0xF5D576, size: 8, distance: 300, speed: 0.008, ring: true },
+            { name: "Uran", color: 0x4FD0E7, size: 6, distance: 400, speed: 0.006 },
+            { name: "Neptun", color: 0x3E54E8, size: 6, distance: 500, speed: 0.005 }
+        ];
+
+        init();
+        animate();
+
+        function init() {
+            // SAHNA
+            scene = new THREE.Scene();
+            // Yulduzli fon (Skybox o'rniga oddiy yulduzlar)
+            addStars();
+
+            // KAMERA
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 20000);
+            camera.position.set(0, 50, 200); // Boshlang'ich joylashuv
+
+            // YORUG'LIK (Quyoshdan taraladi)
+            const sunLight = new THREE.PointLight(0xffffff, 2, 1000, 0.5);
+            sunLight.position.set(0, 0, 0);
+            scene.add(sunLight);
+            const ambientLight = new THREE.AmbientLight(0x333333); // Umumiy xira yorug'lik
+            scene.add(ambientLight);
+
+            // RENDERER (3D chizuvchi)
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            // LABEL RENDERER (Yozuvlar uchun)
+            labelRenderer = new CSS2DRenderer();
+            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.domElement.style.position = 'absolute';
+            labelRenderer.domElement.style.top = '0px';
+            document.body.appendChild(labelRenderer.domElement);
+
+            // CONTROLS (CS:GO Style)
+            controls = new PointerLockControls(camera, document.body);
+
+            const instructions = document.getElementById('instructions');
+            instructions.addEventListener('click', () => {
+                controls.lock(); // Sichqonchani qulflash
+            });
+
+            controls.addEventListener('lock', () => {
+                instructions.style.display = 'none';
+            });
+            controls.addEventListener('unlock', () => {
+                instructions.style.display = 'block';
+            });
+
+            scene.add(controls.getObject());
+
+            // KLAVIATURA TINGLOVCHISI
+            document.addEventListener('keydown', onKeyDown);
+            document.addEventListener('keyup', onKeyUp);
+
+            // OB'EKTLARNI YARATISH
+            createSun();
+            planetData.forEach(createPlanet);
+
+            // Resize
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        // YULDUZLAR FONINI YARATISH
+        function addStars() {
+            const starGeo = new THREE.BufferGeometry();
+            const starCount = 10000;
+            const posArray = new Float32Array(starCount * 3);
+            for(let i=0; i<starCount*3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 4000; // Katta maydon
+            }
+            starGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            const starMat = new THREE.PointsMaterial({color: 0xffffff, size: 0.7});
+            const stars = new THREE.Points(starGeo, starMat);
+            scene.add(stars);
+        }
+
+        // QUYOSH
+        function createSun() {
+            const geometry = new THREE.SphereGeometry(20, 32, 32);
+            const material = new THREE.MeshBasicMaterial({ color: 0xFFFF00 }); // O'zi yonadi
+            const sun = new THREE.Mesh(geometry, material);
+            
+            // Quyosh atrofiga nur effekti (Glow)
+            const glowGeo = new THREE.SphereGeometry(22, 32, 32);
+            const glowMat = new THREE.MeshBasicMaterial({ color: 0xFFaa00, transparent: true, opacity: 0.3, side: THREE.BackSide });
+            const glow = new THREE.Mesh(glowGeo, glowMat);
+            sun.add(glow);
+
+            scene.add(sun);
+        }
+
+        // SAYYORALAR
+        function createPlanet(data) {
+            // 1. Orbita chizig'i
+            const orbitGeo = new THREE.RingGeometry(data.distance - 0.2, data.distance + 0.2, 128);
+            const orbitMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0.1 });
+            const orbit = new THREE.Mesh(orbitGeo, orbitMat);
+            orbit.rotation.x = Math.PI / 2;
+            scene.add(orbit);
+
+            // 2. Sayyora tanasi
+            const geometry = new THREE.SphereGeometry(data.size, 32, 32);
+            const material = new THREE.MeshStandardMaterial({ color: data.color });
+            const planet = new THREE.Mesh(geometry, material);
+            
+            // Sayyora obyekti (Aylanish markazi bilan birga)
+            const planetObj = {
+                mesh: planet,
+                distance: data.distance,
+                speed: data.speed,
+                angle: Math.random() * Math.PI * 2
+            };
+
+            // 3. Nom yozish (Label)
+            const div = document.createElement('div');
+            div.className = 'label';
+            div.textContent = data.name;
+            const label = new CSS2DObject(div);
+            label.position.set(0, data.size + 2, 0);
+            planet.add(label);
+
+            // 4. Saturn halqasi (Agar bo'lsa)
+            if (data.ring) {
+                const ringGeo = new THREE.RingGeometry(data.size + 2, data.size + 6, 32);
+                const ringMat = new THREE.MeshBasicMaterial({ color: 0xA5A5A5, side: THREE.DoubleSide, transparent: true, opacity: 0.7 });
+                const ring = new THREE.Mesh(ringGeo, ringMat);
+                ring.rotation.x = Math.PI / 2;
+                planet.add(ring);
+            }
+
+            scene.add(planet);
+            planets.push(planetObj);
+        }
+
+        // BOSHQARUV LOGIKASI
+        function onKeyDown(event) {
+            switch (event.code) {
+                case 'KeyW': moveForward = true; break;
+                case 'KeyA': moveLeft = true; break;
+                case 'KeyS': moveBackward = true; break;
+                case 'KeyD': moveRight = true; break;
+                case 'Space': moveUp = true; break;
+                case 'ControlLeft': moveDown = true; break;
+                case 'ShiftLeft': speedMultiplier = 5; break; // Tezlashish
+            }
+        }
+
+        function onKeyUp(event) {
+            switch (event.code) {
+                case 'KeyW': moveForward = false; break;
+                case 'KeyA': moveLeft = false; break;
+                case 'KeyS': moveBackward = false; break;
+                case 'KeyD': moveRight = false; break;
+                case 'Space': moveUp = false; break;
+                case 'ControlLeft': moveDown = false; break;
+                case 'ShiftLeft': speedMultiplier = 1; break;
+            }
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // ANIMATSIYA (O'yin tsikli)
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const time = performance.now();
+            const delta = (time - prevTime) / 1000;
+
+            // 1. Sayyoralarni aylantirish
+            planets.forEach(p => {
+                p.angle += p.speed * delta; // Orbit bo'ylab harakat
+                p.mesh.position.x = Math.cos(p.angle) * p.distance;
+                p.mesh.position.z = Math.sin(p.angle) * p.distance;
+                
+                // O'z o'qi atrofida aylanish
+                p.mesh.rotation.y += 1 * delta;
+            });
+
+            // 2. Kamera harakati (CS:GO Physics)
+            if (controls.isLocked === true) {
+                velocity.x -= velocity.x * 5.0 * delta; // Ishqalanish (to'xtash)
+                velocity.z -= velocity.z * 5.0 * delta;
+                velocity.y -= velocity.y * 5.0 * delta;
+
+                direction.z = Number(moveForward) - Number(moveBackward);
+                direction.x = Number(moveRight) - Number(moveLeft);
+                direction.y = Number(moveDown) - Number(moveUp);
+                direction.normalize(); // Diagonal yurish tezlashib ketmasligi uchun
+
+                const moveSpeed = 100.0 * speedMultiplier; // Tezlik
+
+                if (moveForward || moveBackward) velocity.z -= direction.z * moveSpeed * delta;
+                if (moveLeft || moveRight) velocity.x -= direction.x * moveSpeed * delta;
+                if (moveUp || moveDown) velocity.y -= direction.y * moveSpeed * delta;
+
+                controls.moveRight(-velocity.x * delta);
+                controls.moveForward(-velocity.z * delta);
+                camera.position.y -= velocity.y * delta; // Tepaga/Pastga
+            }
+
+            prevTime = time;
+
+            renderer.render(scene, camera);
+            labelRenderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>
