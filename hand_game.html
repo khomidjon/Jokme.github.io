@@ -2,292 +2,349 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JARVIS - Neon Gravity (Fixed)</title>
+    <title>KIMYOGAR - Reaksiya Simulyatori</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #050505; font-family: sans-serif; }
-        
-        /* Debug uchun videoni kichkina qilib ko'rsatamiz */
-        #webcam {
-            position: absolute; bottom: 10px; right: 10px;
-            width: 160px; height: 120px;
-            border: 2px solid cyan; border-radius: 8px;
-            transform: scaleX(-1); /* Ko'zgu effekti */
-            z-index: 100; opacity: 0.7;
+        body {
+            margin: 0;
+            background-color: #1a1a2e;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
         }
 
-        #ui {
-            position: absolute; top: 20px; left: 20px; color: white;
-            z-index: 10; pointer-events: none;
+        /* CHAP TOMON - OMBOR (ELEMENTLAR) */
+        #inventory {
+            width: 250px;
+            background-color: #16213e;
+            border-right: 2px solid #0f3460;
+            padding: 20px;
+            overflow-y: auto;
         }
-        h1 { margin: 0; font-size: 28px; text-shadow: 0 0 10px cyan; }
-        p { font-size: 16px; color: #ccc; background: rgba(0,0,0,0.5); padding: 5px; border-radius: 4px; }
-        #score-board { font-size: 50px; font-weight: bold; color: yellow; margin-top: 10px; }
-        
-        #status {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: cyan; font-size: 24px; font-weight: bold; text-align: center;
-            background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px;
-            z-index: 20;
+        .section-title {
+            color: #00d2ff;
+            border-bottom: 2px solid #00d2ff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .item {
+            background: #0f3460;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.2s;
+            border: 1px solid transparent;
+        }
+        .item:hover {
+            background: #1a2a50;
+            border-color: #00d2ff;
+            transform: translateX(5px);
+        }
+        .formula { font-weight: bold; color: #e94560; font-family: monospace; font-size: 16px; }
+
+        /* O'RTA - LABORATORIYA STOLI */
+        #lab {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: radial-gradient(circle at center, #252a40 0%, #1a1a2e 100%);
         }
 
-        /* Xatoliklar ekrani */
-        #error-log {
-            position: absolute; top: 0; right: 0; width: 300px;
-            color: red; background: rgba(0,0,0,0.8);
-            font-size: 12px; padding: 10px; display: none; z-index: 999;
+        /* MIJOZ EKRANI */
+        #client-screen {
+            background: #0f3460;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e94560;
+            text-align: center;
+            width: 60%;
+            margin-bottom: 40px;
+            box-shadow: 0 0 20px rgba(233, 69, 96, 0.2);
+        }
+        #order-text { font-size: 20px; margin-bottom: 10px; }
+        #target-substance { font-size: 30px; color: #e94560; font-weight: bold; }
+        #money-display { 
+            position: absolute; top: 20px; right: 20px; 
+            font-size: 24px; color: #00ff00; font-weight: bold; 
+            background: rgba(0,0,0,0.5); padding: 10px; border-radius: 10px;
+        }
+
+        /* KOLBA (ARALASHMA JOYI) */
+        #flask {
+            width: 200px;
+            height: 200px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        #flask::before { content: "KOLBA"; position: absolute; top: -30px; color: #aaa; font-size: 12px; }
+
+        .flask-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin: 2px;
+            font-size: 12px;
+        }
+
+        /* TUGMALAR */
+        .btn-group { display: flex; gap: 10px; }
+        button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        #mix-btn { background: #00d2ff; color: #000; }
+        #mix-btn:hover { background: #00aaff; box-shadow: 0 0 15px #00d2ff; }
+        
+        #clear-btn { background: #e94560; color: white; }
+        #clear-btn:hover { background: #c0354a; }
+
+        /* JAVOB XABARI */
+        #message {
+            height: 30px;
+            margin-top: 15px;
+            font-weight: bold;
+            font-size: 18px;
         }
     </style>
 </head>
 <body>
 
-    <div id="error-log"></div>
-
-    <div id="ui">
-        <h1>NEON GRAVITY</h1>
-        <p>✋ Ochiq qo'l = ITARISH (Qizilga qarshi)</p>
-        <p>✊ Musht = TORTISH (Sariqni yutish)</p>
-        <div id="score-board">0</div>
+    <div id="inventory">
+        <div class="section-title">ELEMENTLAR & MODDALAR</div>
+        <div id="items-list">
+            </div>
     </div>
 
-    <div id="status">TIZIM YUKLANMOQDA...<br><span style="font-size:16px; color:white">Iltimos, kameraga ruxsat bering</span></div>
+    <div id="lab">
+        <div id="money-display">💰 $0</div>
 
-    <video id="webcam" playsinline></video>
+        <div id="client-screen">
+            <div id="order-text">👋 Salom! Menga quyidagi modda kerak:</div>
+            <div id="target-substance">...</div>
+            <div style="margin-top:10px; font-size: 14px; color:#aaa;">(Narxi: $<span id="order-price">0</span>)</div>
+        </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+        <div id="flask" title="Moddalarni shu yerga bosing">
+            </div>
+
+        <div class="btn-group">
+            <button id="clear-btn" onclick="clearFlask()">TOZALASH 🗑️</button>
+            <button id="mix-btn" onclick="react()">REAKSIYA ⚗️</button>
+        </div>
+
+        <div id="message"></div>
+    </div>
 
     <script>
-        // XATOLARNI USHLASH
-        window.onerror = function(message) {
-            const el = document.getElementById('error-log');
-            el.style.display = 'block';
-            el.innerHTML += "XATO: " + message + "<br>";
+        // ---------------------------------------------------------
+        // 1. MA'LUMOTLAR BAZASI (KIMYOVIY RETSEPTLAR)
+        // ---------------------------------------------------------
+        
+        // O'yindagi bor barcha moddalar
+        const substances = [
+            { id: 'H2', name: 'Vodorod', type: 'gas' },
+            { id: 'O2', name: 'Kislorod', type: 'gas' },
+            { id: 'C', name: 'Uglerod', type: 'solid' },
+            { id: 'Na', name: 'Natriy', type: 'solid' },
+            { id: 'Cl2', name: 'Xlor', type: 'gas' },
+            { id: 'H2O', name: 'Suv', type: 'liquid' },
+            { id: 'Al4C3', name: 'Alyuminiy Karbid', type: 'solid' },
+            { id: 'HCl', name: 'Xlorid Kislota', type: 'liquid' },
+            { id: 'NaOH', name: 'Natriy Gidroksid', type: 'solid' },
+            // Natijaviy moddalar (Omborda bo'lmasligi ham mumkin)
+            { id: 'CH4', name: 'Metan', type: 'gas' },
+            { id: 'NaCl', name: 'Osh tuzi', type: 'solid' },
+            { id: 'CO2', name: 'Karbonat Angidrid', type: 'gas' },
+            { id: 'Al(OH)3', name: 'Alyuminiy Gidroksid', type: 'solid' }
+        ];
+
+        // Reaksiya qoidalari (Inputs -> Outputs)
+        // Tartib muhim emas, kod o'zi saralaydi
+        const recipes = [
+            { inputs: ['H2', 'O2'], output: 'H2O', price: 50 },
+            { inputs: ['Na', 'Cl2'], output: 'NaCl', price: 70 },
+            { inputs: ['C', 'O2'], output: 'CO2', price: 40 },
+            { inputs: ['Al4C3', 'H2O'], output: 'CH4', extra: 'Al(OH)3', price: 200 }, // Siz so'ragan reaksiya
+            { inputs: ['HCl', 'NaOH'], output: 'NaCl', extra: 'H2O', price: 100 },
+        ];
+
+        // ---------------------------------------------------------
+        // 2. O'YIN MANTIG'I
+        // ---------------------------------------------------------
+        
+        let currentMoney = 0;
+        let flaskContents = []; // Kolbadagi narsalar
+        let currentOrder = null;
+
+        // O'yin boshlanishi
+        window.onload = function() {
+            renderInventory();
+            generateNewOrder();
         };
 
-        // 1. THREE.JS (GRAFIKA)
-        const scene = new THREE.Scene();
-        // Fonni biroz ko'kimtir qilamiz, qora ekran bo'lib qolmasligi uchun
-        scene.background = new THREE.Color(0x0a0a15); 
-        
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.z = 50;
+        // Omborni chizish
+        function renderInventory() {
+            const list = document.getElementById('items-list');
+            list.innerHTML = "";
+            
+            // Faqat "Result" bo'lmagan, ya'ni boshlang'ich moddalarni chiqaramiz
+            // Yoki hammasini chiqaramiz, o'yin qiyinligiga qarab.
+            // Hozircha asosiy reaktiflarni chiqaramiz.
+            const starterPack = ['H2', 'O2', 'C', 'Na', 'Cl2', 'H2O', 'Al4C3', 'HCl', 'NaOH'];
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-
-        // O'YIN ELEMENTLARI
-        let score = 0;
-        let handX = 0, handY = 0;
-        let isFist = false;
-        let isHandDetected = false;
-        const targets = [];
-        const enemies = [];
-        
-        // Zarrachalar (Fon)
-        const particleCount = 400;
-        const particleGeo = new THREE.BufferGeometry();
-        const particlePos = new Float32Array(particleCount * 3);
-        const particleVel = [];
-
-        for(let i=0; i<particleCount; i++) {
-            particlePos[i*3] = (Math.random() - 0.5) * 120;
-            particlePos[i*3+1] = (Math.random() - 0.5) * 80;
-            particlePos[i*3+2] = 0;
-            particleVel.push({x: 0, y: 0});
-        }
-        particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePos, 3));
-        const particleMat = new THREE.PointsMaterial({ color: 0x00ffff, size: 0.8 });
-        const particles = new THREE.Points(particleGeo, particleMat);
-        scene.add(particles);
-
-        // Qo'l Kursor
-        const cursorGeo = new THREE.RingGeometry(2, 3, 32);
-        const cursorMat = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-        const cursor = new THREE.Mesh(cursorGeo, cursorMat);
-        scene.add(cursor);
-
-        // 2. FUNKSIYALAR
-        function spawnTarget() {
-            const geo = new THREE.SphereGeometry(2, 16, 16);
-            const mat = new THREE.MeshBasicMaterial({ color: 0xffd700 });
-            const mesh = new THREE.Mesh(geo, mat);
-            mesh.position.set((Math.random()-0.5)*100, (Math.random()-0.5)*60, 0);
-            scene.add(mesh);
-            targets.push({ mesh: mesh, active: true });
+            substances.forEach(sub => {
+                if(starterPack.includes(sub.id)) {
+                    const div = document.createElement('div');
+                    div.className = 'item';
+                    div.innerHTML = `<span>${sub.name}</span> <span class="formula">${sub.id}</span>`;
+                    div.onclick = () => addToFlask(sub);
+                    list.appendChild(div);
+                }
+            });
         }
 
-        function spawnEnemy() {
-            const geo = new THREE.SphereGeometry(2.5, 16, 16);
-            const mat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-            const mesh = new THREE.Mesh(geo, mat);
-            const side = Math.random() > 0.5 ? 1 : -1;
-            mesh.position.set(side * 60, (Math.random()-0.5)*40, 0);
-            const vel = { x: -side * (0.1 + Math.random()*0.2), y: (Math.random()-0.5)*0.2 };
-            scene.add(mesh);
-            enemies.push({ mesh: mesh, active: true, vel: vel });
+        // Kolbaga modda qo'shish
+        function addToFlask(sub) {
+            if (flaskContents.length >= 2) {
+                showMessage("Kolba to'la! Avval reaksiyani boshlang yoki tozalang.", "red");
+                return;
+            }
+            flaskContents.push(sub.id);
+            updateFlaskUI();
         }
 
-        // Boshlang'ich obyektlar
-        for(let i=0; i<6; i++) spawnTarget();
-        setInterval(spawnEnemy, 2500);
+        // Kolbani tozalash
+        function clearFlask() {
+            flaskContents = [];
+            updateFlaskUI();
+            showMessage("", "white");
+        }
 
-        // 3. MEDIAPIPE LOGIKASI
-        const videoElement = document.getElementById('webcam');
-        const statusElement = document.getElementById('status');
+        // Kolba ko'rinishini yangilash
+        function updateFlaskUI() {
+            const flaskDiv = document.getElementById('flask');
+            flaskDiv.innerHTML = "";
+            flaskContents.forEach(item => {
+                const sub = substances.find(s => s.id === item);
+                const span = document.createElement('span');
+                span.className = 'flask-item';
+                span.innerText = sub.formula || sub.id; // Formula
+                flaskDiv.appendChild(span);
+            });
+        }
 
-        function onResults(results) {
-            // Agar qo'l topilsa
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                isHandDetected = true;
-                statusElement.style.display = 'none'; // Yozuvni yo'qotish
+        // REAKSIYA BOSHLASH (ASOSIY MANTIQ)
+        function react() {
+            if (flaskContents.length < 2) {
+                showMessage("Reaksiya uchun kamida 2 ta modda kerak!", "orange");
+                return;
+            }
+
+            // 1. Kolbadagi moddalarni tartiblaymiz (Inputlar ketma-ketligi muhim bo'lmasligi uchun)
+            flaskContents.sort();
+
+            // 2. Retseptlarni tekshiramiz
+            let foundRecipe = null;
+
+            for (let recipe of recipes) {
+                // Retsept inputlarini ham tartiblaymiz
+                const recipeInputs = [...recipe.inputs].sort();
                 
-                const landmarks = results.multiHandLandmarks[0];
-                
-                // Koordinata (9 - O'rta barmoq asosi)
-                const x = (1 - landmarks[9].x) * 2 - 1; 
-                const y = -(landmarks[9].y * 2 - 1);
-                
-                // Yumshatish (Smooth movement)
-                handX += (x * 55 - handX) * 0.2;
-                handY += (y * 35 - handY) * 0.2;
+                // Solishtiramiz
+                if (JSON.stringify(flaskContents) === JSON.stringify(recipeInputs)) {
+                    foundRecipe = recipe;
+                    break;
+                }
+            }
 
-                // Mushtni aniqlash
-                const tip = landmarks[8].y;  // Ko'rsatkich uchi
-                const base = landmarks[5].y; // Ko'rsatkich asosi
-                const pinkyTip = landmarks[20].y;
-                const pinkyBase = landmarks[17].y;
-
-                // Agar barmoqlar bukilgan bo'lsa
-                if (tip > landmarks[6].y && pinkyTip > landmarks[18].y) {
-                    isFist = true;
-                    cursor.material.color.setHex(0xff0000); // Qizil
-                    cursor.scale.set(0.7, 0.7, 1);
+            // 3. Natija
+            if (foundRecipe) {
+                // Reaksiya muvaffaqiyatli!
+                const outputName = getSubName(foundRecipe.output);
+                
+                // Mijoz so'ragan narsami?
+                if (foundRecipe.output === currentOrder.output) {
+                    successReaction(foundRecipe);
                 } else {
-                    isFist = false;
-                    cursor.material.color.setHex(0x00ff00); // Yashil
-                    cursor.scale.set(1.2, 1.2, 1);
+                    // Reaksiya o'xshadi, lekin mijoz buni so'ramagan
+                    showMessage(`Reaksiya ketdi! ${outputName} hosil bo'ldi, lekin mijozga ${currentOrder.output} kerak edi.`, "yellow");
+                    clearFlask();
                 }
-
-                cursor.position.set(handX, handY, 0);
             } else {
-                isHandDetected = false;
-                statusElement.style.display = 'block';
-                statusElement.innerHTML = "QO'L KO'RINMAYAPTI<br><span style='font-size:16px; color:white'>Qo'lingizni kameraga ko'rsating</span>";
+                // Reaksiya yo'q
+                showMessage("Bu moddalar reaksiyaga kirishmadi yoki portlab ketdi! 💥", "red");
+                clearFlask();
             }
         }
 
-        const hands = new Hands({locateFile: (file) => {
-            return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-        }});
-        
-        hands.setOptions({
-            maxNumHands: 1,
-            modelComplexity: 1,
-            minDetectionConfidence: 0.5,
-            minTrackingConfidence: 0.5
-        });
-        
-        hands.onResults(onResults);
+        // Muvaffaqiyatli savdo
+        function successReaction(recipe) {
+            const outputName = getSubName(recipe.output);
+            
+            // Effekt
+            document.getElementById('flask').style.backgroundColor = "#00ff00";
+            setTimeout(() => document.getElementById('flask').style.backgroundColor = "rgba(255,255,255,0.05)", 500);
 
-        // Kamerani ishga tushirish
-        const cameraUtils = new Camera(videoElement, {
-            onFrame: async () => {
-                await hands.send({image: videoElement});
-            },
-            width: 640,
-            height: 480
-        });
-        
-        cameraUtils.start()
-            .then(() => { console.log("Kamera ishga tushdi"); })
-            .catch(err => { 
-                alert("Kameraga ulanib bo'lmadi! Iltimos ruxsat bering.");
-                console.error(err); 
-            });
-
-
-        // 4. ANIMATSIYA
-        function animate() {
-            requestAnimationFrame(animate);
-
-            // Zarrachalar harakati
-            const positions = particles.geometry.attributes.position.array;
-            for(let i=0; i<particleCount; i++) {
-                let px = positions[i*3];
-                let py = positions[i*3+1];
-                
-                // Qo'l ta'siri
-                if (isHandDetected) {
-                    let dx = handX - px;
-                    let dy = handY - py;
-                    let dist = Math.sqrt(dx*dx + dy*dy);
-
-                    if (dist < 20) {
-                        let force = isFist ? 0.8 : -1.2; // Tortish yoki Itarish
-                        particleVel[i].x += (dx/dist) * force * 0.05;
-                        particleVel[i].y += (dy/dist) * force * 0.05;
-                    }
-                }
-
-                // Tabiiy harakat
-                particleVel[i].x *= 0.95; 
-                particleVel[i].y *= 0.95;
-                positions[i*3] += particleVel[i].x;
-                positions[i*3+1] += particleVel[i].y;
-
-                // Chegaradan qaytish
-                if(positions[i*3] > 60 || positions[i*3] < -60) positions[i*3] *= -0.9;
-                if(positions[i*3+1] > 40 || positions[i*3+1] < -40) positions[i*3+1] *= -0.9;
-            }
-            particles.geometry.attributes.position.needsUpdate = true;
-
-            // Obyektlar mantig'i
-            targets.forEach(t => {
-                if(!t.active) return;
-                let d = t.mesh.position.distanceTo(new THREE.Vector3(handX, handY, 0));
-                if(isFist && d < 25 && isHandDetected) t.mesh.position.lerp(new THREE.Vector3(handX, handY, 0), 0.05);
-                if(d < 3 && isHandDetected && isFist) {
-                    score += 10;
-                    document.getElementById('score-board').innerText = score;
-                    scene.remove(t.mesh); t.active = false;
-                    spawnTarget();
-                }
-            });
-
-            enemies.forEach(e => {
-                if(!e.active) return;
-                e.mesh.position.x += e.vel.x; e.mesh.position.y += e.vel.y;
-                let d = e.mesh.position.distanceTo(new THREE.Vector3(handX, handY, 0));
-                
-                if(!isFist && d < 10 && isHandDetected) {
-                    e.vel.x = (e.mesh.position.x - handX) * 0.3;
-                    e.vel.y = (e.mesh.position.y - handY) * 0.3;
-                } else if(isFist && d < 4 && isHandDetected) {
-                    score -= 50; if(score < 0) score = 0;
-                    document.getElementById('score-board').innerText = score;
-                    scene.remove(e.mesh); e.active = false;
-                    document.body.style.background = "red";
-                    setTimeout(() => document.body.style.background = "#050505", 100);
-                }
-                
-                if(Math.abs(e.mesh.position.x) > 70) { scene.remove(e.mesh); e.active = false; }
-            });
-
-            renderer.render(scene, camera);
+            showMessage(`AJOYIB! Siz ${outputName} oldingiz! +$${recipe.price}`, "#00ff00");
+            
+            currentMoney += recipe.price;
+            document.getElementById('money-display').innerText = `💰 $${currentMoney}`;
+            
+            clearFlask();
+            
+            // Yangi buyurtma
+            setTimeout(() => {
+                generateNewOrder();
+            }, 2000);
         }
 
-        animate();
-        
-        // Oynani o'lchamini to'g'irlash
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
+        // Yangi buyurtma generatsiya qilish
+        function generateNewOrder() {
+            // Tasodifiy retsept tanlash
+            const randomRecipe = recipes[Math.floor(Math.random() * recipes.length)];
+            currentOrder = randomRecipe;
+            
+            const subName = getSubName(randomRecipe.output);
+            
+            document.getElementById('target-substance').innerText = `${subName} (${randomRecipe.output})`;
+            document.getElementById('order-price').innerText = randomRecipe.price;
+            showMessage("Yangi mijoz keldi...", "cyan");
+        }
+
+        // Yordamchi funksiya: ID dan nomni olish
+        function getSubName(id) {
+            const s = substances.find(x => x.id === id);
+            return s ? s.name : id;
+        }
+
+        function showMessage(text, color) {
+            const m = document.getElementById('message');
+            m.innerText = text;
+            m.style.color = color;
+        }
+
     </script>
 </body>
 </html>
