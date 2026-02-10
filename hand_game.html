@@ -2,9 +2,9 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <title>ULTIMATE ALCHEMIST - Kimyo va Savdo</title>
+    <title>ULTIMATE ALCHEMIST - Full Version</title>
     <style>
-        /* UMUMIY DIZAYN */
+        /* UMUMIY */
         body {
             margin: 0;
             background-color: #121212;
@@ -14,18 +14,18 @@
             grid-template-areas: 
                 "inventory lab"
                 "shop shop";
-            grid-template-columns: 250px 1fr;
-            grid-template-rows: 1fr 200px;
+            grid-template-columns: 280px 1fr;
+            grid-template-rows: 1fr 220px; /* Magazin balandligi */
             height: 100vh;
             overflow: hidden;
         }
 
-        /* 1. CHAP TOMON - OMBOR */
+        /* 1. CHAP - OMBOR */
         #inventory-panel {
             grid-area: inventory;
             background: #1e1e24;
             border-right: 2px solid #333;
-            padding: 10px;
+            padding: 15px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
@@ -33,27 +33,28 @@
         .section-title {
             color: #00d2ff;
             border-bottom: 2px solid #00d2ff;
-            padding-bottom: 5px;
-            margin-bottom: 10px;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
             font-weight: bold;
-            text-transform: uppercase;
+            font-size: 18px;
+            letter-spacing: 1px;
         }
         .inv-item {
             background: #2b2b36;
-            padding: 8px;
-            margin-bottom: 5px;
-            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 6px;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-left: 3px solid transparent;
+            border-left: 4px solid transparent;
             transition: 0.2s;
         }
-        .inv-item:hover { background: #3a3a48; border-left-color: #00d2ff; }
-        .qty-badge { background: #444; padding: 2px 6px; border-radius: 10px; font-size: 11px; }
+        .inv-item:hover { background: #3a3a48; border-left-color: #00d2ff; transform: translateX(5px); }
+        .qty-badge { background: #00d2ff; color: #000; padding: 2px 8px; border-radius: 10px; font-weight: bold; font-size: 12px; }
 
-        /* 2. O'RTA - LABORATORIYA */
+        /* 2. O'RTA - LAB */
         #lab-panel {
             grid-area: lab;
             position: relative;
@@ -64,130 +65,110 @@
             padding: 20px;
         }
 
-        /* Yordam va Pul */
+        /* Yuqori Panel */
         #top-info {
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            font-size: 20px;
-            font-weight: bold;
+            width: 100%; display: flex; justify-content: space-between; align-items: center;
+            font-size: 22px; font-weight: bold;
         }
-        #money-display { color: #ffd700; text-shadow: 0 0 10px #ffd700; }
+        #money-display { color: #ffd700; text-shadow: 0 0 10px #ffd700; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px; }
+        .help-btn { background: #ff0055; color: white; border: none; padding: 5px 15px; border-radius: 20px; cursor: pointer; font-size: 16px; font-weight: bold; }
 
-        /* Buyurtma Ekrani */
+        /* Buyurtma */
         #quest-box {
-            background: rgba(0,0,0,0.6);
-            border: 1px solid #00ff00;
-            padding: 10px 20px;
-            border-radius: 8px;
-            margin-top: 10px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00e676;
+            padding: 15px 30px;
+            border-radius: 12px;
+            margin-top: 15px;
             text-align: center;
+            box-shadow: 0 0 20px rgba(0, 230, 118, 0.1);
         }
-        #quest-name { color: #ff0055; font-weight: bold; font-size: 22px; }
+        #quest-name { color: #ff4081; font-weight: bold; font-size: 24px; margin: 5px 0; }
 
         /* KOLBA */
         #flask-area {
-            position: relative;
-            margin-top: 30px;
-            width: 200px;
-            height: 200px;
+            position: relative; margin-top: 40px; width: 220px; height: 220px;
         }
         #flask {
             width: 100%; height: 100%;
             border-radius: 50%;
-            border: 5px solid rgba(255,255,255,0.3);
+            border: 6px solid rgba(255,255,255,0.3);
             background: rgba(255,255,255,0.05);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            transition: 0.3s;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            overflow: hidden; position: relative;
         }
+        .flask-item { background: rgba(255,255,255,0.2); padding: 5px 10px; margin: 3px; border-radius: 4px; color: #fff; font-size: 14px; }
+        
         /* Olov */
-        #heater {
-            width: 100px; height: 10px;
-            background: #555;
-            margin: 0 auto;
-            margin-top: 5px;
-            position: relative;
-        }
+        #heater-base { width: 120px; height: 15px; background: #444; margin: 5px auto; border-radius: 5px; }
         #fire {
-            position: absolute; bottom: 10px; left: 10px; right: 10px; height: 40px;
-            background: linear-gradient(to top, #ff4500, #ffcc00, transparent);
-            filter: blur(4px);
-            opacity: 0;
-            transition: 0.5s;
+            position: absolute; bottom: 20px; left: 0; right: 0; height: 60px;
+            background: radial-gradient(ellipse at bottom, #ff5722, transparent 70%);
+            filter: blur(5px); opacity: 0; transition: 0.5s; pointer-events: none;
         }
         .heater-on #fire { opacity: 1; }
 
-        /* TUGMALAR */
-        #controls { margin-top: 20px; display: flex; gap: 10px; }
-        button {
-            padding: 10px 20px; font-size: 16px; font-weight: bold;
-            border: none; border-radius: 5px; cursor: pointer; color: white;
-            transition: 0.2s;
-        }
-        .btn-mix { background: #2196f3; }
-        .btn-mix:hover { background: #1976d2; box-shadow: 0 0 15px #2196f3; }
-        
-        /* Isitish tugmasi (Switch) */
-        #heat-toggle { background: #424242; color: #aaa; }
-        #heat-toggle.active { background: #ff3d00; color: white; box-shadow: 0 0 20px #ff3d00; }
+        /* Tugmalar */
+        #controls { margin-top: 20px; display: flex; gap: 15px; }
+        button { padding: 12px 25px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; color: white; transition: 0.2s; }
+        button:active { transform: scale(0.95); }
 
+        .btn-mix { background: linear-gradient(45deg, #2196f3, #00bcd4); }
+        .btn-heat { background: #424242; color: #aaa; }
+        .btn-heat.active { background: #ff3d00; color: white; box-shadow: 0 0 20px #ff3d00; }
         .btn-clear { background: #d32f2f; }
         .btn-submit { background: #00c853; display: none; }
 
-        /* LOG */
+        /* Log */
         #log {
-            width: 80%; height: 100px;
-            background: #000; border-top: 1px solid #333;
-            overflow-y: auto;
-            font-family: monospace; font-size: 12px;
-            padding: 5px; margin-top: auto;
-            color: #aaa;
+            width: 90%; height: 120px; background: #000; border: 1px solid #333;
+            overflow-y: auto; font-family: monospace; font-size: 13px;
+            padding: 10px; margin-top: auto; color: #ccc; border-radius: 6px;
         }
 
-        /* 3. PASTKI QISM - MAGAZIN */
+        /* 3. PAST - MAGAZIN */
         #shop-panel {
             grid-area: shop;
             background: #18181b;
-            border-top: 2px solid #333;
-            padding: 10px 20px;
-            display: flex;
-            flex-direction: column;
+            border-top: 3px solid #333;
+            padding: 15px 25px;
+            display: flex; flex-direction: column;
         }
         #shop-items {
-            display: flex;
-            overflow-x: auto;
-            gap: 15px;
-            padding-bottom: 10px;
+            display: flex; overflow-x: auto; gap: 15px; padding-bottom: 10px;
         }
-        .shop-card {
-            background: #272730;
-            min-width: 140px;
-            padding: 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            border: 1px solid transparent;
-            position: relative;
-        }
-        .shop-card:hover { border-color: #ffd700; transform: translateY(-3px); }
-        .shop-name { font-weight: bold; color: #fff; }
-        .shop-price { color: #00e676; }
-        
-        /* Chegirma yorlig'i */
-        .sale-badge {
-            position: absolute; top: -5px; right: -5px;
-            background: #ff0055; color: white;
-            font-size: 10px; padding: 2px 5px;
-            border-radius: 4px; font-weight: bold;
-            animation: pulse 1s infinite;
-            display: none;
-        }
-        .old-price { text-decoration: line-through; color: #777; font-size: 11px; margin-right: 5px; display: none; }
+        /* Scrollbar */
+        #shop-items::-webkit-scrollbar { height: 8px; }
+        #shop-items::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
 
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        .shop-card {
+            background: #272730; min-width: 150px; padding: 15px;
+            border-radius: 8px; cursor: pointer; border: 1px solid #333; position: relative;
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .shop-card:hover { border-color: #ffd700; background: #32323d; }
+        .shop-name { font-weight: bold; font-size: 16px; color: #fff; margin-bottom: 5px; }
+        .shop-price { color: #00e676; font-size: 18px; font-weight: bold; }
+        
+        .sale-badge {
+            position: absolute; top: -8px; right: -8px; background: #ff0055; color: white;
+            font-size: 11px; padding: 3px 8px; border-radius: 10px; font-weight: bold;
+            animation: bounce 1s infinite; display: none;
+        }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+
+        /* Modal (Yordam) */
+        #modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;
+        }
+        #modal-content {
+            background: #222; padding: 20px; border-radius: 10px; width: 500px;
+            max-height: 80vh; overflow-y: auto; border: 1px solid #00d2ff;
+        }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #444; padding: 8px; text-align: left; font-size: 14px; }
+        th { color: #00d2ff; }
 
     </style>
 </head>
@@ -195,119 +176,129 @@
 
     <div id="inventory-panel">
         <div class="section-title">📦 Elementlar</div>
+        <div id="empty-msg" style="color:#777; font-size:14px; text-align:center; margin-top:20px;">
+            Hozircha bo'sh...<br>Magazindan sotib oling!
+        </div>
         <div id="inv-list"></div>
     </div>
 
     <div id="lab-panel">
         <div id="top-info">
-            <button onclick="showHint()" style="background:#ffd700; color:black; border-radius:50%; width:30px; height:30px; padding:0;">?</button>
+            <button class="help-btn" onclick="toggleModal(true)">📖 Retseptlar</button>
             <span id="money-display">💰 $200</span>
         </div>
 
         <div id="quest-box">
-            <div>Mijoz so'rovi:</div>
+            <div style="font-size:12px; color:#aaa; text-transform:uppercase;">Mijoz Buyurtmasi</div>
             <div id="quest-name">...</div>
-            <div id="quest-reward" style="color: #00e676;">Mukofot: ...</div>
-            <button class="btn-submit" id="btn-submit" onclick="submitQuest()">SOTISH</button>
+            <div id="quest-reward" style="color: #00e676; font-weight: bold; margin-top:5px;">...</div>
+            <button class="btn-submit" id="btn-submit" onclick="submitQuest()">SOTISH ($)</button>
         </div>
 
         <div id="flask-area">
             <div id="flask"></div>
             <div id="fire"></div>
-            <div id="heater"></div>
         </div>
+        <div id="heater-base"></div>
 
         <div id="controls">
             <button class="btn-clear" onclick="clearFlask()">Tozalash</button>
-            <button id="heat-toggle" onclick="toggleHeater()">OLOV: O'CHIQ</button>
+            <button id="heat-toggle" class="btn-heat" onclick="toggleHeater()">OLOV: O'CHIQ</button>
             <button class="btn-mix" onclick="react()">REAKSIYA! ⚗️</button>
         </div>
 
-        <div id="log">Tizim tayyor...</div>
+        <div id="log">Tizim ishga tushdi. Bonus elementlar berildi!</div>
     </div>
 
     <div id="shop-panel">
-        <div class="section-title">🏪 MAGAZIN (Chegirmalar har 30 sekunda)</div>
+        <div class="section-title" style="display:flex; justify-content:space-between;">
+            <span>🏪 MAGAZIN</span>
+            <span style="font-size:12px; color:#aaa; font-weight:normal;">(Chegirmalar har 30 sekunda yangilanadi)</span>
+        </div>
         <div id="shop-items"></div>
     </div>
 
+    <div id="modal" onclick="if(event.target===this) toggleModal(false)">
+        <div id="modal-content">
+            <h2 style="margin-top:0; color:#00d2ff;">Kimyo Kitobi 📖</h2>
+            <p>Qanday yasash mumkin:</p>
+            <table id="recipe-table">
+                <tr><th>Kiruvchi</th><th>Jarayon</th><th>Natija</th></tr>
+            </table>
+            <button onclick="toggleModal(false)" style="background:#444; margin-top:20px; width:100%;">Yopish</button>
+        </div>
+    </div>
+
     <script>
-        // ---------------------------------------------------------
-        // 1. KIMYOVIY BAZA
-        // ---------------------------------------------------------
+        // 1. DATA
         const substances = {
-            'H2': { name: 'Vodorod', type: 'elem' },
-            'O2': { name: 'Kislorod', type: 'elem' },
-            'C': { name: 'Ko\'mir (C)', type: 'elem' },
-            'Na': { name: 'Natriy', type: 'elem' },
-            'Cl2': { name: 'Xlor', type: 'elem' },
-            'Ca': { name: 'Kalsiy', type: 'elem' },
-            'S': { name: 'Oltingugurt', type: 'elem' },
-            'Fe': { name: 'Temir', type: 'elem' },
-            // Murakkab
-            'H2O': { name: 'Suv', type: 'comp' },
-            'CO2': { name: 'Karbonat Angidrid', type: 'comp' },
-            'NaCl': { name: 'Osh Tuzi', type: 'comp' },
-            'CaO': { name: 'Ohak (Sondirilmagan)', type: 'comp' },
-            'CaCO3': { name: 'Bo\'r (Kalsiy Karbonat)', type: 'comp' },
-            'Ca(OH)2': { name: 'Ohakli Suv', type: 'comp' },
-            'FeS': { name: 'Temir Sulfid', type: 'comp' },
-            'CH4': { name: 'Metan', type: 'comp' },
-            'H2SO4': { name: 'Sulfat Kislota', type: 'comp' },
-            'C2H2': { name: 'Asetilen', type: 'comp' } // Sotib olinadigan
+            'H2': { name: 'Vodorod' }, 'O2': { name: 'Kislorod' }, 'C': { name: 'Ko\'mir' },
+            'Na': { name: 'Natriy' }, 'Cl2': { name: 'Xlor' }, 'Ca': { name: 'Kalsiy' },
+            'S': { name: 'Oltingugurt' }, 'Fe': { name: 'Temir' }, 'Al': { name: 'Alyuminiy' },
+            // Products
+            'H2O': { name: 'Suv' }, 'CO2': { name: 'Karbonat Angidrid' }, 'NaCl': { name: 'Osh Tuzi' },
+            'CaO': { name: 'Ohak' }, 'CaCO3': { name: 'Bo\'r' }, 'Ca(OH)2': { name: 'Ohakli Suv' },
+            'FeS': { name: 'Temir Sulfid' }, 'SO2': { name: 'Sulfat Gazi' }, 'CH4': { name: 'Metan' },
+            'Al4C3': { name: 'Alyuminiy Karbid' }, 'Al(OH)3': { name: 'Alyuminiy Gidroksid' }
         };
 
         const recipes = [
-            // ARALASHTIRISH (MIX) - Oddiy haroratda
-            { in: ['H2', 'O2'], out: ['H2O'], type: 'mix', eq: '2H₂ + O₂ → 2H₂O' },
-            { in: ['Na', 'Cl2'], out: ['NaCl'], type: 'mix', eq: '2Na + Cl₂ → 2NaCl' },
-            { in: ['CaO', 'H2O'], out: ['Ca(OH)2'], type: 'mix', eq: 'CaO + H₂O → Ca(OH)₂' },
-            { in: ['CaO', 'CO2'], out: ['CaCO3'], type: 'mix', eq: 'CaO + CO₂ → CaCO₃' },
-            
-            // QIZDIRISH (HEAT) - Olov yoqiq bo'lsa
-            { in: ['C', 'O2'], out: ['CO2'], type: 'heat', eq: 'C + O₂ →(t) CO₂' },
-            { in: ['S', 'O2'], out: ['SO2'], type: 'heat', eq: 'S + O₂ →(t) SO₂' },
-            { in: ['Fe', 'S'], out: ['FeS'], type: 'heat', eq: 'Fe + S →(t) FeS' },
-            // PARCHALASH (DECOMPOSITION) - 1 ta moddadan 2 ta olish
-            { in: ['CaCO3'], out: ['CaO', 'CO2'], type: 'heat', eq: 'CaCO₃ →(t) CaO + CO₂ (Parchalanish)' },
-            { in: ['H2O'], out: ['H2', 'O2'], type: 'heat', eq: '2H₂O →(t) 2H₂ + O₂ (Bug\'lanish/Gidroliz)' }
+            { in: ['H2', 'O2'], out: ['H2O'], type: 'mix', text: '2H₂ + O₂' },
+            { in: ['Na', 'Cl2'], out: ['NaCl'], type: 'mix', text: '2Na + Cl₂' },
+            { in: ['CaO', 'H2O'], out: ['Ca(OH)2'], type: 'mix', text: 'CaO + H₂O' },
+            { in: ['CaO', 'CO2'], out: ['CaCO3'], type: 'mix', text: 'CaO + CO₂' },
+            { in: ['Al4C3', 'H2O'], out: ['CH4', 'Al(OH)3'], type: 'mix', text: 'Al₄C₃ + 12H₂O' },
+
+            { in: ['C', 'O2'], out: ['CO2'], type: 'heat', text: 'C + O₂' },
+            { in: ['S', 'O2'], out: ['SO2'], type: 'heat', text: 'S + O₂' },
+            { in: ['Fe', 'S'], out: ['FeS'], type: 'heat', text: 'Fe + S' },
+            { in: ['Ca', 'O2'], out: ['CaO'], type: 'heat', text: '2Ca + O₂' },
+            { in: ['CaCO3'], out: ['CaO', 'CO2'], type: 'heat', text: 'CaCO₃ (Parchalash)' }
         ];
 
         let shopData = [
             { id: 'H2', price: 10 }, { id: 'O2', price: 10 }, { id: 'C', price: 15 },
             { id: 'Na', price: 20 }, { id: 'Cl2', price: 20 }, { id: 'Ca', price: 25 },
-            { id: 'S', price: 25 }, { id: 'Fe', price: 30 }, { id: 'CaCO3', price: 100 },
-            { id: 'C2H2', price: 150 } // Qimmat
+            { id: 'S', price: 25 }, { id: 'Fe', price: 30 }, { id: 'Al', price: 35 },
+            { id: 'Al4C3', price: 150 }, { id: 'CaCO3', price: 80 }
         ];
 
-        // ---------------------------------------------------------
         // 2. STATE
-        // ---------------------------------------------------------
         let money = 200;
-        let inventory = {};
+        let inventory = { 'H2': 5, 'O2': 5, 'C': 5 }; // BONUS BILAN BOSHLASH!
         let flask = [];
         let isHeaterOn = false;
         let currentQuest = null;
 
-        // Boshlash
         init();
-        setInterval(shopRotation, 30000); // Har 30 sekunda chegirma o'zgaradi
+        setInterval(shopRotation, 30000);
 
         function init() {
             renderInventory();
             renderShop();
+            renderRecipes(); // Jadvalni to'ldirish
             newQuest();
         }
 
-        // --- DO'KON VA CHEGIRMA ---
-        function shopRotation() {
-            log("📢 DO'KONDA CHEGIRMALAR YANGILANDI!", "#ff0055");
-            // Har safar tasodifiy 2 ta mahsulotga chegirma beramiz
-            shopData.forEach(item => {
-                item.discount = 0; // Reset
-                if (Math.random() > 0.7) item.discount = Math.floor(Math.random() * 30 + 10); // 10-40% chegirma
-            });
-            renderShop();
+        // --- RENDER ---
+        function renderInventory() {
+            const list = document.getElementById('inv-list');
+            const msg = document.getElementById('empty-msg');
+            list.innerHTML = '';
+            
+            let hasItems = false;
+            for (let [id, qty] of Object.entries(inventory)) {
+                if (qty > 0) {
+                    hasItems = true;
+                    const el = document.createElement('div');
+                    el.className = 'inv-item';
+                    el.innerHTML = `<span>${substances[id].name}</span> <span class="qty-badge">x${qty}</span>`;
+                    el.onclick = () => addToFlask(id);
+                    list.appendChild(el);
+                }
+            }
+            msg.style.display = hasItems ? 'none' : 'block';
+            checkQuest();
         }
 
         function renderShop() {
@@ -320,8 +311,8 @@
                 card.className = 'shop-card';
                 card.innerHTML = `
                     <div class="shop-name">${substances[item.id].name}</div>
-                    <div style="margin-top:5px;">
-                        <span class="old-price" style="display:${item.discount ? 'inline' : 'none'}">$${item.price}</span>
+                    <div>
+                        <span style="text-decoration:line-through; color:#666; font-size:12px; display:${item.discount ? 'inline' : 'none'}">$${item.price}</span>
                         <span class="shop-price">$${finalPrice}</span>
                     </div>
                     <div class="sale-badge" style="display:${item.discount ? 'block' : 'none'}">-${item.discount}%</div>
@@ -331,38 +322,32 @@
             });
         }
 
-        function buy(id, price) {
-            if (money >= price) {
-                money -= price;
-                updateMoney();
-                addItem(id, 1);
-                log(`Sotib olindi: ${substances[id].name}`, '#00e676');
-            } else {
-                alert("Pul yetmaydi!");
-            }
+        function renderFlask() {
+            const f = document.getElementById('flask');
+            f.innerHTML = '';
+            flask.forEach(id => {
+                const el = document.createElement('div');
+                el.className = 'flask-item';
+                el.innerText = id;
+                f.appendChild(el);
+            });
         }
 
-        // --- OMBOR VA LAB ---
-        function renderInventory() {
-            const list = document.getElementById('inv-list');
-            list.innerHTML = '';
-            for (let [id, qty] of Object.entries(inventory)) {
-                if (qty > 0) {
-                    const el = document.createElement('div');
-                    el.className = 'inv-item';
-                    el.innerHTML = `<span>${substances[id].name} (${id})</span> <span class="qty-badge">x${qty}</span>`;
-                    el.onclick = () => addToFlask(id);
-                    list.appendChild(el);
-                }
-            }
+        function renderRecipes() {
+            const table = document.getElementById('recipe-table');
+            recipes.forEach(r => {
+                const row = document.createElement('tr');
+                const method = r.type === 'heat' ? "🔥 Olov" : "💧 Aralash.";
+                const outNames = r.out.map(o => substances[o].name).join(' + ');
+                row.innerHTML = `<td>${r.text}</td><td>${method}</td><td>${outNames}</td>`;
+                table.appendChild(row);
+            });
         }
 
+        // --- ACTIONS ---
         function addToFlask(id) {
             if(inventory[id] > 0) {
-                // Kolba cheklovi: Qizdirish uchun ko'p narsa kerak emas, lekin aralashtirish uchun 2 ta.
-                // Erkinlik beramiz (maksimum 3 ta)
                 if(flask.length >= 3) { alert("Kolba to'ldi!"); return; }
-                
                 inventory[id]--;
                 flask.push(id);
                 renderInventory();
@@ -370,93 +355,82 @@
             }
         }
 
-        function renderFlask() {
-            const f = document.getElementById('flask');
-            f.innerHTML = '';
-            flask.forEach(id => {
-                const s = document.createElement('div');
-                s.style.background = "rgba(255,255,255,0.2)";
-                s.style.padding = "4px 8px";
-                s.style.margin = "2px";
-                s.style.borderRadius = "4px";
-                s.innerText = id;
-                f.appendChild(s);
-            });
+        function buy(id, price) {
+            if(money >= price) {
+                money -= price;
+                updateMoney();
+                if(!inventory[id]) inventory[id] = 0;
+                inventory[id]++;
+                renderInventory();
+                log(`Sotib olindi: ${substances[id].name}`, '#00e676');
+            } else {
+                alert("Pul yetmaydi!");
+            }
         }
 
         function toggleHeater() {
             isHeaterOn = !isHeaterOn;
             const btn = document.getElementById('heat-toggle');
             const area = document.getElementById('flask-area');
-            
             if(isHeaterOn) {
                 btn.innerText = "OLOV: YONIQ 🔥";
-                btn.className = "active";
-                area.classList.add("heater-on");
+                btn.classList.add('active');
+                area.classList.add('heater-on');
             } else {
                 btn.innerText = "OLOV: O'CHIQ";
-                btn.className = "";
-                area.classList.remove("heater-on");
+                btn.classList.remove('active');
+                area.classList.remove('heater-on');
             }
         }
 
-        function clearFlask() {
-            flask.forEach(id => addItem(id, 1));
-            flask = [];
-            renderFlask();
-        }
-
-        function addItem(id, qty) {
-            inventory[id] = (inventory[id] || 0) + qty;
-            renderInventory();
-            checkQuest();
-        }
-
-        // --- REAKSIYA MANTIG'I (ENG MUHIMI) ---
         function react() {
             if(flask.length === 0) return;
-
             const mode = isHeaterOn ? 'heat' : 'mix';
             let success = false;
 
-            // Retseptlarni tekshiramiz
             for (let r of recipes) {
                 if (r.type !== mode) continue;
-
-                // Moddalar mos keladimi? (Tartib muhim emas)
-                // 1. Kiruvchi moddalar soni teng bo'lishi kerak
                 if (r.in.length !== flask.length) continue;
+                
+                const sRecipe = [...r.in].sort().join(',');
+                const sFlask = [...flask].sort().join(',');
 
-                // 2. Moddalar bir xil bo'lishi kerak
-                const sortedRecipe = [...r.in].sort().join(',');
-                const sortedFlask = [...flask].sort().join(',');
-
-                if (sortedRecipe === sortedFlask) {
-                    // REAKSIYA TOPILDI!
-                    log(`Muvaffaqiyat! ${r.eq}`, '#00e676');
-                    flask = []; // Eskilar yo'qoladi
-                    r.out.forEach(out => addItem(out, 1)); // Yangilar qo'shiladi
+                if (sRecipe === sFlask) {
+                    log(`Reaksiya: ${r.text} -> ${r.out.join('+')}`, '#00e676');
+                    r.out.forEach(out => {
+                        if(!inventory[out]) inventory[out] = 0;
+                        inventory[out]++;
+                    });
+                    flask = [];
                     renderFlask();
+                    renderInventory();
                     success = true;
                     break;
                 }
             }
 
-            if (!success) {
-                if(isHeaterOn) log("Yondirdingiz, lekin hech narsa bo'lmadi (yoki kuyib ketdi).", "#ff3d00");
-                else log("Bu moddalar aralashmaydi.", "#aaa");
-                
-                // Jazo: Noto'g'ri reaksiyada moddalar yo'qolishi mumkin
-                // Hozircha qaytarib beramiz, o'yinni oson qilish uchun
-                 clearFlask(); 
+            if(!success) {
+                log(isHeaterOn ? "Olovda hech narsa bo'lmadi (Kuyib ketdi)" : "Bu moddalar aralashmaydi", '#ff3d00');
+                flask = []; // Yo'qotish
+                renderFlask();
             }
         }
 
-        // --- BUYURTMA ---
+        function clearFlask() {
+            flask.forEach(id => {
+                if(!inventory[id]) inventory[id] = 0;
+                inventory[id]++;
+            });
+            flask = [];
+            renderFlask();
+            renderInventory();
+        }
+
+        // --- GAMEPLAY ---
         function newQuest() {
             const targets = [
                 { id: 'H2O', r: 50 }, { id: 'NaCl', r: 80 }, { id: 'CO2', r: 70 },
-                { id: 'CaO', r: 100 }, { id: 'Ca(OH)2', r: 150 }, { id: 'FeS', r: 120 }
+                { id: 'CaO', r: 100 }, { id: 'Ca(OH)2', r: 150 }, { id: 'CH4', r: 500 }
             ];
             currentQuest = targets[Math.floor(Math.random() * targets.length)];
             document.getElementById('quest-name').innerText = substances[currentQuest.id].name;
@@ -476,32 +450,27 @@
                 inventory[currentQuest.id]--;
                 money += currentQuest.r;
                 updateMoney();
-                log(`SOTILDI! +$${currentQuest.r}`, 'gold');
+                log(`SOTILDI: ${substances[currentQuest.id].name}`, 'gold');
                 renderInventory();
                 newQuest();
             }
         }
 
-        function updateMoney() {
-            document.getElementById('money-display').innerText = `💰 $${money}`;
+        function shopRotation() {
+            log("📢 DO'KONDA YANGI CHEGIRMALAR!", "#00d2ff");
+            shopData.forEach(i => {
+                i.discount = Math.random() > 0.6 ? Math.floor(Math.random()*40+10) : 0;
+            });
+            renderShop();
         }
 
-        function log(msg, color) {
+        function updateMoney() { document.getElementById('money-display').innerText = `💰 $${money}`; }
+        function log(m, c) {
             const l = document.getElementById('log');
-            l.innerHTML += `<div style="color:${color}">> ${msg}</div>`;
+            l.innerHTML += `<div style="color:${c || '#ccc'}">> ${m}</div>`;
             l.scrollTop = l.scrollHeight;
         }
-
-        function showHint() {
-            // Hozirgi kvest uchun yordam
-            const r = recipes.find(x => x.out.includes(currentQuest.id));
-            if(r) {
-                let type = r.type === 'heat' ? "🔥 QIZDIRISH" : "💧 ARALASHTIRISH";
-                alert(`Maslahat: ${r.in.join(' + ')} -> [${type}]`);
-            } else {
-                alert("Bu moddani do'kondan qidirib ko'ring yoki boshqa reaksiyalarni sinang.");
-            }
-        }
+        function toggleModal(show) { document.getElementById('modal').style.display = show ? 'flex' : 'none'; }
 
     </script>
 </body>
