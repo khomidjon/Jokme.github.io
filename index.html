@@ -3,404 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jarvis - SMS Auth</title>
-    
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-
+    <title>JARVIS - Kirish</title>
     <style>
-        /* SIZNING DIZAYNINGIZ (O'ZGARISHSIZ) */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
+        /* SIZNING ESKI DIZAYNINGIZ (O'ZGARISHSIZ) */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            min-height: 100vh;
-            display: flex; align-items: center; justify-content: center;
-            background: #000; overflow: hidden; position: relative; color: white;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f0c29;
+            background: linear-gradient(to right, #24243e, #302b63, #0f0c29);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            overflow: hidden;
         }
 
-        /* Animated Background */
-        .bg-animation { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
-        .bg-gradient {
-            position: absolute; width: 100%; height: 100%;
-            background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
-            animation: gradientShift 15s ease infinite;
-        }
-        @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-
-        .particles { position: absolute; width: 100%; height: 100%; }
-        .particle {
-            position: absolute; background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%; animation: float 20s infinite;
-        }
-        .particle:nth-child(1) { width: 80px; height: 80px; left: 10%; animation-delay: 0s; }
-        .particle:nth-child(2) { width: 60px; height: 60px; left: 30%; animation-delay: 2s; }
-        .particle:nth-child(3) { width: 100px; height: 100px; left: 50%; animation-delay: 4s; }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
-            50% { transform: translateY(-100vh) rotate(360deg); opacity: 0.6; }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            width: 320px;
+            text-align: center;
         }
 
-        /* Main Container */
-        .container { position: relative; z-index: 10; max-width: 450px; width: 90%; padding: 20px; }
+        h2 { margin-bottom: 30px; letter-spacing: 2px; }
 
-        /* Hero Section */
-        .hero { text-align: center; margin-bottom: 40px; }
-        .hero h1 {
-            font-size: 42px; font-weight: 700;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            margin-bottom: 10px; text-shadow: 0 0 30px rgba(102, 126, 234, 0.3);
-        }
-        .hero p { color: rgba(255, 255, 255, 0.7); font-size: 16px; font-weight: 300; }
-
-        /* Glass Login Box */
-        .login-box {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px; padding: 40px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            transition: all 0.3s ease;
-        }
-        .login-box:hover {
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            box-shadow: 0 8px 32px 0 rgba(102, 126, 234, 0.2);
+        input {
+            width: 100%;
+            padding: 12px 0;
+            margin-bottom: 20px;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid #fff;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
         }
 
-        /* Tabs */
-        .tabs { display: flex; gap: 10px; margin-bottom: 30px; }
-        .tab {
-            flex: 1; padding: 12px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px; color: rgba(255, 255, 255, 0.5);
-            cursor: pointer; transition: all 0.3s ease;
-            font-weight: 500; text-align: center;
-        }
-        .tab.active {
-            background: rgba(102, 126, 234, 0.2);
-            border-color: rgba(102, 126, 234, 0.5);
-            color: #fff; box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
-        }
-
-        /* Inputs & Buttons */
-        .input-group { margin-bottom: 20px; }
-        .input-group label { display: block; color: rgba(255, 255, 255, 0.8); font-size: 14px; margin-bottom: 8px; }
-        .input-group input {
-            width: 100%; padding: 14px; background: rgba(255, 255, 255, 0.05);
-            border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
-            color: #fff; font-size: 15px; outline: none; transition: 0.3s;
-        }
-        .input-group input:focus { border-color: #667eea; background: rgba(255, 255, 255, 0.08); }
+        input:focus { border-bottom-color: #00d2ff; }
         
-        .btn {
-            width: 100%; padding: 14px; margin-top: 10px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none; border-radius: 12px; color: #fff;
-            font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s;
+        ::placeholder { color: rgba(255,255,255,0.6); }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            background: linear-gradient(45deg, #00d2ff, #3a7bd5);
+            color: white;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+            font-weight: bold;
         }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        /* Form Visibility */
-        .form-content { display: none; animation: fadeIn 0.5s; }
-        .form-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 210, 255, 0.4);
+        }
 
-        .otp-input { text-align: center; letter-spacing: 5px; font-size: 20px; }
-        .resend-link { text-align: center; margin-top: 15px; font-size: 12px; cursor: pointer; color: #aaa; }
-        .divider { text-align: center; margin: 20px 0; color: rgba(255,255,255,0.4); font-size: 14px; }
+        .toggle-text {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #ccc;
+            cursor: pointer;
+        }
         
-        /* Firebase Recaptcha uchun yashirin joy */
-        #recaptcha-container { display: none; }
+        .toggle-text span { color: #00d2ff; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="bg-animation">
-        <div class="bg-gradient"></div>
-        <div class="particles">
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-        </div>
-    </div>
-
     <div class="container">
-        <div class="hero">
-            <h1>XUSH KELIBSIZ!</h1>
-            <p>JARVIS AI tizimiga kiring</p>
-        </div>
-
-        <div class="login-box">
-            <div class="tabs">
-                <div class="tab active" id="tab-login" onclick="switchTab('login')">Kirish</div>
-                <div class="tab" id="tab-register" onclick="switchTab('register')">Ro'yxatdan o'tish</div>
-            </div>
-
-            <div id="login-form" class="form-content active">
-                <div class="input-group">
-                    <label>Email</label>
-                    <input type="email" id="login-email" placeholder="Emailingiz">
-                </div>
-                <div class="input-group">
-                    <label>Parol</label>
-                    <input type="password" id="login-password" placeholder="Parolingiz">
-                </div>
-                <button class="btn" onclick="loginUser()">Tizimga kirish</button>
-            </div>
-
-            <div id="register-form" class="form-content">
-                <div id="reg-step-1">
-                    <div class="input-group">
-                        <label>Foydalanuvchi nomi</label>
-                        <input type="text" id="reg-username" placeholder="Ismingiz">
-                    </div>
-                    <div class="input-group">
-                        <label>Telefon raqam (SMS uchun)</label>
-                        <input type="tel" id="reg-phone" placeholder="+998901234567" value="+998">
-                    </div>
-                    <div class="input-group">
-                        <label>Parol (8+ belgi, 1 ta katta harf)</label>
-                        <input type="password" id="reg-password" placeholder="Parol o'ylab toping">
-                    </div>
-                    
-                    <div id="recaptcha-container"></div>
-                    
-                    <button class="btn" id="send-code-btn" onclick="startPhoneAuth()">SMS Kodni Yuborish</button>
-                </div>
-
-                <div id="reg-step-2" style="display: none;">
-                    <p style="text-align: center; margin-bottom: 15px;">Telefonga kelgan kodni kiriting:</p>
-                    <div class="input-group">
-                        <input type="text" id="otp-input" class="otp-input" maxlength="6" placeholder="123456">
-                    </div>
-                    <button class="btn" onclick="verifyOTP()">Tasdiqlash</button>
-                    <p class="resend-link" onclick="location.reload()">Raqamni o'zgartirish</p>
-                </div>
-            </div>
-
-            <div class="divider">yoki Google orqali</div>
-            <button class="btn google-btn" onclick="google.accounts.id.prompt()" style="background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 15px;">
-                <svg width="20" height="20" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                Google orqali kirish
-            </button>
-            <div id="g_id_onload"
-                 data-client_id="532407535407-t122jsgms7oqvtei0p46sb3bql3bpptu.apps.googleusercontent.com"
-                 data-context="signin"
-                 data-ux_mode="popup"
-                 data-callback="handleCredentialResponse"
-                 data-auto_select="true"
-                 data-itp_support="true">
-            </div>
-        </div>
+        <h2 id="title">Xush kelibsiz</h2>
+        
+        <input type="email" id="email" placeholder="Email (masalan: ali@mail.ru)" required>
+        <input type="password" id="password" placeholder="Parol (o'ylab toping)" required>
+        
+        <button id="mainBtn" onclick="handleAuth()">Kirish</button>
+        
+        <p class="toggle-text" onclick="toggleMode()">
+            Hali hisobingiz yo'qmi? <span id="toggleLink">Ro'yxatdan o'tish</span>
+        </p>
+        <p id="status" style="margin-top:15px; font-size:14px; color:#ff4d4d;"></p>
     </div>
 
-    <script>
-        // ---------------------------------------------------------
-        // 1. FIREBASE SOZLAMALARI
-        // ---------------------------------------------------------
+    <script type="module">
+        // FIREBASE KODLARI
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        // 🔥 SHU YERGA O'ZINGIZNING FIREBASE CONFIGINGIZNI QO'YING
         const firebaseConfig = {
-            apiKey: "AIzaSyAg_n9-MsYSI41l_BqHWHuXrkE7I0fRfmo",
+            apiKey: "SIZNING_API_KEYINGIZ",
             authDomain: "my-universe-a5416.firebaseapp.com",
             projectId: "my-universe-a5416",
-            storageBucket: "my-universe-a5416.firebasestorage.app",
-            messagingSenderId: "960863192078",
-            appId: "1:960863192078:web:b47ef80668ccbeea9d285f",
-            measurementId: "G-FT3XEBVPZ8"
+            storageBucket: "my-universe-a5416.appspot.com",
+            messagingSenderId: "191427503837",
+            appId: "1:191427503837:web:2f82245c1106093510e163"
         };
-        
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
 
-        // ---------------------------------------------------------
-        // 2. GLOBAL O'ZGARUVCHILAR
-        // ---------------------------------------------------------
-        const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-        
-        // Recaptcha o'rnatish
-        window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-            'size': 'invisible', // Kod ko'rinmasdan ishlaydi
-            'callback': (response) => {
-                // reCAPTCHA hal qilindi
-                console.log("Recaptcha Verified");
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        let isLoginMode = true; // Boshida "Kirish" rejimida bo'ladi
+
+        // Foydalanuvchi allaqachon kirgan bo'lsa, JARVIS ga o'tkazish
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.location.href = "jarvis.html";
             }
         });
 
-        if (localStorage.getItem('atom_user')) {
-            window.location.href = 'dashboard.html';
-        }
+        window.handleAuth = async function() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const status = document.getElementById('status');
 
-        // ---------------------------------------------------------
-        // 3. TABLARNI ALMASHTIRISH
-        // ---------------------------------------------------------
-        function switchTab(tab) {
-            const loginForm = document.getElementById('login-form');
-            const registerForm = document.getElementById('register-form');
-            const tabLogin = document.getElementById('tab-login');
-            const tabRegister = document.getElementById('tab-register');
-
-            if (tab === 'login') {
-                loginForm.classList.add('active');
-                registerForm.classList.remove('active');
-                tabLogin.classList.add('active');
-                tabRegister.classList.remove('active');
-            } else {
-                loginForm.classList.remove('active');
-                registerForm.classList.add('active');
-                tabLogin.classList.remove('active');
-                tabRegister.classList.add('active');
-            }
-        }
-
-        // ---------------------------------------------------------
-        // 4. SMS YUBORISH (Start Registration)
-        // ---------------------------------------------------------
-        function startPhoneAuth() {
-            const username = document.getElementById('reg-username').value;
-            const phone = document.getElementById('reg-phone').value;
-            const pass = document.getElementById('reg-password').value;
-
-            if (!username || !phone || !pass) { alert("Barcha maydonlarni to'ldiring!"); return; }
-            
-            // Parol tekshiruvi
-            const regex = /^(?=.*[A-Z]).{8,}$/;
-            if (!regex.test(pass)) { 
-                alert("Parol juda oddiy! Kamida 8 ta belgi va 1 ta katta harf bo'lishi kerak."); 
-                return; 
+            if (!email || !password) {
+                status.style.color = "yellow";
+                status.innerText = "Iltimos, email va parolni kiriting!";
+                return;
             }
 
-            const btn = document.getElementById('send-code-btn');
-            btn.innerText = "Yuborilmoqda...";
-            btn.disabled = true;
-
-            const appVerifier = window.recaptchaVerifier;
-
-            firebase.auth().signInWithPhoneNumber(phone, appVerifier)
-                .then((confirmationResult) => {
-                    // SMS yuborildi
-                    window.confirmationResult = confirmationResult;
-                    alert("SMS kod yuborildi!");
-                    document.getElementById('reg-step-1').style.display = 'none';
-                    document.getElementById('reg-step-2').style.display = 'block';
-                }).catch((error) => {
-                    // Xatolik
-                    btn.innerText = "SMS Kodni Yuborish";
-                    btn.disabled = false;
-                    console.error("SMS Xatosi:", error);
-                    alert("SMS yuborishda xatolik! Telefon raqam to'g'riligini va Firebase sozlamalarini tekshiring.");
-                });
-        }
-
-        // ---------------------------------------------------------
-        // 5. KODNI TASDIQLASH (Verify OTP)
-        // ---------------------------------------------------------
-        function verifyOTP() {
-            const code = document.getElementById('otp-input').value;
-            if(!code) return;
-
-            window.confirmationResult.confirm(code).then((result) => {
-                // Muvaffaqiyatli o'tdi
-                const user = result.user;
-                const username = document.getElementById('reg-username').value;
-                const pass = document.getElementById('reg-password').value;
-                const phone = document.getElementById('reg-phone').value;
-
-                // Bazaga saqlash
-                const userData = {
-                    username: username,
-                    phone: phone,
-                    email: "", // SMS orqali kirganda email bo'lmaydi
-                    password: pass, // Parolni saqlash shart emas aslida, lekin siz so'ragansiz
-                    picture: defaultAvatar,
-                    uid: user.uid,
-                    regDate: new Date().toLocaleString()
-                };
-
-                db.collection("users").doc(user.uid).set(userData).then(() => {
-                    localStorage.setItem('atom_user', JSON.stringify({
-                        name: username,
-                        email: phone, // Email o'rniga telefon
-                        picture: defaultAvatar
-                    }));
-                    window.location.href = 'dashboard.html';
-                });
-
-            }).catch((error) => {
-                alert("Kod noto'g'ri!");
-                console.log(error);
-            });
-        }
-
-        // ---------------------------------------------------------
-        // 6. LOGIN (ESKI EMAIL ORQALI)
-        // ---------------------------------------------------------
-        async function loginUser() {
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-
-            if (!email || !password) { alert("Iltimos, ma'lumotlarni kiriting!"); return; }
+            status.style.color = "#00d2ff";
+            status.innerText = "Bajarilmoqda...";
 
             try {
-                // Oddiy firestore qidiruvi (Email/Parol)
-                const snapshot = await db.collection("users")
-                    .where("email", "==", email)
-                    .where("password", "==", password)
-                    .get();
-
-                if (!snapshot.empty) {
-                    const userDoc = snapshot.docs[0].data();
-                    localStorage.setItem('atom_user', JSON.stringify({
-                        name: userDoc.username,
-                        email: userDoc.email,
-                        picture: userDoc.picture || defaultAvatar
-                    }));
-                    window.location.href = 'dashboard.html';
+                if (isLoginMode) {
+                    // KIRISH (LOGIN)
+                    await signInWithEmailAndPassword(auth, email, password);
+                    status.innerText = "Muvaffaqiyatli! Kirilmoqda...";
                 } else {
-                    alert("Email yoki parol noto'g'ri!");
+                    // RO'YXATDAN O'TISH (REGISTER)
+                    await createUserWithEmailAndPassword(auth, email, password);
+                    status.innerText = "Hisob yaratildi! Kirilmoqda...";
                 }
             } catch (error) {
-                alert("Tizim xatosi: " + error.message);
+                status.style.color = "#ff4d4d";
+                // Xatolarni chiroyli qilib ko'rsatish
+                if (error.code === 'auth/email-already-in-use') {
+                    status.innerText = "Bu email band. Tizimga kiring.";
+                } else if (error.code === 'auth/wrong-password') {
+                    status.innerText = "Parol xato!";
+                } else if (error.code === 'auth/user-not-found') {
+                    status.innerText = "Bunday foydalanuvchi topilmadi.";
+                } else if (error.code === 'auth/invalid-email') {
+                    status.innerText = "Email xato yozildi.";
+                } else if (error.code === 'auth/weak-password') {
+                    status.innerText = "Parol juda oddiy (kamida 6 ta belgi).";
+                } else {
+                    status.innerText = "Xatolik: " + error.message;
+                }
             }
         }
 
-        // ---------------------------------------------------------
-        // 7. GOOGLE AUTH
-        // ---------------------------------------------------------
-        window.handleCredentialResponse = function(response) {
-            try {
-                const payload = JSON.parse(atob(response.credential.split('.')[1]));
-                localStorage.setItem('atom_user', JSON.stringify({
-                    name: payload.name,
-                    email: payload.email,
-                    picture: payload.picture
-                }));
-                window.location.href = 'dashboard.html';
-            } catch (e) {
-                console.error("Google Login Error:", e);
-            }
-        };
+        // Rejimni o'zgartirish (Kirish <-> Ro'yxatdan o'tish)
+        window.toggleMode = function() {
+            isLoginMode = !isLoginMode;
+            const title = document.getElementById('title');
+            const btn = document.getElementById('mainBtn');
+            const link = document.getElementById('toggleLink');
+            const status = document.getElementById('status');
+            
+            status.innerText = ""; // Xatolikni tozalash
 
-        window.onload = function() {
-            google.accounts.id.prompt((notification) => {
-                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-                    console.log("Google One Tap yopildi");
-                }
-            });
-        };
+            if (isLoginMode) {
+                title.innerText = "Xush kelibsiz";
+                btn.innerText = "Kirish";
+                link.innerText = "Ro'yxatdan o'tish";
+            } else {
+                title.innerText = "Yangi hisob";
+                btn.innerText = "Ro'yxatdan o'tish";
+                link.innerText = "Kirish";
+            }
+        }
     </script>
 </body>
 </html>
