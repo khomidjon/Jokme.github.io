@@ -2,7 +2,7 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <title>JARVIS - REAL SPACE</title>
+    <title>JARVIS - ETERNAL SUN</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Courier New', Courier, monospace; }
         
@@ -26,14 +26,15 @@
         /* MA'LUMOT EKRANI */
         #data-panel {
             position: absolute; top: 20px; right: 20px;
-            background: rgba(0, 20, 0, 0.7);
+            background: rgba(0, 20, 0, 0.8);
             border: 1px solid #00ff00;
             padding: 15px;
             color: #00ff00;
             font-size: 16px;
             border-radius: 8px;
             min-width: 200px;
-            display: none; /* Boshida yashirin */
+            display: none;
+            box-shadow: 0 0 15px #00ff00;
         }
         #target-name { font-size: 24px; font-weight: bold; border-bottom: 1px solid #00ff00; margin-bottom: 5px; }
         
@@ -83,8 +84,7 @@
         let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false, moveUp = false, moveDown = false;
         let speedMultiplier = 1;
         
-        const textureLoader = new THREE.TextureLoader();
-        const planets = []; // Raycaster uchun ro'yxat
+        const planets = []; 
 
         init();
         animate();
@@ -93,19 +93,22 @@
             // 1. SAHNA
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x000000);
-            scene.fog = new THREE.FogExp2(0x000000, 0.0001);
+            scene.fog = new THREE.FogExp2(0x000000, 0.0002);
 
             // 2. KAMERA
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000000);
-            camera.position.set(0, 0, 300);
+            camera.position.set(0, 0, 400); // Quyoshdan uzoqroqda
 
             // 3. RENDERER
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
+            // Yoritishni kuchaytirish
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
             document.body.appendChild(renderer.domElement);
 
-            // 4. RAYCASTER (Lazer o'lchagich)
+            // 4. RAYCASTER
             raycaster = new THREE.Raycaster();
 
             // 5. BOSHQARUV
@@ -118,104 +121,119 @@
 
             document.addEventListener('keydown', onKeyDown);
             document.addEventListener('keyup', onKeyUp);
-            
-            // MOUSE RIGHT CLICK (Masofa o'lchash)
             window.addEventListener('contextmenu', onRightClick);
 
-            // 6. YORUG'LIK
-            const ambientLight = new THREE.AmbientLight(0x333333); // Umumiy yorug'lik
+            // 6. YORUG'LIK (MUHIM)
+            const ambientLight = new THREE.AmbientLight(0x222222); 
             scene.add(ambientLight);
 
-            // 7. OBEKTLAR
-            createStars();
-            createRealisticSun();
+            // 7. OBEKTLARNI YARATISH (Internet shart emas)
+            createGeneratedStars();
+            createProceduralSun();
             createSolarSystem();
 
             window.addEventListener('resize', onWindowResize);
         }
 
-        // --- SUPER REAL QUYOSH ---
-        function createRealisticSun() {
-            // A) Quyosh tanasi (Oppoq-Sariq) - O'zi nur sochadi (BasicMaterial)
+        // --- 1. SUPER OLOVLI QUYOSH (RASMSIZ) ---
+        function createProceduralSun() {
+            // A) Quyosh Markazi (Oppoq/Sariq yadro)
             const geometry = new THREE.SphereGeometry(60, 64, 64);
-            const material = new THREE.MeshBasicMaterial({ color: 0xffddaa }); 
+            const material = new THREE.MeshBasicMaterial({ color: 0xffffff }); // Markazi oppoq (juda issiq)
             const sun = new THREE.Mesh(geometry, material);
             sun.name = "QUYOSH";
             
-            // B) Nur (PointLight) - Butun sistemani yoritadi
-            const sunLight = new THREE.PointLight(0xffffff, 3, 0); // Cheksiz masofa
-            sun.add(sunLight);
+            // B) Quyosh Atmosferasi (Shader trick) - Sariq/Qizil qobiq
+            // Biz rasm o'rniga shaffof qobiq ishlatamiz
+            const atmosGeo = new THREE.SphereGeometry(62, 64, 64);
+            const atmosMat = new THREE.MeshBasicMaterial({
+                color: 0xffaa00, // Olovrang
+                transparent: true,
+                opacity: 0.5,
+                side: THREE.BackSide // Ichki tomoni ko'rinmaydi
+            });
+            const atmosphere = new THREE.Mesh(atmosGeo, atmosMat);
+            sun.add(atmosphere);
 
-            // C) GLOW (Nur yog'dusi) - Sprite ishlatamiz
+            // C) NUR (Glow) - Buni Canvasda chizamiz (Rasm kerak emas)
+            const glowTexture = createGlowTexture();
             const spriteMaterial = new THREE.SpriteMaterial({ 
-                map: textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/sprites/glow.png'), 
-                color: 0xffaa00, 
+                map: glowTexture, 
+                color: 0xff4400, // Qizg'ish olov
                 transparent: true, 
-                blending: THREE.AdditiveBlending, // Ranglarni qo'shish (yorqinlik uchun)
-                depthWrite: false // Boshqa narsalarni to'sib qo'ymaydi
+                blending: THREE.AdditiveBlending, // Yoritish rejimi
+                opacity: 1.0
             });
             const sprite = new THREE.Sprite(spriteMaterial);
-            sprite.scale.set(300, 300, 1.0); // Quyoshdan 5 barobar katta nur
+            sprite.scale.set(400, 400, 1.0); // Katta nur
             sun.add(sprite);
 
-            // Ikkinchi qavat nur (Oppoq markaz uchun)
+            // D) Oq Nur (Yadro nuri)
             const coreMaterial = new THREE.SpriteMaterial({ 
-                map: textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/sprites/glow.png'), 
-                color: 0xffffff, 
+                map: glowTexture, 
+                color: 0xffffee, 
                 transparent: true, 
                 blending: THREE.AdditiveBlending,
+                opacity: 0.8
             });
             const coreSprite = new THREE.Sprite(coreMaterial);
             coreSprite.scale.set(150, 150, 1.0);
             sun.add(coreSprite);
 
+            // E) Haqiqiy Yorug'lik manbasi
+            const sunLight = new THREE.PointLight(0xffffff, 3, 0);
+            sun.add(sunLight);
+
             scene.add(sun);
-            planets.push(sun); // Lazer uchun ro'yxatga qo'shamiz
+            planets.push(sun);
         }
 
+        // --- NUR TEXTURASINI YARATISH (CANVAS) ---
+        function createGlowTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64; canvas.height = 64;
+            const context = canvas.getContext('2d');
+            const gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
+            gradient.addColorStop(0, 'rgba(255,255,255,1)'); // Markaz
+            gradient.addColorStop(0.2, 'rgba(255,255,255,0.8)');
+            gradient.addColorStop(0.5, 'rgba(255,200,0,0.2)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0)'); // Chetlar
+            context.fillStyle = gradient;
+            context.fillRect(0,0,64,64);
+            const texture = new THREE.CanvasTexture(canvas);
+            return texture;
+        }
+
+        // --- 2. SAYYORALAR (RANGLI) ---
         function createSolarSystem() {
-            // Sayyoralar ma'lumotlari (Hajmi kattalashtirildi ko'rinishi uchun)
             const data = [
-                { name: "MERKURIY", size: 5, dist: 100, color: 0xaaaaaa, tex: 'moon_1024.jpg' },
-                { name: "VENERA", size: 8, dist: 150, color: 0xe6b800, tex: 'venus_atmosphere_2k.jpg' },
-                { name: "YER", size: 9, dist: 220, color: 0x2233ff, tex: 'earth_atmos_2048.jpg', isEarth: true },
-                { name: "MARS", size: 6, dist: 300, color: 0xff3300, tex: 'mars_1k.jpg' },
-                { name: "YUPITER", size: 25, dist: 450, color: 0xd9b38c, tex: 'jupiter_2k.jpg' },
-                { name: "SATURN", size: 20, dist: 650, color: 0xf4d19f, tex: 'saturn_2k.jpg', ring: true },
-                { name: "URAN", size: 12, dist: 850, color: 0x66ccff, tex: 'uranus_2k.jpg' },
-                { name: "NEPTUN", size: 12, dist: 1000, color: 0x3333ff, tex: 'neptune_2k.jpg' }
+                { name: "MERKURIY", size: 5, dist: 120, color: 0xaaaaaa },
+                { name: "VENERA", size: 8, dist: 180, color: 0xffcc00 },
+                { name: "YER", size: 9, dist: 250, color: 0x0055ff },
+                { name: "MARS", size: 6, dist: 350, color: 0xff3300 },
+                { name: "YUPITER", size: 25, dist: 500, color: 0xffaa88 },
+                { name: "SATURN", size: 20, dist: 700, color: 0xffddaa, ring: true },
+                { name: "URAN", size: 12, dist: 900, color: 0x00ffff },
+                { name: "NEPTUN", size: 12, dist: 1100, color: 0x0000ff }
             ];
 
             data.forEach(p => {
                 const geo = new THREE.SphereGeometry(p.size, 64, 64);
-                let mat;
-                
-                // Tekstura yuklash
-                const texUrl = `https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/${p.tex}`;
-                
-                if(p.isEarth) {
-                    mat = new THREE.MeshPhongMaterial({
-                        map: textureLoader.load(texUrl),
-                        specular: new THREE.Color(0x333333),
-                        shininess: 5
-                    });
-                } else {
-                    mat = new THREE.MeshStandardMaterial({
-                        map: textureLoader.load(texUrl),
-                        color: 0xffffff,
-                        roughness: 0.8
-                    });
-                }
+                // Standard Material yorug'likni yaxshi qaytaradi
+                const mat = new THREE.MeshStandardMaterial({
+                    color: p.color,
+                    roughness: 0.5,
+                    metalness: 0.1
+                });
 
                 const mesh = new THREE.Mesh(geo, mat);
-                mesh.position.set(p.dist, 0, 0); // Bir qatorga tizib chiqamiz boshida
+                mesh.position.set(p.dist, 0, 0);
                 mesh.name = p.name;
-                mesh.userData = { angle: Math.random() * 10, dist: p.dist, speed: 100 / p.dist }; // Aylanish uchun
-
-                // Saturn halqasi
+                
+                // Halqasi bormi?
                 if(p.ring) {
                     const ringGeo = new THREE.RingGeometry(p.size + 5, p.size + 15, 64);
-                    const ringMat = new THREE.MeshBasicMaterial({ color: 0xcfb593, side: THREE.DoubleSide, transparent: true, opacity: 0.6 });
+                    const ringMat = new THREE.MeshBasicMaterial({ color: 0xccaacc, side: THREE.DoubleSide, transparent: true, opacity: 0.6 });
                     const ring = new THREE.Mesh(ringGeo, ringMat);
                     ring.rotation.x = Math.PI / 2;
                     mesh.add(ring);
@@ -226,26 +244,24 @@
             });
         }
 
-        function createStars() {
+        // --- 3. YULDUZLAR (KOD BILAN) ---
+        function createGeneratedStars() {
             const starGeo = new THREE.BufferGeometry();
-            const positions = new Float32Array(30000); // 10,000 yulduz
+            const positions = new Float32Array(30000); 
             for(let i=0; i<30000; i++) {
-                positions[i] = (Math.random() - 0.5) * 10000;
+                positions[i] = (Math.random() - 0.5) * 50000;
             }
             starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            const starMat = new THREE.PointsMaterial({color: 0xffffff, size: 0.8});
+            const starMat = new THREE.PointsMaterial({color: 0xffffff, size: 0.9});
             const stars = new THREE.Points(starGeo, starMat);
             scene.add(stars);
         }
 
         // --- MASOFA O'LCHASH (O'NG TUGMA) ---
         function onRightClick(event) {
-            if(!controls.isLocked) return; // Menyudagida ishlamasin
+            if(!controls.isLocked) return;
 
-            // Markazdan nur otish (0, 0)
             raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
-
-            // Nur nimalarga tegdi?
             const intersects = raycaster.intersectObjects(planets);
 
             const panel = document.getElementById('data-panel');
@@ -256,24 +272,20 @@
             panel.style.display = 'block';
 
             if (intersects.length > 0) {
-                // Nur nimagadir tegdi
                 const hit = intersects[0];
-                const object = hit.object;
-                const distanceToSurface = hit.distance; // Raycaster sirtgacha bo'lgan masofani beradi!
+                const distanceToSurface = hit.distance;
 
-                nameDiv.innerText = object.name;
+                nameDiv.innerText = hit.object.name;
                 nameDiv.style.color = "#00ff00";
-                
-                // Animatsiya bilan hisoblash
                 statusDiv.innerText = "HISOBLANMOQDA...";
+                statusDiv.style.color = "yellow";
+                
                 setTimeout(() => {
                     distDiv.innerText = `Masofa: ${Math.floor(distanceToSurface * 1000)} km`;
                     statusDiv.innerText = "LOKATSIYA TASDIQLANDI";
                     statusDiv.style.color = "cyan";
                 }, 500);
-
             } else {
-                // Bo'shliqqa tegdi
                 nameDiv.innerText = "KOINOT BO'SHLIG'I";
                 nameDiv.style.color = "red";
                 distDiv.innerText = "Ob'ekt topilmadi";
@@ -314,16 +326,6 @@
 
         function animate() {
             requestAnimationFrame(animate);
-
-            // Sayyoralarni aylantirish
-            const time = Date.now() * 0.0001;
-            planets.forEach(p => {
-                if (p.name !== "QUYOSH") {
-                    p.position.x = Math.cos(time * p.userData.speed + p.userData.angle) * p.userData.dist;
-                    p.position.z = Math.sin(time * p.userData.speed + p.userData.angle) * p.userData.dist;
-                    p.rotation.y += 0.005;
-                }
-            });
 
             // Uchish
             if (controls.isLocked) {
