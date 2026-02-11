@@ -1,477 +1,115 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <meta charset="UTF-8">
-    <title>ULTIMATE ALCHEMIST - Full Version</title>
-    <style>
-        /* UMUMIY */
-        body {
-            margin: 0;
-            background-color: #121212;
-            color: white;
-            font-family: 'Segoe UI', sans-serif;
-            display: grid;
-            grid-template-areas: 
-                "inventory lab"
-                "shop shop";
-            grid-template-columns: 280px 1fr;
-            grid-template-rows: 1fr 220px; /* Magazin balandligi */
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* 1. CHAP - OMBOR */
-        #inventory-panel {
-            grid-area: inventory;
-            background: #1e1e24;
-            border-right: 2px solid #333;
-            padding: 15px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-        }
-        .section-title {
-            color: #00d2ff;
-            border-bottom: 2px solid #00d2ff;
-            padding-bottom: 8px;
-            margin-bottom: 15px;
-            font-weight: bold;
-            font-size: 18px;
-            letter-spacing: 1px;
-        }
-        .inv-item {
-            background: #2b2b36;
-            padding: 12px;
-            margin-bottom: 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-left: 4px solid transparent;
-            transition: 0.2s;
-        }
-        .inv-item:hover { background: #3a3a48; border-left-color: #00d2ff; transform: translateX(5px); }
-        .qty-badge { background: #00d2ff; color: #000; padding: 2px 8px; border-radius: 10px; font-weight: bold; font-size: 12px; }
-
-        /* 2. O'RTA - LAB */
-        #lab-panel {
-            grid-area: lab;
-            position: relative;
-            background: radial-gradient(circle at center, #23232e 0%, #121212 100%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-        }
-
-        /* Yuqori Panel */
-        #top-info {
-            width: 100%; display: flex; justify-content: space-between; align-items: center;
-            font-size: 22px; font-weight: bold;
-        }
-        #money-display { color: #ffd700; text-shadow: 0 0 10px #ffd700; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px; }
-        .help-btn { background: #ff0055; color: white; border: none; padding: 5px 15px; border-radius: 20px; cursor: pointer; font-size: 16px; font-weight: bold; }
-
-        /* Buyurtma */
-        #quest-box {
-            background: rgba(0, 255, 136, 0.1);
-            border: 1px solid #00e676;
-            padding: 15px 30px;
-            border-radius: 12px;
-            margin-top: 15px;
-            text-align: center;
-            box-shadow: 0 0 20px rgba(0, 230, 118, 0.1);
-        }
-        #quest-name { color: #ff4081; font-weight: bold; font-size: 24px; margin: 5px 0; }
-
-        /* KOLBA */
-        #flask-area {
-            position: relative; margin-top: 40px; width: 220px; height: 220px;
-        }
-        #flask {
-            width: 100%; height: 100%;
-            border-radius: 50%;
-            border: 6px solid rgba(255,255,255,0.3);
-            background: rgba(255,255,255,0.05);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            overflow: hidden; position: relative;
-        }
-        .flask-item { background: rgba(255,255,255,0.2); padding: 5px 10px; margin: 3px; border-radius: 4px; color: #fff; font-size: 14px; }
-        
-        /* Olov */
-        #heater-base { width: 120px; height: 15px; background: #444; margin: 5px auto; border-radius: 5px; }
-        #fire {
-            position: absolute; bottom: 20px; left: 0; right: 0; height: 60px;
-            background: radial-gradient(ellipse at bottom, #ff5722, transparent 70%);
-            filter: blur(5px); opacity: 0; transition: 0.5s; pointer-events: none;
-        }
-        .heater-on #fire { opacity: 1; }
-
-        /* Tugmalar */
-        #controls { margin-top: 20px; display: flex; gap: 15px; }
-        button { padding: 12px 25px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; color: white; transition: 0.2s; }
-        button:active { transform: scale(0.95); }
-
-        .btn-mix { background: linear-gradient(45deg, #2196f3, #00bcd4); }
-        .btn-heat { background: #424242; color: #aaa; }
-        .btn-heat.active { background: #ff3d00; color: white; box-shadow: 0 0 20px #ff3d00; }
-        .btn-clear { background: #d32f2f; }
-        .btn-submit { background: #00c853; display: none; }
-
-        /* Log */
-        #log {
-            width: 90%; height: 120px; background: #000; border: 1px solid #333;
-            overflow-y: auto; font-family: monospace; font-size: 13px;
-            padding: 10px; margin-top: auto; color: #ccc; border-radius: 6px;
-        }
-
-        /* 3. PAST - MAGAZIN */
-        #shop-panel {
-            grid-area: shop;
-            background: #18181b;
-            border-top: 3px solid #333;
-            padding: 15px 25px;
-            display: flex; flex-direction: column;
-        }
-        #shop-items {
-            display: flex; overflow-x: auto; gap: 15px; padding-bottom: 10px;
-        }
-        /* Scrollbar */
-        #shop-items::-webkit-scrollbar { height: 8px; }
-        #shop-items::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
-
-        .shop-card {
-            background: #272730; min-width: 150px; padding: 15px;
-            border-radius: 8px; cursor: pointer; border: 1px solid #333; position: relative;
-            display: flex; flex-direction: column; justify-content: space-between;
-        }
-        .shop-card:hover { border-color: #ffd700; background: #32323d; }
-        .shop-name { font-weight: bold; font-size: 16px; color: #fff; margin-bottom: 5px; }
-        .shop-price { color: #00e676; font-size: 18px; font-weight: bold; }
-        
-        .sale-badge {
-            position: absolute; top: -8px; right: -8px; background: #ff0055; color: white;
-            font-size: 11px; padding: 3px 8px; border-radius: 10px; font-weight: bold;
-            animation: bounce 1s infinite; display: none;
-        }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-
-        /* Modal (Yordam) */
-        #modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;
-        }
-        #modal-content {
-            background: #222; padding: 20px; border-radius: 10px; width: 500px;
-            max-height: 80vh; overflow-y: auto; border: 1px solid #00d2ff;
-        }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #444; padding: 8px; text-align: left; font-size: 14px; }
-        th { color: #00d2ff; }
-
-    </style>
+  <meta charset="UTF-8">
+  <title>Particle Mirror Effect</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: white;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+    canvas {
+      border: 1px solid #333;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+  <script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"></script>
 </head>
 <body>
 
-    <div id="inventory-panel">
-        <div class="section-title">📦 Elementlar</div>
-        <div id="empty-msg" style="color:#777; font-size:14px; text-align:center; margin-top:20px;">
-            Hozircha bo'sh...<br>Magazindan sotib oling!
-        </div>
-        <div id="inv-list"></div>
-    </div>
+<script>
+  let video;
+  let bodyPix;
+  let segmentation;
+  let isModelReady = false;
 
-    <div id="lab-panel">
-        <div id="top-info">
-            <button class="help-btn" onclick="toggleModal(true)">📖 Retseptlar</button>
-            <span id="money-display">💰 $200</span>
-        </div>
+  function setup() {
+    createCanvas(640, 480);
+    
+    // Kamerani ishga tushiramiz
+    video = createCapture(VIDEO);
+    video.size(width, height);
+    video.hide(); // Asl videoni yashiramiz
 
-        <div id="quest-box">
-            <div style="font-size:12px; color:#aaa; text-transform:uppercase;">Mijoz Buyurtmasi</div>
-            <div id="quest-name">...</div>
-            <div id="quest-reward" style="color: #00e676; font-weight: bold; margin-top:5px;">...</div>
-            <button class="btn-submit" id="btn-submit" onclick="submitQuest()">SOTISH ($)</button>
-        </div>
+    // Model sozlamalari
+    let options = {
+      multiplier: 0.75, // Tezlik va sifat o'rtasidagi balans
+      outputStride: 16,
+      segmentationThreshold: 0.5
+    };
 
-        <div id="flask-area">
-            <div id="flask"></div>
-            <div id="fire"></div>
-        </div>
-        <div id="heater-base"></div>
+    // BodyPix modelini yuklash
+    bodyPix = ml5.bodyPix(video, options, modelReady);
+    
+    noStroke();
+  }
 
-        <div id="controls">
-            <button class="btn-clear" onclick="clearFlask()">Tozalash</button>
-            <button id="heat-toggle" class="btn-heat" onclick="toggleHeater()">OLOV: O'CHIQ</button>
-            <button class="btn-mix" onclick="react()">REAKSIYA! ⚗️</button>
-        </div>
+  function modelReady() {
+    console.log('Model tayyor!');
+    isModelReady = true;
+    // Odamni ajratishni boshlash
+    bodyPix.segment(gotResults);
+  }
 
-        <div id="log">Tizim ishga tushdi. Bonus elementlar berildi!</div>
-    </div>
+  function gotResults(err, result) {
+    if (err) {
+      console.log(err);
+      return;
+    }
+    segmentation = result;
+    // Qayta-qayta tekshirish (Loop)
+    bodyPix.segment(gotResults);
+  }
 
-    <div id="shop-panel">
-        <div class="section-title" style="display:flex; justify-content:space-between;">
-            <span>🏪 MAGAZIN</span>
-            <span style="font-size:12px; color:#aaa; font-weight:normal;">(Chegirmalar har 30 sekunda yangilanadi)</span>
-        </div>
-        <div id="shop-items"></div>
-    </div>
+  function draw() {
+    background(0); // Har safar fonni qora qilish
 
-    <div id="modal" onclick="if(event.target===this) toggleModal(false)">
-        <div id="modal-content">
-            <h2 style="margin-top:0; color:#00d2ff;">Kimyo Kitobi 📖</h2>
-            <p>Qanday yasash mumkin:</p>
-            <table id="recipe-table">
-                <tr><th>Kiruvchi</th><th>Jarayon</th><th>Natija</th></tr>
-            </table>
-            <button onclick="toggleModal(false)" style="background:#444; margin-top:20px; width:100%;">Yopish</button>
-        </div>
-    </div>
+    if (isModelReady && segmentation) {
+      // Zarrachalar kattaligi (bu raqamni o'zgartirsangiz nuqtalar kattaradi/kichrayadi)
+      let stepSize = 10; 
 
-    <script>
-        // 1. DATA
-        const substances = {
-            'H2': { name: 'Vodorod' }, 'O2': { name: 'Kislorod' }, 'C': { name: 'Ko\'mir' },
-            'Na': { name: 'Natriy' }, 'Cl2': { name: 'Xlor' }, 'Ca': { name: 'Kalsiy' },
-            'S': { name: 'Oltingugurt' }, 'Fe': { name: 'Temir' }, 'Al': { name: 'Alyuminiy' },
-            // Products
-            'H2O': { name: 'Suv' }, 'CO2': { name: 'Karbonat Angidrid' }, 'NaCl': { name: 'Osh Tuzi' },
-            'CaO': { name: 'Ohak' }, 'CaCO3': { name: 'Bo\'r' }, 'Ca(OH)2': { name: 'Ohakli Suv' },
-            'FeS': { name: 'Temir Sulfid' }, 'SO2': { name: 'Sulfat Gazi' }, 'CH4': { name: 'Metan' },
-            'Al4C3': { name: 'Alyuminiy Karbid' }, 'Al(OH)3': { name: 'Alyuminiy Gidroksid' }
-        };
-
-        const recipes = [
-            { in: ['H2', 'O2'], out: ['H2O'], type: 'mix', text: '2H₂ + O₂' },
-            { in: ['Na', 'Cl2'], out: ['NaCl'], type: 'mix', text: '2Na + Cl₂' },
-            { in: ['CaO', 'H2O'], out: ['Ca(OH)2'], type: 'mix', text: 'CaO + H₂O' },
-            { in: ['CaO', 'CO2'], out: ['CaCO3'], type: 'mix', text: 'CaO + CO₂' },
-            { in: ['Al4C3', 'H2O'], out: ['CH4', 'Al(OH)3'], type: 'mix', text: 'Al₄C₃ + 12H₂O' },
-
-            { in: ['C', 'O2'], out: ['CO2'], type: 'heat', text: 'C + O₂' },
-            { in: ['S', 'O2'], out: ['SO2'], type: 'heat', text: 'S + O₂' },
-            { in: ['Fe', 'S'], out: ['FeS'], type: 'heat', text: 'Fe + S' },
-            { in: ['Ca', 'O2'], out: ['CaO'], type: 'heat', text: '2Ca + O₂' },
-            { in: ['CaCO3'], out: ['CaO', 'CO2'], type: 'heat', text: 'CaCO₃ (Parchalash)' }
-        ];
-
-        let shopData = [
-            { id: 'H2', price: 10 }, { id: 'O2', price: 10 }, { id: 'C', price: 15 },
-            { id: 'Na', price: 20 }, { id: 'Cl2', price: 20 }, { id: 'Ca', price: 25 },
-            { id: 'S', price: 25 }, { id: 'Fe', price: 30 }, { id: 'Al', price: 35 },
-            { id: 'Al4C3', price: 150 }, { id: 'CaCO3', price: 80 }
-        ];
-
-        // 2. STATE
-        let money = 200;
-        let inventory = { 'H2': 5, 'O2': 5, 'C': 5 }; // BONUS BILAN BOSHLASH!
-        let flask = [];
-        let isHeaterOn = false;
-        let currentQuest = null;
-
-        init();
-        setInterval(shopRotation, 30000);
-
-        function init() {
-            renderInventory();
-            renderShop();
-            renderRecipes(); // Jadvalni to'ldirish
-            newQuest();
-        }
-
-        // --- RENDER ---
-        function renderInventory() {
-            const list = document.getElementById('inv-list');
-            const msg = document.getElementById('empty-msg');
-            list.innerHTML = '';
+      for (let y = 0; y < height; y += stepSize) {
+        for (let x = 0; x < width; x += stepSize) {
+          
+          // Hozirgi nuqta (x, y) odamga tegishlimi?
+          let index = x + y * width;
+          
+          // Agar segmentation.data[index] === 1 bo'lsa, demak bu odam
+          // Agar 0 bo'lsa, demak bu fon
+          if (segmentation.data[index] === 1) {
             
-            let hasItems = false;
-            for (let [id, qty] of Object.entries(inventory)) {
-                if (qty > 0) {
-                    hasItems = true;
-                    const el = document.createElement('div');
-                    el.className = 'inv-item';
-                    el.innerHTML = `<span>${substances[id].name}</span> <span class="qty-badge">x${qty}</span>`;
-                    el.onclick = () => addToFlask(id);
-                    list.appendChild(el);
-                }
-            }
-            msg.style.display = hasItems ? 'none' : 'block';
-            checkQuest();
+            // O'sha joydagi videoning haqiqiy rangini olamiz
+            let pixelIndex = (y * width + x) * 4;
+            let r = video.pixels[pixelIndex];
+            let g = video.pixels[pixelIndex + 1];
+            let b = video.pixels[pixelIndex + 2];
+            
+            fill(r, g, b, 200); // Rang berish
+            
+            // Zarrachani chizish (aylana shaklida)
+            circle(x, y, stepSize - 2);
+          }
         }
+      }
+    } else {
+      // Agar model hali yuklanmagan bo'lsa
+      fill(255);
+      textAlign(CENTER, CENTER);
+      textSize(24);
+      text("Sun'iy intellekt yuklanmoqda...", width / 2, height / 2);
+      textSize(16);
+      text("Iltimos, biroz kuting (internet kerak)", width / 2, height / 2 + 30);
+    }
+  }
+</script>
 
-        function renderShop() {
-            const container = document.getElementById('shop-items');
-            container.innerHTML = '';
-            shopData.forEach(item => {
-                const finalPrice = Math.floor(item.price * (1 - (item.discount || 0)/100));
-                
-                const card = document.createElement('div');
-                card.className = 'shop-card';
-                card.innerHTML = `
-                    <div class="shop-name">${substances[item.id].name}</div>
-                    <div>
-                        <span style="text-decoration:line-through; color:#666; font-size:12px; display:${item.discount ? 'inline' : 'none'}">$${item.price}</span>
-                        <span class="shop-price">$${finalPrice}</span>
-                    </div>
-                    <div class="sale-badge" style="display:${item.discount ? 'block' : 'none'}">-${item.discount}%</div>
-                `;
-                card.onclick = () => buy(item.id, finalPrice);
-                container.appendChild(card);
-            });
-        }
-
-        function renderFlask() {
-            const f = document.getElementById('flask');
-            f.innerHTML = '';
-            flask.forEach(id => {
-                const el = document.createElement('div');
-                el.className = 'flask-item';
-                el.innerText = id;
-                f.appendChild(el);
-            });
-        }
-
-        function renderRecipes() {
-            const table = document.getElementById('recipe-table');
-            recipes.forEach(r => {
-                const row = document.createElement('tr');
-                const method = r.type === 'heat' ? "🔥 Olov" : "💧 Aralash.";
-                const outNames = r.out.map(o => substances[o].name).join(' + ');
-                row.innerHTML = `<td>${r.text}</td><td>${method}</td><td>${outNames}</td>`;
-                table.appendChild(row);
-            });
-        }
-
-        // --- ACTIONS ---
-        function addToFlask(id) {
-            if(inventory[id] > 0) {
-                if(flask.length >= 3) { alert("Kolba to'ldi!"); return; }
-                inventory[id]--;
-                flask.push(id);
-                renderInventory();
-                renderFlask();
-            }
-        }
-
-        function buy(id, price) {
-            if(money >= price) {
-                money -= price;
-                updateMoney();
-                if(!inventory[id]) inventory[id] = 0;
-                inventory[id]++;
-                renderInventory();
-                log(`Sotib olindi: ${substances[id].name}`, '#00e676');
-            } else {
-                alert("Pul yetmaydi!");
-            }
-        }
-
-        function toggleHeater() {
-            isHeaterOn = !isHeaterOn;
-            const btn = document.getElementById('heat-toggle');
-            const area = document.getElementById('flask-area');
-            if(isHeaterOn) {
-                btn.innerText = "OLOV: YONIQ 🔥";
-                btn.classList.add('active');
-                area.classList.add('heater-on');
-            } else {
-                btn.innerText = "OLOV: O'CHIQ";
-                btn.classList.remove('active');
-                area.classList.remove('heater-on');
-            }
-        }
-
-        function react() {
-            if(flask.length === 0) return;
-            const mode = isHeaterOn ? 'heat' : 'mix';
-            let success = false;
-
-            for (let r of recipes) {
-                if (r.type !== mode) continue;
-                if (r.in.length !== flask.length) continue;
-                
-                const sRecipe = [...r.in].sort().join(',');
-                const sFlask = [...flask].sort().join(',');
-
-                if (sRecipe === sFlask) {
-                    log(`Reaksiya: ${r.text} -> ${r.out.join('+')}`, '#00e676');
-                    r.out.forEach(out => {
-                        if(!inventory[out]) inventory[out] = 0;
-                        inventory[out]++;
-                    });
-                    flask = [];
-                    renderFlask();
-                    renderInventory();
-                    success = true;
-                    break;
-                }
-            }
-
-            if(!success) {
-                log(isHeaterOn ? "Olovda hech narsa bo'lmadi (Kuyib ketdi)" : "Bu moddalar aralashmaydi", '#ff3d00');
-                flask = []; // Yo'qotish
-                renderFlask();
-            }
-        }
-
-        function clearFlask() {
-            flask.forEach(id => {
-                if(!inventory[id]) inventory[id] = 0;
-                inventory[id]++;
-            });
-            flask = [];
-            renderFlask();
-            renderInventory();
-        }
-
-        // --- GAMEPLAY ---
-        function newQuest() {
-            const targets = [
-                { id: 'H2O', r: 50 }, { id: 'NaCl', r: 80 }, { id: 'CO2', r: 70 },
-                { id: 'CaO', r: 100 }, { id: 'Ca(OH)2', r: 150 }, { id: 'CH4', r: 500 }
-            ];
-            currentQuest = targets[Math.floor(Math.random() * targets.length)];
-            document.getElementById('quest-name').innerText = substances[currentQuest.id].name;
-            document.getElementById('quest-reward').innerText = `Mukofot: $${currentQuest.r}`;
-            document.getElementById('btn-submit').style.display = 'none';
-            checkQuest();
-        }
-
-        function checkQuest() {
-            if(inventory[currentQuest.id] > 0) {
-                document.getElementById('btn-submit').style.display = 'inline-block';
-            }
-        }
-
-        function submitQuest() {
-            if(inventory[currentQuest.id] > 0) {
-                inventory[currentQuest.id]--;
-                money += currentQuest.r;
-                updateMoney();
-                log(`SOTILDI: ${substances[currentQuest.id].name}`, 'gold');
-                renderInventory();
-                newQuest();
-            }
-        }
-
-        function shopRotation() {
-            log("📢 DO'KONDA YANGI CHEGIRMALAR!", "#00d2ff");
-            shopData.forEach(i => {
-                i.discount = Math.random() > 0.6 ? Math.floor(Math.random()*40+10) : 0;
-            });
-            renderShop();
-        }
-
-        function updateMoney() { document.getElementById('money-display').innerText = `💰 $${money}`; }
-        function log(m, c) {
-            const l = document.getElementById('log');
-            l.innerHTML += `<div style="color:${c || '#ccc'}">> ${m}</div>`;
-            l.scrollTop = l.scrollHeight;
-        }
-        function toggleModal(show) { document.getElementById('modal').style.display = show ? 'flex' : 'none'; }
-
-    </script>
 </body>
 </html>
