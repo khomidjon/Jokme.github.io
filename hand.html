@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <title>Zarrachali Boshqaruv</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+  <script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background-color: #000;
+      color: white;
+      font-family: monospace;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      font-size: 24px;
+      color: cyan;
+    }
+    canvas {
+      border: 1px solid #333;
+    }
+  </style>
+</head>
+<body>
+
+<div id="loading">
+  AI MODEL YUKLANMOQDA...<br>
+  <span style="font-size:14px; color: yellow;">(Kamera ruxsatini bering va 30 soniya kuting)</span>
+</div>
+
+<script>
+  let video;
+  let handpose;
+  let predictions = [];
+  let isModelReady = false;
+
+  // Shar koordinatalari
+  let ball = { x: 320, y: 240, r: 40 };
+
+  function setup() {
+    createCanvas(640, 480);
+    video = createCapture(VIDEO);
+    video.size(width, height);
+    video.hide();
+
+    // HandPose modelini yuklash
+    handpose = ml5.handpose(video, modelReady);
+
+    // Qo'l topilganda hodisa
+    handpose.on("predict", results => {
+      predictions = results;
+    });
+  }
+
+  function modelReady() {
+    console.log("Model tayyor!");
+    isModelReady = true;
+    document.getElementById("loading").style.display = "none";
+  }
+
+  function draw() {
+    background(0); // Qora fon
+
+    // 1. Videoni pastki burchakda kichkina qilib ko'rsatish
+    // Oynadek teskari qilish uchun push/pop ishlatamiz
+    push();
+    translate(width, 0);
+    scale(-1, 1);
+    // Asl videoni 20% o'lchamda pastki o'ng burchakka chizamiz
+    image(video, width - 138, height - 106, 128, 96); 
+    pop();
+    
+    // Chegara chizig'i (kichkina video uchun)
+    noFill();
+    stroke(100);
+    rect(10, height - 106, 128, 96);
+
+    if (!isModelReady) return;
+
+    // Asosiy ish: Qo'llar va Sharni chizish
+    drawHandsAndParticles();
+  }
+
+  function drawHandsAndParticles() {
+    // Chimchilayotgan qo'llarni aniqlash
+    let pinches = []; // {x, y} koordinatalarini yig'amiz
+
+    // Har bir topilgan qo'l uchun
+    for (let i = 0; i < predictions.length; i += 1) {
+      const prediction = predictions[i];
+      
+      // 1. Qo'l suyaklarini zarracha qilib chizish
+      drawHandParticles(prediction.landmarks);
+
+      // 2. Chimchilashni (Pinch) tekshirish
+      // Bosh barmoq uchi (4) va Ko'rsatkich barmoq uchi (8)
+      let thumb = prediction.landmarks[4];
+      let index = prediction.landmarks[8];
+      
+      // Masofani o'lchaymiz
+      let d = dist(thumb[0], thumb[1], index[0], index[1]);
+
+      // Agar masofa 30 pikseldan kam bo'lsa - bu "Pinch"
+      if (d < 40) {
+        // O'rta nuqtani olamiz
+        let pinchX = (thumb[0] + index[0]) / 2;
+        let pinchY = (thumb[1] + index[1]) / 2;
+        pinches.push({ x: pinchX, y: pinchY });
+        
+        // Chimchilash joyiga effekt berish
+        noStroke();
+        fill(0, 255, 0, 150);
+        circle(pinchX, pinchY, 20);
+      }
+    }
+
+    // --- MANTIQ QISMI ---
+
+    // Holat 1: Ikkita qo'l ham chimchilayapti (Cho'zish effekti)
+    if (pinches.length === 2) {
+      let p1 = pinches[0];
+      let p2 = pinches[1];
+      
+      // Ikki qo'l orasida zarrachalar oqimini yaratish
+      strokeWeight(2);
+      for (let i = 0; i < 100; i++) {
+        let t = i / 100;
+        let x = lerp(p1.x, p2.x, t);
+        let y = lerp(p1.y, p2.y, t);
+        
+        // Biroz tebranish (energiya effekti)
+        let vibration = random(-10, 10);
+        
+        stroke(0, 255, 255, 150);
+        point(x, y + vibration);
+        
+        // O'rtadagi shar pozitsiyasini yangilash (markazda turadi)
+        ball.x = (p1.x + p2.x) / 2;
+        ball.y = (p1.y + p2.y) / 2;
+      }
+      
+    } 
+    // Holat 2: Bitta qo'l chimchilayapti (Tashish effekti)
+    else if (pinches.length === 1) {
+      // Shar qo'lga ergashadi
+      // Sekinroq harakatlanishi uchun (smooth)
+      ball.x = lerp(ball.x, pinches[0].x, 0.1);
+      ball.y = lerp(ball.y, pinches[0].y, 0.1);
+      
+      drawEnergyBall(ball.x, ball.y, true);
+    } 
+    // Holat 3: Hech kim tegmayapti (Shar o'zi turadi)
+    else {
+      drawEnergyBall(ball.x, ball.y, false);
+    }
+  }
+
+  // Qo'lni zarracha qilib chizish funksiyasi
+  function drawHandParticles(landmarks) {
+    noStroke();
+    fill(255, 100, 100); // Qizg'ish zarrachalar
+
+    for (let j = 0; j < landmarks.length; j++) {
+      let x = landmarks[j][0];
+      let y = landmarks[j][1];
+      
+      // Har bir bo'g'inga zarracha chizamiz
+      circle(x, y, 8);
+    }
+  }
+
+  // Sharni chizish funksiyasi
+  function drawEnergyBall(x, y, isActive) {
+    noStroke();
+    
+    // Agar aktiv bo'lsa (qo'lda bo'lsa) rangi o'zgaradi
+    if (isActive) fill(0, 255, 0, 200); // Yashil
+    else fill(0, 200, 255, 200); // Ko'k
+
+    // Asosiy shar
+    circle(x, y, 30);
+    
+    // Atrofidagi mayda zarrachalar (Energiya)
+    for (let i = 0; i < 10; i++) {
+      let rX = random(-20, 20);
+      let rY = random(-20, 20);
+      let alpha = random(100, 255);
+      fill(255, 255, 0, alpha);
+      circle(x + rX, y + rY, 4);
+    }
+  }
+</script>
+
+</body>
+</html>
