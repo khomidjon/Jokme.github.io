@@ -2,60 +2,138 @@
 <html lang="uz">
 <head>
   <meta charset="UTF-8">
-  <title>Particle Mirror Effect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Particle Mirror</title>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+  <script src="https://unpkg.com/ml5@0.4.3/dist/ml5.min.js"></script>
+
   <style>
     body {
       margin: 0;
       padding: 0;
-      background-color: black;
+      background-color: #000;
+      overflow: hidden; /* Skrollni yo'qotish */
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      color: white;
-      font-family: Arial, sans-serif;
+      font-family: 'Courier New', Courier, monospace;
+    }
+
+    /* Katta konteyner (o'rtada turishi uchun) */
+    #canvas-container {
+      position: relative;
+      width: 640px;
+      height: 480px;
+      border: 1px solid #333;
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+    }
+
+    /* Yuklanish ekrani (Loading Screen) */
+    #loading-screen {
+      position: absolute;
+      bottom: 10%; /* Ekranning pastki qismida */
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      width: 80%;
+      z-index: 10;
+    }
+
+    /* Loading yozuvi */
+    #loading-text {
+      color: cyan;
+      font-size: 18px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      animation: blink 1.5s infinite;
+    }
+
+    /* Progress bar orqa foni */
+    #progress-container {
+      width: 100%;
+      height: 4px;
+      background-color: #333;
+      border-radius: 2px;
       overflow: hidden;
     }
-    canvas {
-      border: 1px solid #333;
+
+    /* Yuradigan chiziq */
+    #progress-bar {
+      width: 0%;
+      height: 100%;
+      background-color: cyan;
+      box-shadow: 0 0 10px cyan;
+      transition: width 0.5s;
+      animation: loadBar 30s forwards; /* 30 soniyada to'ladi deb taxmin qilamiz */
+    }
+
+    @keyframes blink {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    @keyframes loadBar {
+      0% { width: 0%; }
+      20% { width: 40%; } /* Tez boshlanadi */
+      50% { width: 60%; } /* Sekinlashadi (model og'ir) */
+      90% { width: 95%; } /* Kutib turadi */
+      100% { width: 98%; }
     }
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
-  <script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"></script>
 </head>
 <body>
+
+  <div id="canvas-container">
+    <div id="loading-screen">
+      <div id="loading-text">Tizim yuklanmoqda...</div>
+      <div id="progress-container">
+        <div id="progress-bar"></div>
+      </div>
+    </div>
+  </div>
 
 <script>
   let video;
   let bodyPix;
   let segmentation;
-  let isModelReady = false;
+  let isReady = false;
 
   function setup() {
-    createCanvas(640, 480);
+    // Canvasni HTMLdagi konteyner ichiga joylaymiz
+    let canvas = createCanvas(640, 480);
+    canvas.parent('canvas-container');
     
-    // Kamerani ishga tushiramiz
+    // Video (Kamera) sozlamalari
     video = createCapture(VIDEO);
     video.size(width, height);
     video.hide(); // Asl videoni yashiramiz
 
     // Model sozlamalari
     let options = {
-      multiplier: 0.75, // Tezlik va sifat o'rtasidagi balans
+      multiplier: 0.50, // O'rtacha sifat (tezroq ishlashi uchun)
       outputStride: 16,
       segmentationThreshold: 0.5
     };
 
-    // BodyPix modelini yuklash
+    // Modelni chaqirish
     bodyPix = ml5.bodyPix(video, options, modelReady);
     
+    pixelDensity(1); // Ekranni qotmasligi uchun
     noStroke();
   }
 
   function modelReady() {
-    console.log('Model tayyor!');
-    isModelReady = true;
-    // Odamni ajratishni boshlash
+    console.log("Model tayyor!");
+    isReady = true;
+    
+    // Yuklanish tugadi! Ekrandagi yozuvlarni olib tashlaymiz
+    document.getElementById('loading-screen').style.display = 'none';
+    
+    // Segmentatsiyani boshlaymiz
     bodyPix.segment(gotResults);
   }
 
@@ -65,48 +143,43 @@
       return;
     }
     segmentation = result;
-    // Qayta-qayta tekshirish (Loop)
+    // Doimiy ravishda qayta ishlash
     bodyPix.segment(gotResults);
   }
 
   function draw() {
-    background(0); // Har safar fonni qora qilish
+    background(0); // Qora fon
 
-    if (isModelReady && segmentation) {
-      // Zarrachalar kattaligi (bu raqamni o'zgartirsangiz nuqtalar kattaradi/kichrayadi)
-      let stepSize = 10; 
+    if (isReady && segmentation) {
+      
+      // Videoni piksellarga ajratamiz
+      video.loadPixels();
+      
+      // Zarrachalar o'lchami (12 piksel)
+      let stepSize = 12; 
 
       for (let y = 0; y < height; y += stepSize) {
         for (let x = 0; x < width; x += stepSize) {
           
-          // Hozirgi nuqta (x, y) odamga tegishlimi?
           let index = x + y * width;
           
-          // Agar segmentation.data[index] === 1 bo'lsa, demak bu odam
-          // Agar 0 bo'lsa, demak bu fon
+          // Agar bu piksel odamniki bo'lsa (segmentation.data[i] === 1)
           if (segmentation.data[index] === 1) {
             
-            // O'sha joydagi videoning haqiqiy rangini olamiz
+            // Rangni olamiz
             let pixelIndex = (y * width + x) * 4;
             let r = video.pixels[pixelIndex];
-            let g = video.pixels[pixelIndex + 1];
-            let b = video.pixels[pixelIndex + 2];
+            let g = video.pixels[pixelIndex+1];
+            let b = video.pixels[pixelIndex+2];
             
-            fill(r, g, b, 200); // Rang berish
+            // Biroz shaffoflik qo'shamiz (ghost effect)
+            fill(r, g, b, 200);
             
-            // Zarrachani chizish (aylana shaklida)
+            // Dumaloq zarracha
             circle(x, y, stepSize - 2);
           }
         }
       }
-    } else {
-      // Agar model hali yuklanmagan bo'lsa
-      fill(255);
-      textAlign(CENTER, CENTER);
-      textSize(24);
-      text("Sun'iy intellekt yuklanmoqda...", width / 2, height / 2);
-      textSize(16);
-      text("Iltimos, biroz kuting (internet kerak)", width / 2, height / 2 + 30);
     }
   }
 </script>
