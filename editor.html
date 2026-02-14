@@ -232,14 +232,24 @@
 
         // --- ✨ GENERATE AI (TUZATILGAN) ---
         async function generateAI() {
-            // SIZNING KALITINGIZ (To'g'ri joylandi)
             const apiKey = "sk-SbO89p7YA2x5aL1EYYmZucaFSJeWuEiy7zutqiCKCIhXC9jA"; 
-
-            // DIQQAT: Men "if" tekshiruvini olib tashladim. Endi to'g'ri ishlaydi!
 
             loadingOverlay.style.display = 'flex'; 
 
-            canvas.toBlob(async function(blob) {
+            // 1. VAQTINCHALIK KANVAS YARATAMIZ (AI talab qilgan 1024x1024 o'lchamda)
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = 1024;
+            tempCanvas.height = 1024;
+            const tempCtx = tempCanvas.getContext('2d');
+
+            // 2. Bizning chizgan rasmni o'sha 1024x1024 ichiga cho'zib joylaymiz
+            // (Oq fon bilan to'ldiramiz, shaffof bo'lmasligi uchun)
+            tempCtx.fillStyle = "#FFFFFF"; 
+            tempCtx.fillRect(0, 0, 1024, 1024);
+            tempCtx.drawImage(canvas, 0, 0, 1024, 1024);
+
+            // 3. Endi o'sha to'g'irlangan rasmni yuboramiz
+            tempCanvas.toBlob(async function(blob) {
                 const formData = new FormData();
                 formData.append('init_image', blob);
                 formData.append('init_image_mode', 'IMAGE_STRENGTH');
@@ -259,7 +269,10 @@
                         body: formData,
                     });
 
-                    if (!response.ok) throw new Error(await response.text());
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Server Xatosi: ${errorText}`);
+                    }
 
                     const data = await response.json();
 
@@ -267,9 +280,9 @@
                         const newImg = new Image();
                         newImg.src = `data:image/png;base64,${image.base64}`;
                         newImg.onload = function() {
+                            // Kelgan 1024x1024 rasmni yana bizning ekran o'lchamiga moslab chizamiz
                             ctx.drawImage(newImg, 0, 0, canvas.width, canvas.height);
                             loadingOverlay.style.display = 'none';
-                            // Alertni o'chirib qo'ydim, shunchaki rasm paydo bo'ladi
                         };
                     });
 
