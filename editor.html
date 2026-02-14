@@ -3,167 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JOKKER: Galaxy AI Studio</title>
+    <title>JOKKER: Face Keeper Studio</title>
     <style>
-        body { margin: 0; padding: 0; background-color: #000; color: #fff; font-family: sans-serif; overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
+        body { margin: 0; padding: 0; background-color: #050505; color: #fff; font-family: sans-serif; overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
         
-        #top-bar { height: 50px; background: #111; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; border-bottom: 1px solid #333; }
-        h1 { font-size: 16px; color: #fff; margin: 0; font-weight: normal; }
+        #top-bar { height: 60px; background: #111; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-bottom: 1px solid #333; }
+        h1 { font-size: 18px; color: #00ffcc; letter-spacing: 1px; margin: 0; }
         
-        #canvas-container { flex: 1; display: flex; justify-content: center; align-items: center; background: #000; overflow: hidden; position: relative; }
-        canvas { box-shadow: 0 0 20px rgba(255,255,255,0.1); max-width: 100%; max-height: 100%; }
-        
-        #bottom-bar { height: 140px; background: #111; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; border-top: 1px solid #333; padding: 10px; }
+        /* KANVASLAR USTMA-UST */
+        #canvas-container { flex: 1; display: flex; justify-content: center; align-items: center; background: #000; position: relative; overflow: hidden; }
+        .canvas-layer { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); max-width: 95%; max-height: 95%; }
+        #image-layer { z-index: 1; } /* Asl rasm pastda */
+        #draw-layer { z-index: 2; cursor: crosshair; opacity: 0.6; } /* Chizish tepada (shaffof) */
+
+        #bottom-bar { height: 130px; background: #111; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px; border-top: 1px solid #333; padding: 10px; }
         .row { display: flex; gap: 10px; align-items: center; width: 100%; justify-content: center; }
         
-        .btn { background: #333; color: #fff; border: none; padding: 12px 16px; border-radius: 50px; cursor: pointer; font-size: 14px; }
-        .btn.active { background: #fff; color: #000; }
+        .btn { background: #222; color: #fff; border: 1px solid #444; padding: 10px 15px; border-radius: 8px; cursor: pointer; }
+        .btn:hover { border-color: #00ffcc; color: #00ffcc; }
+        .btn.active { background: #00ffcc; color: #000; font-weight: bold; }
         
-        /* GENERATE TUGMASI - SAMSUNG STYLE */
         .btn-gen { 
-            background: linear-gradient(90deg, #5e6aff, #d768ff); 
-            color: white; border: none; padding: 12px 30px; 
-            border-radius: 50px; font-weight: bold; letter-spacing: 1px;
-            box-shadow: 0 0 15px rgba(100, 100, 255, 0.5);
+            background: linear-gradient(90deg, #00ffcc, #007bff); color: #000; font-weight: bold; border: none; padding: 12px 30px; 
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
         }
 
-        #prompt-input { padding: 10px; border-radius: 20px; border: 1px solid #444; background: #222; color: #fff; width: 220px; outline: none; text-align: center; }
+        #prompt-input { padding: 10px; border-radius: 8px; border: 1px solid #444; background: #000; color: #00ffcc; width: 250px; outline: none; }
+        
+        #loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 999; }
+        .scanner { width: 100%; height: 2px; background: #00ffcc; position: absolute; animation: scan 2s infinite ease-in-out; box-shadow: 0 0 20px #00ffcc; }
+        @keyframes scan { 0% { top: 0; } 50% { top: 100%; } 100% { top: 0; } }
         
         /* RANG TANLASH */
-        #color-picker { width: 40px; height: 40px; border: none; background: none; cursor: pointer; }
-        
-        #loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 999; }
-        .galaxy-loader {
-            width: 50px; height: 50px; border-radius: 50%;
-            background: linear-gradient(45deg, #5e6aff, #d768ff);
-            animation: pulse 1s infinite alternate;
-        }
-        @keyframes pulse { 0% { transform: scale(0.8); opacity: 0.7; } 100% { transform: scale(1.2); opacity: 1; } }
+        .color-dot { width: 25px; height: 25px; border-radius: 50%; cursor: pointer; border: 2px solid #444; }
+        .color-dot.active { border-color: #fff; transform: scale(1.2); }
     </style>
 </head>
 <body>
 
     <div id="top-bar">
-        <h1>Galaxy Sketch AI</h1>
-        <button class="btn" onclick="document.getElementById('file-input').click()">Rasmni Ochish</button>
+        <h1>JOKKER INPAINTING</h1>
+        <button class="btn" onclick="document.getElementById('file-input').click()">📁 Rasm Yuklash</button>
         <input type="file" id="file-input" accept="image/*" style="display:none">
     </div>
 
     <div id="canvas-container">
         <div id="loading-overlay">
-            <div class="galaxy-loader"></div>
-            <p style="margin-top:20px; color:#ccc;">AI Generate...</p>
+            <div class="scanner"></div>
+            <p style="margin-top:20px; color:#00ffcc;">YUZ SAQLANMOQDA... SOQOL EKILMOQDA...</p>
         </div>
-        <canvas id="main-canvas"></canvas>
+        <canvas id="image-layer" class="canvas-layer"></canvas>
+        <canvas id="draw-layer" class="canvas-layer"></canvas>
     </div>
 
     <div id="bottom-bar">
         <div class="row">
-            <input type="text" id="prompt-input" placeholder="Nima chizdingiz? (Masalan: Soqol)">
-            <input type="color" id="color-picker" value="#000000" title="Rangni tanlang">
+            <input type="text" id="prompt-input" placeholder="Nima chizish kerak? (Masalan: Qora soqol)">
         </div>
 
         <div class="row">
-            <button class="btn" onclick="undo()">↩️</button>
-            <button class="btn active" id="btn-brush" onclick="setTool('brush')">✏️</button>
-            <button class="btn" id="btn-eraser" onclick="setTool('eraser')">🧽</button>
-            <button class="btn" onclick="clearCanvas()">🗑</button>
-            <button class="btn-gen" onclick="generateAI()">✨ GENERATE</button>
+            <button class="btn" onclick="undo()">↩️ Undo</button>
+            <button class="btn active" id="btn-brush" onclick="setTool('brush')">🖌 Maska (Bo'yash)</button>
+            <button class="btn" id="btn-eraser" onclick="setTool('eraser')">🧽 O'chir</button>
+            <button class="btn" onclick="clearMask()">🗑 Toza</button>
+            <button class="btn-gen" onclick="generateInpainting()">✨ GENERATE</button>
             <button class="btn" onclick="downloadImage()">⬇️</button>
         </div>
-        <input type="hidden" id="strength-val" value="0.65">
     </div>
 
     <script>
         const apiKey = "sk-SbO89p7YA2x5aL1EYYmZucaFSJeWuEiy7zutqiCKCIhXC9jA"; 
         
-        const canvas = document.getElementById('main-canvas');
-        const ctx = canvas.getContext('2d');
+        const imgCanvas = document.getElementById('image-layer');
+        const imgCtx = imgCanvas.getContext('2d');
+        const drawCanvas = document.getElementById('draw-layer');
+        const drawCtx = drawCanvas.getContext('2d');
         const fileInput = document.getElementById('file-input');
-        const colorPicker = document.getElementById('color-picker');
+
         let isDrawing = false, currentTool = 'brush';
         let originalImage = new Image();
         let originalWidth = 1024, originalHeight = 1024;
         let undoStack = [], undoStep = -1;
 
+        // --- TARIX ---
         function saveState() {
             undoStep++;
             if (undoStep < undoStack.length) undoStack.length = undoStep;
-            undoStack.push(canvas.toDataURL());
+            undoStack.push(drawCanvas.toDataURL());
         }
         function undo() {
             if (undoStep > 0) {
                 undoStep--;
                 let img = new Image();
                 img.src = undoStack[undoStep];
-                img.onload = () => { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0,canvas.width,canvas.height); }
-            }
+                img.onload = () => { drawCtx.clearRect(0,0,drawCanvas.width,drawCanvas.height); drawCtx.drawImage(img,0,0); }
+            } else { clearMask(false); }
         }
 
-        function initCanvas() {
-            canvas.width = 800; canvas.height = 600;
-            ctx.fillStyle = "#111"; ctx.fillRect(0,0,canvas.width,canvas.height);
-            ctx.fillStyle="#555"; ctx.fillText("Rasm yuklang", 350, 300);
-            saveState();
-        }
-        initCanvas();
-
+        // --- RASM YUKLASH ---
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
-            if(!file)return;
+            if(!file) return;
             const reader = new FileReader();
             reader.onload = (ev) => {
                 originalImage.src = ev.target.result;
                 originalImage.onload = () => {
-                    canvas.width = originalImage.width;
-                    canvas.height = originalImage.height;
+                    // O'lchamlarni moslash
+                    imgCanvas.width = originalImage.width;
+                    imgCanvas.height = originalImage.height;
+                    drawCanvas.width = originalImage.width;
+                    drawCanvas.height = originalImage.height;
+                    
                     originalWidth = originalImage.width;
                     originalHeight = originalImage.height;
-                    ctx.drawImage(originalImage,0,0);
-                    saveState();
+
+                    imgCtx.drawImage(originalImage, 0, 0);
+                    clearMask(); // Yangi rasm kelganda maskani tozalash
                 }
             }
             reader.readAsDataURL(file);
         });
 
-        function startDraw(e) { isDrawing = true; draw(e); }
-        function endDraw() { if(isDrawing){ isDrawing=false; ctx.beginPath(); saveState(); } }
-        function draw(e) {
-            if(!isDrawing) return;
-            e.preventDefault();
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
+        // --- MASKA CHIZISH ---
+        function getPos(e) {
+            const rect = drawCanvas.getBoundingClientRect();
+            const scaleX = drawCanvas.width / rect.width;
+            const scaleY = drawCanvas.height / rect.height;
             let x = (e.touches?e.touches[0].clientX:e.clientX) - rect.left;
             let y = (e.touches?e.touches[0].clientY:e.clientY) - rect.top;
-            
-            ctx.lineWidth = currentTool==='brush' ? canvas.width*0.006 : canvas.width*0.04;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            
-            if(currentTool==='brush') {
-                ctx.strokeStyle = colorPicker.value; // TANLAGAN RANGINGIZDA CHIZADI
-            } else {
-                ctx.strokeStyle = '#000000'; // AI qora o'chirgich deb tushunmasligi uchun
-                // Aslida o'chirgich murakkab, shuning uchun undo ishlatgan ma'qul
-                // Lekin vaqtincha rasm rangiga bo'yash:
-                // Oddiylik uchun qora:
-                ctx.strokeStyle = '#000'; 
-            }
-            
-            ctx.lineTo(x*scaleX, y*scaleY);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(x*scaleX, y*scaleY);
+            return { x: x*scaleX, y: y*scaleY };
         }
 
-        canvas.addEventListener('mousedown', startDraw); canvas.addEventListener('mousemove', draw); window.addEventListener('mouseup', endDraw);
-        canvas.addEventListener('touchstart', startDraw, {passive:false}); canvas.addEventListener('touchmove', draw, {passive:false}); window.addEventListener('touchend', endDraw);
+        function startDraw(e) { isDrawing = true; draw(e); }
+        function endDraw() { if(isDrawing) { isDrawing=false; drawCtx.beginPath(); saveState(); } }
+        
+        function draw(e) {
+            if(!isDrawing) return;
+            if(e.type==='touchmove') e.preventDefault();
+            const pos = getPos(e);
+            
+            drawCtx.lineCap = 'round';
+            drawCtx.lineJoin = 'round';
+            drawCtx.lineWidth = drawCanvas.width * 0.05; // Qalin cho'tka
+
+            if (currentTool === 'brush') {
+                drawCtx.globalCompositeOperation = 'source-over';
+                drawCtx.strokeStyle = 'rgba(255, 255, 255, 1)'; // OQ MASKA (Ko'rinishi uchun shaffof oq)
+                // Lekin AI ga qora-oq maska ketadi, shuning uchun bu yerda oq chizamiz
+            } else {
+                drawCtx.globalCompositeOperation = 'destination-out'; // O'chirish
+            }
+            
+            drawCtx.lineTo(pos.x, pos.y);
+            drawCtx.stroke();
+            drawCtx.beginPath();
+            drawCtx.moveTo(pos.x, pos.y);
+        }
+
+        drawCanvas.addEventListener('mousedown', startDraw); drawCanvas.addEventListener('mousemove', draw); window.addEventListener('mouseup', endDraw);
+        drawCanvas.addEventListener('touchstart', startDraw, {passive:false}); drawCanvas.addEventListener('touchmove', draw, {passive:false}); window.addEventListener('touchend', endDraw);
 
         function setTool(t) { currentTool=t; document.getElementById('btn-brush').classList.toggle('active',t==='brush'); document.getElementById('btn-eraser').classList.toggle('active',t==='eraser'); }
-        function clearCanvas() { ctx.drawImage(originalImage,0,0); saveState(); }
-        function downloadImage() { const a=document.createElement('a'); a.download='galaxy_ai.png'; a.href=canvas.toDataURL(); a.click(); }
+        function clearMask(save=true) { drawCtx.clearRect(0,0,drawCanvas.width,drawCanvas.height); if(save) saveState(); }
+        
+        function downloadImage() { 
+            // Yuklashda ikkalasini birlashtiramiz
+            const temp = document.createElement('canvas');
+            temp.width = originalWidth; temp.height = originalHeight;
+            const tCtx = temp.getContext('2d');
+            tCtx.drawImage(imgCanvas,0,0);
+            const link = document.createElement('a');
+            link.download = 'jokker_face.png';
+            link.href = imgCanvas.toDataURL(); // Hozircha faqat rasm qatlami
+            link.click(); 
+        }
 
+        // --- TARJIMA ---
         async function translateText(text) {
             try {
                 const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=uz|en`);
@@ -172,58 +187,65 @@
             } catch(e) { return text; }
         }
 
-        async function generateAI() {
+        // --- INPAINTING GENERATSIYA ---
+        async function generateInpainting() {
             let promptUz = document.getElementById('prompt-input').value;
             if(!promptUz) { alert("Prompt yozing!"); return; }
             
             document.getElementById('loading-overlay').style.display = 'flex';
             
-            // 1. O'zbekchani inglizcha qilish
             let promptEn = await translateText(promptUz);
             
-            // 2. Kuchni 65% qilib belgiladik (Transformatsiya uchun)
-            let strength = 0.65; 
-
-            // 3. Resize Logic (AI Standard)
+            // 1. Rasmni tayyorlash
             const ratio = originalWidth/originalHeight;
             let tw=1024, th=1024;
             if(ratio>1.5) { tw=1344; th=768; } else if(ratio<0.7) { tw=768; th=1344; }
 
-            const tCan = document.createElement('canvas');
-            tCan.width=tw; tCan.height=th;
-            tCan.getContext('2d').drawImage(canvas,0,0,tw,th);
+            const finalImgCanvas = document.createElement('canvas');
+            finalImgCanvas.width=tw; finalImgCanvas.height=th;
+            finalImgCanvas.getContext('2d').drawImage(imgCanvas,0,0,tw,th);
 
-            tCan.toBlob(async (blob) => {
-                const fd = new FormData();
-                fd.append('init_image', blob);
-                fd.append('init_image_mode', 'IMAGE_STRENGTH');
-                fd.append('image_strength', strength);
-                fd.append('text_prompts[0][text]', `${promptEn}, realistic, 8k, photorealistic`);
-                fd.append('text_prompts[1][text]', 'cartoon, drawing, sketch, bad quality, lowres');
-                fd.append('text_prompts[1][weight]', '-1');
-                fd.append('cfg_scale', 10); // Buyruqqa qattiq amal qilish
-                fd.append('samples', 1);
-                fd.append('steps', 40);
+            // 2. MASKANI TAYYORLASH (AI uchun qora-oq)
+            const maskCanvas = document.createElement('canvas');
+            maskCanvas.width=tw; maskCanvas.height=th;
+            const mCtx = maskCanvas.getContext('2d');
+            mCtx.fillStyle = "black"; // Fon qora (o'zgarmaydigan joy)
+            mCtx.fillRect(0,0,tw,th);
+            mCtx.drawImage(drawCanvas,0,0,tw,th); // Biz chizgan joy (oq bo'lib tushadi)
+            // AI da: OQ = O'zgaradi, QORA = O'zgarmaydi.
+            
+            // Convert to blobs
+            const imgBlob = await new Promise(r => finalImgCanvas.toBlob(r, 'image/png'));
+            const maskBlob = await new Promise(r => maskCanvas.toBlob(r, 'image/png'));
 
-                try {
-                    const res = await fetch('https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/image-to-image', {
-                        method: 'POST', headers: {'Authorization': 'Bearer '+apiKey, 'Accept':'application/json'}, body: fd
-                    });
-                    if(!res.ok) throw new Error(await res.text());
-                    const data = await res.json();
-                    
-                    const img = new Image();
-                    img.src = `data:image/png;base64,${data.artifacts[0].base64}`;
-                    img.onload = () => {
-                        ctx.drawImage(img,0,0,originalWidth,originalHeight);
-                        saveState();
-                        document.getElementById('loading-overlay').style.display = 'none';
-                    }
-                } catch(e) {
+            const fd = new FormData();
+            fd.append('init_image', imgBlob);
+            fd.append('mask_image', maskBlob);
+            fd.append('mask_source', 'MASK_IMAGE_WHITE'); // Oq joy maska deb belgilash
+            fd.append('text_prompts[0][text]', `${promptEn}, realistic, 8k, photorealistic texture, blending naturally with skin`);
+            fd.append('cfg_scale', 7);
+            fd.append('samples', 1);
+            fd.append('steps', 30);
+
+            try {
+                // ENDPOINT: MASKING
+                const res = await fetch('https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/image-to-image/masking', {
+                    method: 'POST', headers: {'Authorization': 'Bearer '+apiKey, 'Accept':'application/json'}, body: fd
+                });
+                if(!res.ok) throw new Error(await res.text());
+                const data = await res.json();
+                
+                const resultImg = new Image();
+                resultImg.src = `data:image/png;base64,${data.artifacts[0].base64}`;
+                resultImg.onload = () => {
+                    imgCtx.drawImage(resultImg,0,0,originalWidth,originalHeight); // Natijani joylash
+                    clearMask(); // Maskani olib tashlash
                     document.getElementById('loading-overlay').style.display = 'none';
-                    alert("Xatolik: "+e.message);
                 }
-            }, 'image/png');
+            } catch(e) {
+                document.getElementById('loading-overlay').style.display = 'none';
+                alert("Xatolik: "+e.message);
+            }
         }
     </script>
 </body>
