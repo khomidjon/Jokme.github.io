@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>JOKKER: White Noise Edition</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <style>
+        body { margin: 0; padding: 0; background-color: #000; overflow: hidden; }
+        canvas { display: block; transform: scaleX(-1); } /* Oynadek aks etish */
+        video { display: none; }
+        #status {
+            position: absolute; top: 10px; left: 10px; color: #fff; 
+            font-family: 'Courier New', monospace; font-size: 14px; z-index: 10;
+            text-shadow: 0 0 5px #fff;
+        }
+    </style>
+</head>
+<body>
+
+<div id="status">JOKKER TIZIMI: KAMERA KUTILMOQDA...</div>
+<video id="input_video"></video>
+<canvas id="output_canvas"></canvas>
+
+<script>
+    const videoElement = document.getElementById('input_video');
+    const canvasElement = document.getElementById('output_canvas');
+    const canvasCtx = canvasElement.getContext('2d');
+    const statusDiv = document.getElementById('status');
+
+    let width, height;
+    function resize() {
+        width = canvasElement.width = window.innerWidth;
+        height = canvasElement.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    let balls = [];
+    const SPACING = 45; // Sharlar orasi
+    const PINCH_THRESHOLD = 0.05;
+
+    // --- JOKKER RANGLAR FORMULASI ---
+    function getJokkerColor() {
+        // Bu "Baraban": Ichida Oq rang ko'p, Havorang yo'q.
+        const palette = [
+            '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', // 4 ta Oq (Dominant)
+            '#FF0000', // 1 ta Qizil (Noyob)
+            '#FF00FF', // 1 ta Pushti (Noyob)
+            '#FFFFFF', '#FFFFFF' // Yana Oq
+        ];
+        // Tasodifiy bittasini sug'urib olamiz
+        const randomIndex = Math.floor(Math.random() * palette.length);
+        return palette[randomIndex];
+    }
+
+    let lastPinchX = -100;
+    let lastPinchY = -100;
+
+    const hands = new Hands({locateFile: (file) => {
+        return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+    }});
+
+    hands.setOptions({
+        maxNumHands: 1,
+        modelComplexity: 1,
+        minDetectionConfidence: 0.7,
+        minTrackingConfidence: 0.7
+    });
+
+    hands.onResults(onResults);
+
+    const camera = new Camera(videoElement, {
+        onFrame: async () => { await hands.send({image: videoElement}); },
+        width: 1280, height: 720
+    });
+    camera.start();
+
+    function onResults(results) {
+        statusDiv.innerText = "JOKKER TIZIMI: ONLINE [WHITE MODE]";
+        
+        // Qora fon
+        canvasCtx.fillStyle = '#000000';
+        canvasCtx.fillRect(0, 0, width, height);
+
+        drawBalls();
+
+        if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+            const landmarks = results.multiHandLandmarks[0];
+            const indexTip = landmarks[8];
+            const thumbTip = landmarks[4];
+            
+            const x = indexTip.x * width;
+            const y = indexTip.y * height;
+
+            // --- MUSHT (RESET) ---
+            const wrist = landmarks[0];
+            const middleTip = landmarks[12];
+            if (Math.hypot(middleTip.x - wrist.x, middleTip.y - wrist.y) < 0.15) {
+                balls = [];
+                lastPinchX = -100;
+                return; // Musht bo'lsa chizmaymiz
+            } 
+            
+            // --- PINCH (CHIZISH) ---
+            const distance = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y);
+
+            // Kursor (Yashil nuqta)
+            canvasCtx.beginPath();
+            canvasCtx.arc(x, y, 4, 0, 2 * Math.PI);
+            canvasCtx.fillStyle = '#00FF00';
+            canvasCtx.fill();
+
+            if (distance < PINCH_THRESHOLD) {
+                const distFromLast = Math.hypot(x - lastPinchX, y - lastPinchY);
+                
+                // Faqat masofa yetarli bo'lsa yangi shar qo'shamiz
+                if (distFromLast > SPACING) {
+                    addBall(x, y);
+                    lastPinchX = x;
+                    lastPinchY = y;
+                }
+            }
+        }
+    }
+
+    function addBall(x, y) {
+        balls.push({
+            x: x,
+            y: y,
+            color: getJokkerColor(), // <-- Yangi rang formulasi ishga tushdi
+            timeOffset: Date.now()
+        });
+        
+        // Xotirani tozalash (Agar sharlar 500 dan oshsa, eskilari o'chadi)
+        if (balls.length > 500) {
+            balls.shift();
+        }
+    }
+
+    function drawBalls() {
+        const time = Date.now() * 0.003;
+
+        balls.forEach(ball => {
+            // "Nafas olish" effekti (Kattalashib-kichrayish)
+            const scale = 1 + Math.sin(time + ball.x * 0.02) * 0.25;
+            const radius = 12 * scale;
+
+            canvasCtx.beginPath();
+            const gradient = canvasCtx.createRadialGradient(
+                ball.x, ball.y, radius * 0.1, 
+                ball.x, ball.y, radius
+            );
+            
+            // Markaz doim oq (Porlash)
+            gradient.addColorStop(0, '#FFFFFF');
+            // Asosiy rang (Biz tanlagan)
+            gradient.addColorStop(0.4, ball.color);
+            // Chetlar shaffof
+            gradient.addColorStop(1, 'rgba(0,0,0,0)');
+
+            canvasCtx.fillStyle = gradient;
+            canvasCtx.arc(ball.x, ball.y, radius, 0, Math.PI * 2);
+            canvasCtx.fill();
+        });
+    }
+</script>
+
+</body>
+</html>
