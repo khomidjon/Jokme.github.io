@@ -3,368 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate AI Studio</title>
+    <title>JOKKER: Galaxy AI Studio</title>
     <style>
-        /* --- KIBER DIZAYN (CSS) --- */
-        body { 
-            margin: 0; padding: 0; 
-            background-color: #050505; 
-            color: #e0e0e0; 
-            font-family: 'Segoe UI', Roboto, sans-serif; 
-            overflow: hidden; 
-            display: flex; 
-            flex-direction: column; 
-            height: 100vh; 
-        }
+        body { margin: 0; padding: 0; background-color: #000; color: #fff; font-family: sans-serif; overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
         
-        /* TEPADAGI PANEL */
-        #top-bar { 
-            height: 60px; background: #111; 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 0 20px; border-bottom: 1px solid #333; 
-            box-shadow: 0 0 15px rgba(0, 255, 204, 0.1);
-        }
-        h1 { font-size: 18px; color: #00ffcc; letter-spacing: 2px; text-transform: uppercase; margin: 0; }
+        #top-bar { height: 50px; background: #111; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; border-bottom: 1px solid #333; }
+        h1 { font-size: 16px; color: #fff; margin: 0; font-weight: normal; }
         
-        /* KANVAS EKRANI (Markaziy) */
-        #canvas-container { 
-            flex: 1; 
-            background: #000; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            overflow: hidden; 
-            position: relative;
-            background-image: radial-gradient(circle, #111 1px, transparent 1px);
-            background-size: 20px 20px; /* Panjara effekti */
-        }
+        #canvas-container { flex: 1; display: flex; justify-content: center; align-items: center; background: #000; overflow: hidden; position: relative; }
+        canvas { box-shadow: 0 0 20px rgba(255,255,255,0.1); max-width: 100%; max-height: 100%; }
         
-        canvas { 
-            box-shadow: 0 0 40px rgba(0, 255, 204, 0.15); 
-            cursor: crosshair; 
-            max-width: 95%; 
-            max-height: 95%; 
-            object-fit: contain; /* Rasm ekranga sig'ishi uchun */
-        }
+        #bottom-bar { height: 140px; background: #111; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; border-top: 1px solid #333; padding: 10px; }
+        .row { display: flex; gap: 10px; align-items: center; width: 100%; justify-content: center; }
         
-        /* PASTKI PANEL (Qurollar) */
-        #bottom-bar { 
-            height: 130px; background: #111; 
-            display: flex; flex-direction: column; 
-            justify-content: center; align-items: center; 
-            gap: 10px; border-top: 1px solid #333; 
-            padding: 10px;
+        .btn { background: #333; color: #fff; border: none; padding: 12px 16px; border-radius: 50px; cursor: pointer; font-size: 14px; }
+        .btn.active { background: #fff; color: #000; }
+        
+        /* GENERATE TUGMASI - SAMSUNG STYLE */
+        .btn-gen { 
+            background: linear-gradient(90deg, #5e6aff, #d768ff); 
+            color: white; border: none; padding: 12px 30px; 
+            border-radius: 50px; font-weight: bold; letter-spacing: 1px;
+            box-shadow: 0 0 15px rgba(100, 100, 255, 0.5);
         }
 
-        .tools-row { display: flex; gap: 10px; align-items: center; width: 100%; justify-content: center; }
+        #prompt-input { padding: 10px; border-radius: 20px; border: 1px solid #444; background: #222; color: #fff; width: 220px; outline: none; text-align: center; }
         
-        /* TUGMALAR */
-        .btn { 
-            background: #222; color: #fff; border: 1px solid #444; 
-            padding: 10px 15px; border-radius: 8px; cursor: pointer; 
-            font-size: 14px; transition: all 0.2s; 
-        }
-        .btn:hover { border-color: #00ffcc; color: #00ffcc; }
-        .btn.active { background: #00ffcc; color: #000; font-weight: bold; border-color: #00ffcc; box-shadow: 0 0 15px rgba(0, 255, 204, 0.4); }
+        /* RANG TANLASH */
+        #color-picker { width: 40px; height: 40px; border: none; background: none; cursor: pointer; }
         
-        .btn-magic { 
-            background: linear-gradient(90deg, #007bff, #00ffcc); 
-            color: #000; font-weight: bold; border: none; padding: 12px 25px; 
-            box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+        #loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 999; }
+        .galaxy-loader {
+            width: 50px; height: 50px; border-radius: 50%;
+            background: linear-gradient(45deg, #5e6aff, #d768ff);
+            animation: pulse 1s infinite alternate;
         }
-        .btn-magic:active { transform: scale(0.95); }
-
-        /* INPUTLAR */
-        #prompt-input { 
-            padding: 10px; border-radius: 8px; border: 1px solid #444; 
-            background: #000; color: #00ffcc; width: 250px; outline: none; 
-        }
-        #strength-slider { width: 120px; accent-color: #00ffcc; cursor: pointer; }
-        label { font-size: 11px; color: #888; text-transform: uppercase; font-weight: bold; }
-        
-        #file-input { display: none; }
-
-        /* LOADING ANIMATSIYASI */
-        #loading-overlay { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.9); display: none; 
-            flex-direction: column; justify-content: center; align-items: center; 
-            z-index: 999; backdrop-filter: blur(5px);
-        }
-        .scanner {
-            width: 100%; height: 2px; background: #00ffcc;
-            position: absolute; top: 0;
-            animation: scan 2s infinite ease-in-out;
-            box-shadow: 0 0 20px #00ffcc;
-        }
-        @keyframes scan { 0% { top: 0; } 50% { top: 100%; } 100% { top: 0; } }
-        
-        .loader-text { margin-top: 20px; color: #00ffcc; font-family: monospace; letter-spacing: 2px; }
+        @keyframes pulse { 0% { transform: scale(0.8); opacity: 0.7; } 100% { transform: scale(1.2); opacity: 1; } }
     </style>
 </head>
 <body>
 
     <div id="top-bar">
-        <h1>JOKKER AI STUDIO</h1>
-        <button class="btn" onclick="document.getElementById('file-input').click()">📁 Rasm Yuklash</button>
-        <input type="file" id="file-input" accept="image/*">
+        <h1>Galaxy Sketch AI</h1>
+        <button class="btn" onclick="document.getElementById('file-input').click()">Rasmni Ochish</button>
+        <input type="file" id="file-input" accept="image/*" style="display:none">
     </div>
 
     <div id="canvas-container">
         <div id="loading-overlay">
-            <div class="scanner"></div>
-            <p class="loader-text" id="loading-text">AI ISHLAMOQDA...</p>
+            <div class="galaxy-loader"></div>
+            <p style="margin-top:20px; color:#ccc;">AI Generate...</p>
         </div>
         <canvas id="main-canvas"></canvas>
     </div>
 
     <div id="bottom-bar">
-        <div class="tools-row">
-            <input type="text" id="prompt-input" placeholder="Promt aniq nima qilish">
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 3px;">
-                <label>KUCH: <span id="strength-val">35%</span></label>
-                <input type="range" id="strength-slider" min="0.1" max="1.0" step="0.05" value="0.35" oninput="document.getElementById('strength-val').innerText = Math.round(this.value*100) + '%'">
-            </div>
+        <div class="row">
+            <input type="text" id="prompt-input" placeholder="Nima chizdingiz? (Masalan: Soqol)">
+            <input type="color" id="color-picker" value="#000000" title="Rangni tanlang">
         </div>
 
-        <div class="tools-row">
-            <button class="btn" onclick="undo()">↩️ Undo</button>
-            <div style="width: 1px; height: 20px; background: #333;"></div>
-            <button class="btn active" id="btn-brush" onclick="setTool('brush')">✏️ Qalam</button>
-            <button class="btn" id="btn-eraser" onclick="setTool('eraser')">🧽 O'chir</button>
-            <button class="btn" onclick="clearCanvas()">🗑 Toza</button>
-            <div style="width: 1px; height: 20px; background: #333;"></div>
-            <button class="btn btn-magic" onclick="generateAI()">✨ GENERATE</button>
+        <div class="row">
+            <button class="btn" onclick="undo()">↩️</button>
+            <button class="btn active" id="btn-brush" onclick="setTool('brush')">✏️</button>
+            <button class="btn" id="btn-eraser" onclick="setTool('eraser')">🧽</button>
+            <button class="btn" onclick="clearCanvas()">🗑</button>
+            <button class="btn-gen" onclick="generateAI()">✨ GENERATE</button>
             <button class="btn" onclick="downloadImage()">⬇️</button>
         </div>
+        <input type="hidden" id="strength-val" value="0.65">
     </div>
 
     <script>
-        // --- SOZLAMALAR ---
-        const apiKey = "sk-SbO89p7YA2x5aL1EYYmZucaFSJeWuEiy7zutqiCKCIhXC9jA"; // Sizning kalitingiz
+        const apiKey = "sk-SbO89p7YA2x5aL1EYYmZucaFSJeWuEiy7zutqiCKCIhXC9jA"; 
         
         const canvas = document.getElementById('main-canvas');
         const ctx = canvas.getContext('2d');
         const fileInput = document.getElementById('file-input');
-        const loadingOverlay = document.getElementById('loading-overlay');
-        const loadingText = document.getElementById('loading-text');
-
+        const colorPicker = document.getElementById('color-picker');
         let isDrawing = false, currentTool = 'brush';
         let originalImage = new Image();
         let originalWidth = 1024, originalHeight = 1024;
         let undoStack = [], undoStep = -1;
 
-        // --- TARIX (UNDO) TIZIMI ---
         function saveState() {
             undoStep++;
             if (undoStep < undoStack.length) undoStack.length = undoStep;
             undoStack.push(canvas.toDataURL());
         }
-
         function undo() {
             if (undoStep > 0) {
                 undoStep--;
                 let img = new Image();
                 img.src = undoStack[undoStep];
-                img.onload = () => {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.shadowBlur = 0;
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                }
+                img.onload = () => { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0,canvas.width,canvas.height); }
             }
         }
 
-        // --- KANVAS BOSHLANG'ICH HOLATI ---
         function initCanvas() {
-            // Ekranga moslab boshlang'ich o'lcham beramiz
             canvas.width = 800; canvas.height = 600;
-            originalWidth = 800; originalHeight = 600;
-            
-            ctx.fillStyle = "#111"; // To'q fon
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            ctx.font = "30px Arial";
-            ctx.fillStyle = "#333";
-            ctx.textAlign = "center";
-            ctx.fillText("RASM YUKLANG", canvas.width/2, canvas.height/2);
-            
+            ctx.fillStyle = "#111"; ctx.fillRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle="#555"; ctx.fillText("Rasm yuklang", 350, 300);
             saveState();
         }
         initCanvas();
 
-        // --- RASM YUKLASH ---
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
-            if (!file) return;
+            if(!file)return;
             const reader = new FileReader();
             reader.onload = (ev) => {
                 originalImage.src = ev.target.result;
                 originalImage.onload = () => {
-                    // Kanvasni rasmga tenglashtiramiz
                     canvas.width = originalImage.width;
                     canvas.height = originalImage.height;
                     originalWidth = originalImage.width;
                     originalHeight = originalImage.height;
-                    
-                    ctx.shadowBlur = 0;
-                    ctx.drawImage(originalImage, 0, 0);
+                    ctx.drawImage(originalImage,0,0);
                     saveState();
                 }
             }
             reader.readAsDataURL(file);
         });
 
-        // --- CHIZISH FUNKSIYALARI ---
-        function getPos(e) {
+        function startDraw(e) { isDrawing = true; draw(e); }
+        function endDraw() { if(isDrawing){ isDrawing=false; ctx.beginPath(); saveState(); } }
+        function draw(e) {
+            if(!isDrawing) return;
+            e.preventDefault();
             const rect = canvas.getBoundingClientRect();
-            // Rasm ekranda kichraytirilgan bo'lsa, masshtabni hisobga olish
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
+            let x = (e.touches?e.touches[0].clientX:e.clientX) - rect.left;
+            let y = (e.touches?e.touches[0].clientY:e.clientY) - rect.top;
             
-            let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            let clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            
-            return {
-                x: (clientX - rect.left) * scaleX,
-                y: (clientY - rect.top) * scaleY
-            };
-        }
-
-        function startDraw(e) { isDrawing = true; draw(e); }
-        function endDraw() { if(isDrawing) { isDrawing = false; ctx.beginPath(); saveState(); } }
-        
-        function draw(e) {
-            if (!isDrawing) return;
-            // Touch hodisalarida ekranni qimirlashini to'xtatish
-            if(e.type === 'touchmove') e.preventDefault(); 
-
-            const pos = getPos(e);
-
-            // Qalam qalinligi rasm kattaligiga qarab o'zgaradi
-            ctx.lineWidth = currentTool === 'brush' ? (canvas.width * 0.005) : (canvas.width * 0.04);
+            ctx.lineWidth = currentTool==='brush' ? canvas.width*0.006 : canvas.width*0.04;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
-
-            if (currentTool === 'brush') {
-                ctx.strokeStyle = '#FFFFFF'; // AI uchun OQ
+            
+            if(currentTool==='brush') {
+                ctx.strokeStyle = colorPicker.value; // TANLAGAN RANGINGIZDA CHIZADI
             } else {
-                ctx.strokeStyle = '#000000'; // O'chirgich
-                ctx.shadowBlur = 0;
+                ctx.strokeStyle = '#000000'; // AI qora o'chirgich deb tushunmasligi uchun
+                // Aslida o'chirgich murakkab, shuning uchun undo ishlatgan ma'qul
+                // Lekin vaqtincha rasm rangiga bo'yash:
+                // Oddiylik uchun qora:
+                ctx.strokeStyle = '#000'; 
             }
-
-            ctx.lineTo(pos.x, pos.y);
+            
+            ctx.lineTo(x*scaleX, y*scaleY);
             ctx.stroke();
             ctx.beginPath();
-            ctx.moveTo(pos.x, pos.y);
+            ctx.moveTo(x*scaleX, y*scaleY);
         }
 
-        // Hodisalar
-        canvas.addEventListener('mousedown', startDraw);
-        canvas.addEventListener('mousemove', draw);
-        window.addEventListener('mouseup', endDraw); // Ekranda tashqariga chiqsa ham to'xtasin
-        
-        canvas.addEventListener('touchstart', startDraw, {passive: false});
-        canvas.addEventListener('touchmove', draw, {passive: false});
-        window.addEventListener('touchend', endDraw);
+        canvas.addEventListener('mousedown', startDraw); canvas.addEventListener('mousemove', draw); window.addEventListener('mouseup', endDraw);
+        canvas.addEventListener('touchstart', startDraw, {passive:false}); canvas.addEventListener('touchmove', draw, {passive:false}); window.addEventListener('touchend', endDraw);
 
-        // --- TUGMALAR ---
-        function setTool(tool) {
-            currentTool = tool;
-            document.getElementById('btn-brush').classList.toggle('active', tool === 'brush');
-            document.getElementById('btn-eraser').classList.toggle('active', tool === 'eraser');
-        }
-        function clearCanvas() {
-            ctx.shadowBlur = 0;
-            ctx.drawImage(originalImage, 0, 0); // Asl rasmni qaytarish
-            saveState();
-        }
-        function downloadImage() { 
-            const link = document.createElement('a');
-            link.download = 'jokker_art.png';
-            link.href = canvas.toDataURL();
-            link.click(); 
-        }
+        function setTool(t) { currentTool=t; document.getElementById('btn-brush').classList.toggle('active',t==='brush'); document.getElementById('btn-eraser').classList.toggle('active',t==='eraser'); }
+        function clearCanvas() { ctx.drawImage(originalImage,0,0); saveState(); }
+        function downloadImage() { const a=document.createElement('a'); a.download='galaxy_ai.png'; a.href=canvas.toDataURL(); a.click(); }
 
-        // --- TARJIMA FUNKSIYASI ---
         async function translateText(text) {
             try {
                 const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=uz|en`);
                 const data = await res.json();
                 return data.responseData.translatedText || text;
-            } catch (e) {
-                console.error(e);
-                return text; // Xato bo'lsa o'zini qaytaradi
-            }
+            } catch(e) { return text; }
         }
 
-        // --- AI GENERATSIYA (YURAK) ---
         async function generateAI() {
             let promptUz = document.getElementById('prompt-input').value;
-            if (!promptUz) { alert("Iltimos, nima chizishni yozing!"); return; }
+            if(!promptUz) { alert("Prompt yozing!"); return; }
             
-            let strength = parseFloat(document.getElementById('strength-slider').value);
-
-            loadingOverlay.style.display = 'flex';
-            loadingText.innerText = "TARJIMA QILINMOQDA...";
-
-            // 1. Tarjima
+            document.getElementById('loading-overlay').style.display = 'flex';
+            
+            // 1. O'zbekchani inglizcha qilish
             let promptEn = await translateText(promptUz);
-            loadingText.innerText = `AI: "${promptEn}"...`;
-
-            // 2. Formatni to'g'irlash (Stability AI standartlari)
-            const ratio = originalWidth / originalHeight;
-            let targetW = 1024, targetH = 1024;
             
-            if (ratio > 1.5) { targetW = 1344; targetH = 768; }
-            else if (ratio > 1.1) { targetW = 1152; targetH = 896; }
-            else if (ratio < 0.8) { targetW = 896; targetH = 1152; }
-            else if (ratio < 0.6) { targetW = 768; targetH = 1344; }
+            // 2. Kuchni 65% qilib belgiladik (Transformatsiya uchun)
+            let strength = 0.65; 
 
-            // 3. Vaqtincha kanvas yaratish (AI ga yuborish uchun)
-            const tCanvas = document.createElement('canvas');
-            tCanvas.width = targetW; tCanvas.height = targetH;
-            const tCtx = tCanvas.getContext('2d');
+            // 3. Resize Logic (AI Standard)
+            const ratio = originalWidth/originalHeight;
+            let tw=1024, th=1024;
+            if(ratio>1.5) { tw=1344; th=768; } else if(ratio<0.7) { tw=768; th=1344; }
 
-            // Asl rasmni neon-siz ko'chiramiz
-            ctx.shadowBlur = 0; 
-            tCtx.drawImage(canvas, 0, 0, targetW, targetH);
-            if(currentTool === 'brush') ctx.shadowBlur = canvas.width * 0.02; // Qaytarib yoqish
+            const tCan = document.createElement('canvas');
+            tCan.width=tw; tCan.height=th;
+            tCan.getContext('2d').drawImage(canvas,0,0,tw,th);
 
-            tCanvas.toBlob(async (blob) => {
-                const formData = new FormData();
-                formData.append('init_image', blob);
-                formData.append('init_image_mode', 'IMAGE_STRENGTH');
-                formData.append('image_strength', strength);
-                formData.append('text_prompts[0][text]', `${promptEn}, realistic, 8k resolution, highly detailed texture, cinematic lighting, photorealistic`);
-                formData.append('text_prompts[1][text]', 'blur, cartoon, drawing, sketch, bad quality, text, watermark, ugly, deformed');
-                formData.append('text_prompts[1][weight]', '-1');
-                formData.append('cfg_scale', 9);
-                formData.append('samples', 1);
-                formData.append('steps', 35);
+            tCan.toBlob(async (blob) => {
+                const fd = new FormData();
+                fd.append('init_image', blob);
+                fd.append('init_image_mode', 'IMAGE_STRENGTH');
+                fd.append('image_strength', strength);
+                fd.append('text_prompts[0][text]', `${promptEn}, realistic, 8k, photorealistic`);
+                fd.append('text_prompts[1][text]', 'cartoon, drawing, sketch, bad quality, lowres');
+                fd.append('text_prompts[1][weight]', '-1');
+                fd.append('cfg_scale', 10); // Buyruqqa qattiq amal qilish
+                fd.append('samples', 1);
+                fd.append('steps', 40);
 
                 try {
-                    const response = await fetch('https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/image-to-image', {
-                        method: 'POST',
-                        headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + apiKey },
-                        body: formData,
+                    const res = await fetch('https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/image-to-image', {
+                        method: 'POST', headers: {'Authorization': 'Bearer '+apiKey, 'Accept':'application/json'}, body: fd
                     });
-
-                    if (!response.ok) throw new Error(await response.text());
-                    const data = await response.json();
-
-                    // Natijani ko'rsatish
-                    const resultImg = new Image();
-                    resultImg.src = `data:image/png;base64,${data.artifacts[0].base64}`;
-                    resultImg.onload = () => {
-                        ctx.shadowBlur = 0;
-                        ctx.drawImage(resultImg, 0, 0, originalWidth, originalHeight); // Asl o'lchamga qaytarish
+                    if(!res.ok) throw new Error(await res.text());
+                    const data = await res.json();
+                    
+                    const img = new Image();
+                    img.src = `data:image/png;base64,${data.artifacts[0].base64}`;
+                    img.onload = () => {
+                        ctx.drawImage(img,0,0,originalWidth,originalHeight);
                         saveState();
-                        loadingOverlay.style.display = 'none';
-                    };
-
-                } catch (err) {
-                    loadingOverlay.style.display = 'none';
-                    alert("XATOLIK: " + err.message);
+                        document.getElementById('loading-overlay').style.display = 'none';
+                    }
+                } catch(e) {
+                    document.getElementById('loading-overlay').style.display = 'none';
+                    alert("Xatolik: "+e.message);
                 }
             }, 'image/png');
         }
