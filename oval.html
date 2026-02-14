@@ -2,14 +2,21 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <title>JOKKER: Matrix Grid Mode</title>
+    <title>JOKKER</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     <style>
         body { margin: 0; padding: 0; background-color: #000; overflow: hidden; }
-        canvas { display: block; transform: scaleX(-1); width: 100vw; height: 100vh; }
+        /* Kanvasni oynadek o'girish va to'liq 100% ekran qilish */
+        canvas { 
+            display: block; 
+            transform: scaleX(-1); 
+            width: 100vw; 
+            height: 100vh; 
+            object-fit: cover; /* Ekranni to'ldirish uchun */
+        }
         video { display: none; }
     </style>
 </head>
@@ -23,22 +30,26 @@
     const canvasElement = document.getElementById('output_canvas');
     const canvasCtx = canvasElement.getContext('2d');
 
-    // Ekranni to'liq egallash
-    canvasElement.width = window.innerWidth;
-    canvasElement.height = window.innerHeight;
+    // Ekranni to'liq egallash funksiyasi
+    function resizeCanvas() {
+        canvasElement.width = window.innerWidth;
+        canvasElement.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
     let balls = [];
-    let gridMap = {}; // Qaysi katak band ekanligini bilish uchun xarita
+    let gridMap = {}; 
 
     // --- SOZLAMALAR ---
-    const GRID_SIZE = 60; // Katak o'lchami (Kattaroq qildim, aniq ko'rinishi uchun)
-    const PINCH_THRESHOLD = 0.05; // Pinch sezgirligi
-    const FIST_THRESHOLD = 0.25;  // Musht sezgirligi (Oldin 0.15 edi, kuchaytirildi)
+    const GRID_SIZE = 35; // Kichraytirdim (Zichroq bo'lishi uchun)
+    const PINCH_THRESHOLD = 0.05; 
+    const FIST_THRESHOLD = 0.25;  
 
     // JOKKER Ranglar
     function getJokkerColor() {
         const palette = [
-            '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', // OQ (Ko'p)
+            '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', // OQ
             '#FF0000', // Qizil
             '#00FFFF'  // Havorang
         ];
@@ -58,9 +69,11 @@
 
     hands.onResults(onResults);
 
+    // KAMERANI ENG KATTA FORMATDA OCHISH (PC uchun)
     const camera = new Camera(videoElement, {
         onFrame: async () => { await hands.send({image: videoElement}); },
-        width: 1280, height: 720
+        width: 1920, // Full HD so'rovi
+        height: 1080
     });
     camera.start();
 
@@ -76,51 +89,45 @@
         if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
             const landmarks = results.multiHandLandmarks[0];
             
-            // Skeletni chizish (Yashil)
-            drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: '#00FF00', lineWidth: 2});
-            drawLandmarks(canvasCtx, landmarks, {color: '#FF0000', lineWidth: 1, radius: 3});
+            // Skelet
+            drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: '#00FF00', lineWidth: 1});
+            drawLandmarks(canvasCtx, landmarks, {color: '#FF0000', lineWidth: 1, radius: 2});
 
-            // Koordinatalar
             const indexTip = landmarks[8];
             const thumbTip = landmarks[4];
+            
+            // Normallashtirilgan koordinatalarni ekran o'lchamiga ko'paytiramiz
             const x = indexTip.x * canvasElement.width;
             const y = indexTip.y * canvasElement.height;
 
-            // --- MUSHT (RESET) - KUCHAYTIRILGAN ---
+            // --- MUSHT (RESET) ---
             const wrist = landmarks[0];
-            const middleTip = landmarks[12]; // O'rta barmoq
-            const ringTip = landmarks[16];   // Nomsiz barmoq
-            
-            // O'rta barmoq bilakka yaqinlashsa YOKI Nomsiz barmoq yaqinlashsa
+            const middleTip = landmarks[12];
             const distMiddle = Math.hypot(middleTip.x - wrist.x, middleTip.y - wrist.y);
             
             if (distMiddle < FIST_THRESHOLD) {
-                balls = [];     // Sharlarni o'chirish
-                gridMap = {};   // Xaritani tozalash (Kataklarni bo'shatish)
+                balls = [];     
+                gridMap = {};   
                 return; 
             } 
             
-            // --- PINCH (CHIZISH) - GRID TIZIMI ---
+            // --- PINCH (CHIZISH) ---
             const pinchDist = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y);
 
             if (pinchDist < PINCH_THRESHOLD) {
-                // Kursor
+                // Oq Kursor
                 canvasCtx.beginPath();
-                canvasCtx.arc(x, y, 8, 0, 2 * Math.PI);
+                canvasCtx.arc(x, y, 5, 0, 2 * Math.PI);
                 canvasCtx.fillStyle = '#FFFFFF';
                 canvasCtx.fill();
 
-                // 1. Koordinatani GRID (Katak) ga aylantiramiz
-                // Masalan: x=125, GRID=60 bo'lsa -> Col = 2
+                // GRID TIZIMI (Zich)
                 const col = Math.floor(x / GRID_SIZE);
                 const row = Math.floor(y / GRID_SIZE);
-                
-                // 2. Katak kaliti (ID)
                 const key = `${col},${row}`;
 
-                // 3. Agar bu katak bo'sh bo'lsa -> Shar qo'shamiz
                 if (!gridMap[key]) {
-                    // Sharni KATAK O'RTASIGA joylaymiz (Snap to center)
+                    // Markazlashtirish
                     const centerX = col * GRID_SIZE + (GRID_SIZE / 2);
                     const centerY = row * GRID_SIZE + (GRID_SIZE / 2);
 
@@ -134,28 +141,29 @@
         balls.push({
             x: x,
             y: y,
-            key: key, // Katak ID sini saqlab qo'yamiz
+            key: key,
             color: getJokkerColor(),
             timeOffset: Date.now()
         });
-        
-        // Katakni band qilamiz
         gridMap[key] = true;
 
-        // Xotira nazorati (Eski sharlarni o'chirish)
-        if (balls.length > 300) {
+        // Xotira (Zich bo'lgani uchun ko'proq shar sig'diramiz)
+        if (balls.length > 600) {
             const removedBall = balls.shift();
-            // O'chgan sharning katagini bo'shatamiz
             if (removedBall) delete gridMap[removedBall.key];
         }
     }
 
     function drawAnimatedBalls() {
         const time = Date.now() * 0.003;
+        
+        // Sharning radiusi katak o'lchamiga moslashadi (bir-biriga tegmaydi)
+        const baseRadius = (GRID_SIZE / 2) - 2; 
+
         balls.forEach(ball => {
             // Animatsiya
-            const scale = 1 + Math.sin(time + ball.x * 0.02 + ball.y * 0.01) * 0.2;
-            const radius = 15 * scale; // Radiusni GRID_SIZE ga mosladim
+            const scale = 1 + Math.sin(time + ball.x * 0.05 + ball.y * 0.05) * 0.15;
+            const radius = baseRadius * scale; 
 
             canvasCtx.beginPath();
             const gradient = canvasCtx.createRadialGradient(
@@ -172,10 +180,8 @@
         });
     }
 
-    // Oyna o'zgarsa tozalash
     window.addEventListener('resize', () => {
-        canvasElement.width = window.innerWidth;
-        canvasElement.height = window.innerHeight;
+        resizeCanvas();
         balls = [];
         gridMap = {};
     });
