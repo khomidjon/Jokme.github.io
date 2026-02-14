@@ -2,17 +2,15 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <title>JOKKER: Skeleton Mode</title>
+    <title>JOKKER: Matrix Grid Mode</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     <style>
         body { margin: 0; padding: 0; background-color: #000; overflow: hidden; }
-        /* Kanvasni oynadek o'girish va to'liq ekran qilish */
         canvas { display: block; transform: scaleX(-1); width: 100vw; height: 100vh; }
-        video { display: none; } /* Kamera yashirin */
-        /* Hech qanday yozuv uchun joy yo'q */
+        video { display: none; }
     </style>
 </head>
 <body>
@@ -30,25 +28,23 @@
     canvasElement.height = window.innerHeight;
 
     let balls = [];
-    // "Tepa-tepa" bo'lmasligi uchun masofani kattalashtirdim (70px)
-    // Bu sharlarning diametridan (taxminan 30px) ikki barobar katta, shuning uchun ular bir-biriga tegmaydi.
-    const SPACING = 70; 
-    const PINCH_THRESHOLD = 0.05;
+    let gridMap = {}; // Qaysi katak band ekanligini bilish uchun xarita
 
-    // --- JOKKER RANGLAR FORMULASI (Oq dominant) ---
+    // --- SOZLAMALAR ---
+    const GRID_SIZE = 60; // Katak o'lchami (Kattaroq qildim, aniq ko'rinishi uchun)
+    const PINCH_THRESHOLD = 0.05; // Pinch sezgirligi
+    const FIST_THRESHOLD = 0.25;  // Musht sezgirligi (Oldin 0.15 edi, kuchaytirildi)
+
+    // JOKKER Ranglar
     function getJokkerColor() {
         const palette = [
-            '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF',
-            '#FF0000', // Qizil glitch
-            '#00FFFF'  // Havorang glitch (qaytarildi, xohlasang o'chir)
+            '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', // OQ (Ko'p)
+            '#FF0000', // Qizil
+            '#00FFFF'  // Havorang
         ];
         return palette[Math.floor(Math.random() * palette.length)];
     }
 
-    let lastPinchX = -1000; // Ekrab tashqarisida boshlash
-    let lastPinchY = -1000;
-
-    // MediaPipe Hands sozlamalari
     const hands = new Hands({locateFile: (file) => {
         return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
     }});
@@ -69,88 +65,106 @@
     camera.start();
 
     function onResults(results) {
-        // 1. Fonni qora qilish
+        // 1. Fon qora
         canvasCtx.fillStyle = '#000000';
         canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
 
-        // 2. Avval chizilgan sharlarni ko'rsatish (Animatsiya bilan)
+        // 2. Sharlarni chizish
         drawAnimatedBalls();
 
-        // 3. Qo'l skeletini chizish va mantiq
+        // 3. Qo'l logikasi
         if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
             const landmarks = results.multiHandLandmarks[0];
             
-            // --- SKELETNI CHIZISH QISMI ---
-            // Bo'g'inlar orasidagi chiziqlar
-            drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS,
-                {color: '#00FF00', lineWidth: 2}); // Yashil chiziqlar
-            // Bo'g'in nuqtalari
-            drawLandmarks(canvasCtx, landmarks, 
-                {color: '#FF0000', lineWidth: 1, radius: 3}); // Qizil nuqtalar
+            // Skeletni chizish (Yashil)
+            drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: '#00FF00', lineWidth: 2});
+            drawLandmarks(canvasCtx, landmarks, {color: '#FF0000', lineWidth: 1, radius: 3});
 
-            // Pinch koordinatalari
+            // Koordinatalar
             const indexTip = landmarks[8];
             const thumbTip = landmarks[4];
             const x = indexTip.x * canvasElement.width;
             const y = indexTip.y * canvasElement.height;
 
-            // --- MUSHT (RESET) ---
+            // --- MUSHT (RESET) - KUCHAYTIRILGAN ---
             const wrist = landmarks[0];
-            const middleTip = landmarks[12];
-            if (Math.hypot(middleTip.x - wrist.x, middleTip.y - wrist.y) < 0.15) {
-                balls = [];
-                lastPinchX = -1000;
+            const middleTip = landmarks[12]; // O'rta barmoq
+            const ringTip = landmarks[16];   // Nomsiz barmoq
+            
+            // O'rta barmoq bilakka yaqinlashsa YOKI Nomsiz barmoq yaqinlashsa
+            const distMiddle = Math.hypot(middleTip.x - wrist.x, middleTip.y - wrist.y);
+            
+            if (distMiddle < FIST_THRESHOLD) {
+                balls = [];     // Sharlarni o'chirish
+                gridMap = {};   // Xaritani tozalash (Kataklarni bo'shatish)
                 return; 
             } 
             
-            // --- PINCH (CHIZISH) ---
-            const distance = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y);
+            // --- PINCH (CHIZISH) - GRID TIZIMI ---
+            const pinchDist = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y);
 
-            if (distance < PINCH_THRESHOLD) {
-                // Pinch bo'lganda kursor rangi o'zgaradi
+            if (pinchDist < PINCH_THRESHOLD) {
+                // Kursor
                 canvasCtx.beginPath();
                 canvasCtx.arc(x, y, 8, 0, 2 * Math.PI);
-                canvasCtx.fillStyle = '#FFFFFF'; // Oq kursor
+                canvasCtx.fillStyle = '#FFFFFF';
                 canvasCtx.fill();
 
-                // "Tepa-tepa" tekshiruvi: Oxirgi nuqtadan SPACING qadar uzoqlashdimi?
-                const distFromLast = Math.hypot(x - lastPinchX, y - lastPinchY);
+                // 1. Koordinatani GRID (Katak) ga aylantiramiz
+                // Masalan: x=125, GRID=60 bo'lsa -> Col = 2
+                const col = Math.floor(x / GRID_SIZE);
+                const row = Math.floor(y / GRID_SIZE);
                 
-                if (distFromLast > SPACING) {
-                    addBall(x, y);
-                    lastPinchX = x;
-                    lastPinchY = y;
+                // 2. Katak kaliti (ID)
+                const key = `${col},${row}`;
+
+                // 3. Agar bu katak bo'sh bo'lsa -> Shar qo'shamiz
+                if (!gridMap[key]) {
+                    // Sharni KATAK O'RTASIGA joylaymiz (Snap to center)
+                    const centerX = col * GRID_SIZE + (GRID_SIZE / 2);
+                    const centerY = row * GRID_SIZE + (GRID_SIZE / 2);
+
+                    addBall(centerX, centerY, key);
                 }
             }
         }
     }
 
-    function addBall(x, y) {
+    function addBall(x, y, key) {
         balls.push({
             x: x,
             y: y,
+            key: key, // Katak ID sini saqlab qo'yamiz
             color: getJokkerColor(),
             timeOffset: Date.now()
         });
-        if (balls.length > 400) balls.shift(); // Xotira nazorati
+        
+        // Katakni band qilamiz
+        gridMap[key] = true;
+
+        // Xotira nazorati (Eski sharlarni o'chirish)
+        if (balls.length > 300) {
+            const removedBall = balls.shift();
+            // O'chgan sharning katagini bo'shatamiz
+            if (removedBall) delete gridMap[removedBall.key];
+        }
     }
 
     function drawAnimatedBalls() {
         const time = Date.now() * 0.003;
         balls.forEach(ball => {
-            // Animatsiya: Kattalashib-kichrayish
-            const scale = 1 + Math.sin(time + ball.x * 0.02 + ball.y * 0.01) * 0.3;
-            const radius = 15 * scale; // Asosiy radius
+            // Animatsiya
+            const scale = 1 + Math.sin(time + ball.x * 0.02 + ball.y * 0.01) * 0.2;
+            const radius = 15 * scale; // Radiusni GRID_SIZE ga mosladim
 
             canvasCtx.beginPath();
-            // 3D Gradient (Porlash effekti)
             const gradient = canvasCtx.createRadialGradient(
                 ball.x, ball.y, radius * 0.1, 
                 ball.x, ball.y, radius
             );
-            gradient.addColorStop(0, '#FFFFFF'); // Markaz oq
-            gradient.addColorStop(0.5, ball.color); // Rang
-            gradient.addColorStop(1, 'rgba(0,0,0,0)'); // Chetlar shaffof
+            gradient.addColorStop(0, '#FFFFFF');
+            gradient.addColorStop(0.5, ball.color);
+            gradient.addColorStop(1, 'rgba(0,0,0,0)');
 
             canvasCtx.fillStyle = gradient;
             canvasCtx.arc(ball.x, ball.y, radius, 0, Math.PI * 2);
@@ -158,12 +172,12 @@
         });
     }
 
-    // Oyna o'lchami o'zgarganda to'g'irlash
+    // Oyna o'zgarsa tozalash
     window.addEventListener('resize', () => {
         canvasElement.width = window.innerWidth;
         canvasElement.height = window.innerHeight;
-        balls = []; // O'lcham o'zgarsa tozalash kerak, bo'lmasa joylashuv buziladi
-        lastPinchX = -1000;
+        balls = [];
+        gridMap = {};
     });
 
 </script>
