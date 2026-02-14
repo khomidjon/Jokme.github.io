@@ -2,24 +2,21 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <title>JOKKER: White Noise Edition</title>
+    <title>JOKKER: Skeleton Mode</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     <style>
         body { margin: 0; padding: 0; background-color: #000; overflow: hidden; }
-        canvas { display: block; transform: scaleX(-1); } /* Oynadek aks etish */
-        video { display: none; }
-        #status {
-            position: absolute; top: 10px; left: 10px; color: #fff; 
-            font-family: 'Courier New', monospace; font-size: 14px; z-index: 10;
-            text-shadow: 0 0 5px #fff;
-        }
+        /* Kanvasni oynadek o'girish va to'liq ekran qilish */
+        canvas { display: block; transform: scaleX(-1); width: 100vw; height: 100vh; }
+        video { display: none; } /* Kamera yashirin */
+        /* Hech qanday yozuv uchun joy yo'q */
     </style>
 </head>
 <body>
 
-<div id="status">JOKKER TIZIMI: KAMERA KUTILMOQDA...</div>
 <video id="input_video"></video>
 <canvas id="output_canvas"></canvas>
 
@@ -27,37 +24,31 @@
     const videoElement = document.getElementById('input_video');
     const canvasElement = document.getElementById('output_canvas');
     const canvasCtx = canvasElement.getContext('2d');
-    const statusDiv = document.getElementById('status');
 
-    let width, height;
-    function resize() {
-        width = canvasElement.width = window.innerWidth;
-        height = canvasElement.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resize);
-    resize();
+    // Ekranni to'liq egallash
+    canvasElement.width = window.innerWidth;
+    canvasElement.height = window.innerHeight;
 
     let balls = [];
-    const SPACING = 45; // Sharlar orasi
+    // "Tepa-tepa" bo'lmasligi uchun masofani kattalashtirdim (70px)
+    // Bu sharlarning diametridan (taxminan 30px) ikki barobar katta, shuning uchun ular bir-biriga tegmaydi.
+    const SPACING = 70; 
     const PINCH_THRESHOLD = 0.05;
 
-    // --- JOKKER RANGLAR FORMULASI ---
+    // --- JOKKER RANGLAR FORMULASI (Oq dominant) ---
     function getJokkerColor() {
-        // Bu "Baraban": Ichida Oq rang ko'p, Havorang yo'q.
         const palette = [
-            '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', // 4 ta Oq (Dominant)
-            '#FF0000', // 1 ta Qizil (Noyob)
-            '#FF00FF', // 1 ta Pushti (Noyob)
-            '#FFFFFF', '#FFFFFF' // Yana Oq
+            '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF',
+            '#FF0000', // Qizil glitch
+            '#00FFFF'  // Havorang glitch (qaytarildi, xohlasang o'chir)
         ];
-        // Tasodifiy bittasini sug'urib olamiz
-        const randomIndex = Math.floor(Math.random() * palette.length);
-        return palette[randomIndex];
+        return palette[Math.floor(Math.random() * palette.length)];
     }
 
-    let lastPinchX = -100;
-    let lastPinchY = -100;
+    let lastPinchX = -1000; // Ekrab tashqarisida boshlash
+    let lastPinchY = -1000;
 
+    // MediaPipe Hands sozlamalari
     const hands = new Hands({locateFile: (file) => {
         return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
     }});
@@ -78,44 +69,53 @@
     camera.start();
 
     function onResults(results) {
-        statusDiv.innerText = "JOKKER TIZIMI: ONLINE [WHITE MODE]";
-        
-        // Qora fon
+        // 1. Fonni qora qilish
         canvasCtx.fillStyle = '#000000';
-        canvasCtx.fillRect(0, 0, width, height);
+        canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
 
-        drawBalls();
+        // 2. Avval chizilgan sharlarni ko'rsatish (Animatsiya bilan)
+        drawAnimatedBalls();
 
+        // 3. Qo'l skeletini chizish va mantiq
         if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
             const landmarks = results.multiHandLandmarks[0];
+            
+            // --- SKELETNI CHIZISH QISMI ---
+            // Bo'g'inlar orasidagi chiziqlar
+            drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS,
+                {color: '#00FF00', lineWidth: 2}); // Yashil chiziqlar
+            // Bo'g'in nuqtalari
+            drawLandmarks(canvasCtx, landmarks, 
+                {color: '#FF0000', lineWidth: 1, radius: 3}); // Qizil nuqtalar
+
+            // Pinch koordinatalari
             const indexTip = landmarks[8];
             const thumbTip = landmarks[4];
-            
-            const x = indexTip.x * width;
-            const y = indexTip.y * height;
+            const x = indexTip.x * canvasElement.width;
+            const y = indexTip.y * canvasElement.height;
 
             // --- MUSHT (RESET) ---
             const wrist = landmarks[0];
             const middleTip = landmarks[12];
             if (Math.hypot(middleTip.x - wrist.x, middleTip.y - wrist.y) < 0.15) {
                 balls = [];
-                lastPinchX = -100;
-                return; // Musht bo'lsa chizmaymiz
+                lastPinchX = -1000;
+                return; 
             } 
             
             // --- PINCH (CHIZISH) ---
             const distance = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y);
 
-            // Kursor (Yashil nuqta)
-            canvasCtx.beginPath();
-            canvasCtx.arc(x, y, 4, 0, 2 * Math.PI);
-            canvasCtx.fillStyle = '#00FF00';
-            canvasCtx.fill();
-
             if (distance < PINCH_THRESHOLD) {
+                // Pinch bo'lganda kursor rangi o'zgaradi
+                canvasCtx.beginPath();
+                canvasCtx.arc(x, y, 8, 0, 2 * Math.PI);
+                canvasCtx.fillStyle = '#FFFFFF'; // Oq kursor
+                canvasCtx.fill();
+
+                // "Tepa-tepa" tekshiruvi: Oxirgi nuqtadan SPACING qadar uzoqlashdimi?
                 const distFromLast = Math.hypot(x - lastPinchX, y - lastPinchY);
                 
-                // Faqat masofa yetarli bo'lsa yangi shar qo'shamiz
                 if (distFromLast > SPACING) {
                     addBall(x, y);
                     lastPinchX = x;
@@ -129,42 +129,43 @@
         balls.push({
             x: x,
             y: y,
-            color: getJokkerColor(), // <-- Yangi rang formulasi ishga tushdi
+            color: getJokkerColor(),
             timeOffset: Date.now()
         });
-        
-        // Xotirani tozalash (Agar sharlar 500 dan oshsa, eskilari o'chadi)
-        if (balls.length > 500) {
-            balls.shift();
-        }
+        if (balls.length > 400) balls.shift(); // Xotira nazorati
     }
 
-    function drawBalls() {
+    function drawAnimatedBalls() {
         const time = Date.now() * 0.003;
-
         balls.forEach(ball => {
-            // "Nafas olish" effekti (Kattalashib-kichrayish)
-            const scale = 1 + Math.sin(time + ball.x * 0.02) * 0.25;
-            const radius = 12 * scale;
+            // Animatsiya: Kattalashib-kichrayish
+            const scale = 1 + Math.sin(time + ball.x * 0.02 + ball.y * 0.01) * 0.3;
+            const radius = 15 * scale; // Asosiy radius
 
             canvasCtx.beginPath();
+            // 3D Gradient (Porlash effekti)
             const gradient = canvasCtx.createRadialGradient(
                 ball.x, ball.y, radius * 0.1, 
                 ball.x, ball.y, radius
             );
-            
-            // Markaz doim oq (Porlash)
-            gradient.addColorStop(0, '#FFFFFF');
-            // Asosiy rang (Biz tanlagan)
-            gradient.addColorStop(0.4, ball.color);
-            // Chetlar shaffof
-            gradient.addColorStop(1, 'rgba(0,0,0,0)');
+            gradient.addColorStop(0, '#FFFFFF'); // Markaz oq
+            gradient.addColorStop(0.5, ball.color); // Rang
+            gradient.addColorStop(1, 'rgba(0,0,0,0)'); // Chetlar shaffof
 
             canvasCtx.fillStyle = gradient;
             canvasCtx.arc(ball.x, ball.y, radius, 0, Math.PI * 2);
             canvasCtx.fill();
         });
     }
+
+    // Oyna o'lchami o'zgarganda to'g'irlash
+    window.addEventListener('resize', () => {
+        canvasElement.width = window.innerWidth;
+        canvasElement.height = window.innerHeight;
+        balls = []; // O'lcham o'zgarsa tozalash kerak, bo'lmasa joylashuv buziladi
+        lastPinchX = -1000;
+    });
+
 </script>
 
 </body>
